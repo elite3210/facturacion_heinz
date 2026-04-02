@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Guías de Remisión Electrónicas</title>
+    <link rel="stylesheet" href="../assets/css/stylesGuia3.css">
+    <!-- Precargar scripts externos -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Sistema de Guías de Remisión Electrónicas</h1>
+            <nav>
+                <ul>
+                    <li><a href="#" id="nav-list" class="active">Listar Guías</a></li>
+                    <li><a href="#" id="nav-upload">Subir Guía</a></li>
+                </ul>
+            </nav>
+        </header>
+
+        <main>
+            <section id="list-section" class="active">
+                <h2>Guías de Remisión Disponibles</h2>
+                <div class="search-container">
+                    <input type="text" id="search-input" placeholder="Buscar por serie, RUC emisor o destinatario...">
+                </div>
+                <div class="guias-list" id="guias-list">
+                    <div class="loader hidden"></div>
+                    <table id="guias-table">
+                        <thead>
+                            <tr>
+                                <th>Serie-Número</th>
+                                <th>Fecha Emisión</th>
+                                <th>Destinatario</th>
+                                <th>Motivo</th>
+                                <th>Factura</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Aquí se cargarán las guías dinámicamente -->
+                        </tbody>
+                    </table>
+                    <div id="no-guias-message" class="hidden">No se encontraron guías de remisión.</div>
+                </div>
+            </section>
+
+            <section id="upload-section">
+                <h2>Subir Guía de Remisión XML</h2>
+                <div class="upload-container">
+                    <form id="upload-form">
+                        <div class="file-input">
+                            <input type="file" id="xml-file" accept=".xml" required>
+                            <label for="xml-file">Seleccionar archivo XML</label>
+                        </div>
+                        <button type="submit" id="upload-button">Subir Guía</button>
+                    </form>
+                    <div id="upload-status" class="hidden"></div>
+                </div>
+            </section>
+            <section class="hidden" id="toolBar">
+                <h2>Visualizador de Guía de Remisión</h2>
+                <div class="view-actions">
+                    <button id="back-button">Volver</button>
+                    <button id="pdf-button">Generar PDF</button>
+                </div>
+            </section>
+            <section id="view-section" class="hidden">
+
+                <div class="guia-container" id="guia-container">
+                    <div class="loader"></div>
+                    <!-- Aquí se mostrará la guía de remisión -->
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>&copy; 2025 - Sistema de Guías de Remisión Electrónicas</p>
+        </footer>
+    </div>
+
+    <!-- Scripts de la aplicación -->
+    <script src="../lib/qrcode.min.js"></script>
+    <script type="module" src="../assets/js/appGuia3.js"></script>
+</body>
+
+</html>

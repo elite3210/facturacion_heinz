@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catálogo del Hogar</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #ffeef8 0%, #e8f4f8 50%, #f0f8e8 100%);
+            min-height: 100vh;
+            padding: 20px 10px;
+            color: #555;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #8B4F8B;
+            font-size: 24px;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .products-grid {
+            display: grid;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .product-card {
+            background: linear-gradient(145deg, #ffffff, #f8f9ff);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            transform: translateY(0);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .product-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #FFB3E6, #B3E5FC, #C8E6C8);
+            border-radius: 15px 15px 0 0;
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
+        }
+
+        .product-icon {
+            font-size: 32px;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .product-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #4A4A4A;
+            margin-bottom: 8px;
+        }
+
+        .product-description {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.4;
+            margin-bottom: 10px;
+        }
+
+        .product-price {
+            font-size: 16px;
+            font-weight: bold;
+            color: #8B4F8B;
+            margin-bottom: 10px;
+        }
+
+        .product-category {
+            display: inline-block;
+            background: linear-gradient(45deg, #FFE0F0, #E0F0FF);
+            color: #666;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .pagination {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 20px;
+            padding: 20px 0;
+        }
+
+        .pagination-btn {
+            background: linear-gradient(145deg, #FFB3E6, #FF99E6);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 153, 230, 0.3);
+            min-width: 90px;
+        }
+
+        .pagination-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 153, 230, 0.4);
+            background: linear-gradient(145deg, #FF99E6, #FF80E6);
+        }
+
+        .pagination-btn:disabled {
+            background: linear-gradient(145deg, #e0e0e0, #d0d0d0);
+            color: #999;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .pagination-info {
+            background: linear-gradient(145deg, #E0F0FF, #D0E8FF);
+            padding: 10px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #4A90E2;
+            box-shadow: 0 3px 10px rgba(74, 144, 226, 0.2);
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (min-width: 480px) {
+            .container {
+                max-width: 500px;
+                padding: 30px;
+            }
+            
+            .products-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (min-width: 768px) {
+            .container {
+                max-width: 800px;
+            }
+            
+            .products-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏠 Catálogo del Hogar</h1>
+            <p>Encuentra todo lo que necesitas para tu hogar</p>
+        </div>
+        
+        <div id="products-container" class="products-grid">
+            <!-- Los productos se cargarán aquí dinámicamente -->
+        </div>
+        
+        <div class="pagination">
+            <button id="prev-btn" class="pagination-btn">← Anterior</button>
+            <div id="page-info" class="pagination-info">Página 1 de 5</div>
+            <button id="next-btn" class="pagination-btn">Siguiente →</button>
+        </div>
+    </div>
+
+    <script>
+        // Base de datos de productos
+        const products = [
+            // Página 1
+            { icon: '🛋️', name: 'Sofá Moderno', description: 'Cómodo sofá de 3 plazas con tapizado en tela suave y estructura resistente.', price: '$899.99', category: 'Muebles' },
+            { icon: '🪑', name: 'Silla de Oficina', description: 'Silla ergonómica con soporte lumbar y altura ajustable para máximo confort.', price: '$249.99', category: 'Oficina' },
+            { icon: '🛏️', name: 'Cama Queen', description: 'Cama matrimonial con cabecero acolchado y base sólida de madera.', price: '$699.99', category: 'Dormitorio' },
+            { icon: '🔥', name: 'Estufa a Gas', description: 'Estufa de 4 quemadores con horno integrado y acabado en acero inoxidable.', price: '$599.99', category: 'Cocina' },
+            { icon: '❄️', name: 'Refrigerador', description: 'Refrigerador de dos puertas con congelador superior y dispensador de agua.', price: '$1,299.99', category: 'Electrodomésticos' },
+            { icon: '🧺', name: 'Cesto de Ropa', description: 'Cesto plegable de bambú con forro interior removible y tapa.', price: '$45.99', category: 'Organización' },
+
+            // Página 2
+            { icon: '🪞', name: 'Espejo Decorativo', description: 'Espejo redondo con marco dorado, perfecto para sala o recibidor.', price: '$129.99', category: 'Decoración' },
+            { icon: '💡', name: 'Lámpara de Mesa', description: 'Lámpara moderna con base de cerámica y pantalla de lino blanco.', price: '$89.99', category: 'Iluminación' },
+            { icon: '🖼️', name: 'Cuadro Abstracto', description: 'Arte moderno impreso en lienzo con colores vibrantes y marco negro.', price: '$79.99', category: 'Decoración' },
+            { icon: '🕯️', name: 'Velas Aromáticas', description: 'Set de 3 velas de soja con fragancias relajantes: lavanda, vainilla y eucalipto.', price: '$34.99', category: 'Decoración' },
+            { icon: '🌱', name: 'Maceta Cerámica', description: 'Maceta blanca de cerámica con plato incluido, ideal para plantas medianas.', price: '$29.99', category: 'Jardín' },
+            { icon: '🧽', name: 'Kit de Limpieza', description: 'Set completo con productos biodegradables y accesorios de limpieza.', price: '$49.99', category: 'Limpieza' },
+
+            // Página 3
+            { icon: '🍽️', name: 'Vajilla Completa', description: 'Juego de vajilla para 6 personas con platos, tazones y tazas de porcelana.', price: '$159.99', category: 'Cocina' },
+            { icon: '🔪', name: 'Set de Cuchillos', description: 'Cuchillos profesionales de acero inoxidable con bloque de madera.', price: '$199.99', category: 'Cocina' },
+            { icon: '🥄', name: 'Cubiertos Elegantes', description: 'Juego de cubiertos de 24 piezas con acabado mate y estuche incluido.', price: '$89.99', category: 'Cocina' },
+            { icon: '☕', name: 'Cafetera Express', description: 'Cafetera de espresso automática con molinillo integrado y jarra de leche.', price: '$449.99', category: 'Electrodomésticos' },
+            { icon: '🍳', name: 'Sartenes Antiadherentes', description: 'Set de 3 sartenes con recubrimiento cerámico y mangos ergonómicos.', price: '$119.99', category: 'Cocina' },
+            { icon: '🥗', name: 'Bowl de Ensalada', description: 'Bowl grande de bambú con cubiertos para servir, perfecto para ensaladas.', price: '$39.99', category: 'Cocina' },
+
+            // Página 4
+            { icon: '🚿', name: 'Ducha Moderna', description: 'Cabezal de ducha con múltiples funciones y acabado cromado brillante.', price: '$179.99', category: 'Baño' },
+            { icon: '🧴', name: 'Dispensador Jabón', description: 'Dispensador automático de jabón con sensor y base antideslizante.', price: '$69.99', category: 'Baño' },
+            { icon: '🛁', name: 'Alfombra de Baño', description: 'Alfombra súper absorbente con memoria foam y base antideslizante.', price: '$34.99', category: 'Baño' },
+            { icon: '🪥', name: 'Organizador Dental', description: 'Soporte para cepillos y pasta dental con compartimentos separados.', price: '$24.99', category: 'Baño' },
+            { icon: '🧻', name: 'Soporte Papel', description: 'Portarrollos de papel higiénico con estante superior para accesorios.', price: '$49.99', category: 'Baño' },
+            { icon: '🪟', name: 'Cortina de Ducha', description: 'Cortina impermeable con diseño moderno y ganchos incluidos.', price: '$29.99', category: 'Baño' },
+
+            // Página 5
+            { icon: '🏺', name: 'Jarrón Decorativo', description: 'Jarrón de cristal soplado con acabado mate y formas orgánicas.', price: '$149.99', category: 'Decoración' },
+            { icon: '🕰️', name: 'Reloj de Pared', description: 'Reloj silencioso con números grandes y manecillas de diseño moderno.', price: '$59.99', category: 'Decoración' },
+            { icon: '🛡️', name: 'Caja Fuerte', description: 'Caja de seguridad digital con cerradura electrónica y alarma.', price: '$299.99', category: 'Seguridad' },
+            { icon: '🔌', name: 'Regleta Inteligente', description: 'Regleta con 6 tomas USB y control por aplicación móvil.', price: '$79.99', category: 'Tecnología' },
+            { icon: '🎵', name: 'Altavoz Bluetooth', description: 'Speaker portátil resistente al agua con 12 horas de autonomía.', price: '$129.99', category: 'Tecnología' },
+            { icon: '🌡️', name: 'Termostato Digital', description: 'Termostato programable con Wi-Fi y control de temperatura inteligente.', price: '$189.99', category: 'Climatización' }
+        ];
+
+        let currentPage = 1;
+        const totalPages = 5;
+        const productsPerPage = 6;
+
+        // Elementos del DOM
+        const productsContainer = document.getElementById('products-container');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const pageInfo = document.getElementById('page-info');
+
+        // Función para mostrar productos de una página específica
+        function displayProducts(page) {
+            const startIndex = (page - 1) * productsPerPage;
+            const endIndex = startIndex + productsPerPage;
+            const pageProducts = products.slice(startIndex, endIndex);
+
+            // Limpiar contenedor
+            productsContainer.innerHTML = '';
+
+            // Agregar clase de animación
+            productsContainer.classList.add('fade-in');
+
+            // Crear y agregar tarjetas de productos
+            pageProducts.forEach(product => {
+                const productCard = document.createElement('div');
+                productCard.className = 'product-card';
+                productCard.innerHTML = `
+                    <span class="product-icon">${product.icon}</span>
+                    <div class="product-name">${product.name}</div>
+                    <div class="product-description">${product.description}</div>
+                    <div class="product-price">${product.price}</div>
+                    <div class="product-category">${product.category}</div>
+                `;
+                productsContainer.appendChild(productCard);
+            });
+
+            // Remover clase de animación después de la animación
+            setTimeout(() => {
+                productsContainer.classList.remove('fade-in');
+            }, 500);
+        }
+
+        // Función para actualizar los controles de paginación
+        function updatePaginationControls() {
+            // Actualizar información de página
+            pageInfo.textContent = `Página ${currentPage} de ${totalPages}`;
+
+            // Habilitar/deshabilitar botones
+            prevBtn.disabled = currentPage === 1;
+            nextBtn.disabled = currentPage === totalPages;
+        }
+
+        // Event listeners para los botones de navegación
+        prevBtn.addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                displayProducts(currentPage);
+                updatePaginationControls();
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentPage < totalPages) {
+                currentPage++;
+                displayProducts(currentPage);
+                updatePaginationControls();
+            }
+        });
+
+        // Navegación con teclado (opcional)
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft' && currentPage > 1) {
+                currentPage--;
+                displayProducts(currentPage);
+                updatePaginationControls();
+            } else if (e.key === 'ArrowRight' && currentPage < totalPages) {
+                currentPage++;
+                displayProducts(currentPage);
+                updatePaginationControls();
+            }
+        });
+
+        // Inicializar la aplicación
+        function init() {
+            displayProducts(currentPage);
+            updatePaginationControls();
+        }
+
+        // Ejecutar cuando el DOM esté listo
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

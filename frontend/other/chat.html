@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asistente IA con acceso a la base de datos</title>
+    <style>
+        /* Estilos CSS aquí */
+        .chat-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .message {
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .user-message {
+            background-color: #e6f7ff;
+            text-align: right;
+        }
+        .ai-message {
+            background-color: #f0f0f0;
+        }
+        .input-area {
+            display: flex;
+            margin-top: 20px;
+        }
+        #user-input {
+            flex-grow: 1;
+            padding: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #1890ff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <h1>Asistente IA con acceso a la base de datos</h1>
+        <div id="chat-messages"></div>
+        <div class="input-area">
+            <input type="text" id="user-input" placeholder="Pregunta sobre los datos...">
+            <button id="send-button">Enviar</button>
+        </div>
+    </div>
+
+    <script>
+        const chatMessages = document.getElementById('chat-messages');
+        const userInput = document.getElementById('user-input');
+        const sendButton = document.getElementById('send-button');
+
+        function addMessage(text, isUser) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = isUser ? 'message user-message' : 'message ai-message';
+            messageDiv.textContent = text;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        async function sendToIA(userMessage) {
+            try {
+                // Enviar a tu servidor intermediario que maneja la comunicación con la IA
+                const response = await fetch('/api/chat-with-db.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ message: userMessage })
+                });
+
+                const data = await response.json();
+                
+                if (data.error) {
+                    addMessage(`Error: ${data.error}`, false);
+                } else {
+                    addMessage(data.response, false);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                addMessage('Lo siento, ocurrió un error al procesar tu solicitud.', false);
+            }
+        }
+
+        sendButton.addEventListener('click', async () => {
+            const message = userInput.value.trim();
+            if (message) {
+                addMessage(message, true);
+                userInput.value = '';
+                userInput.focus();
+                
+                await sendToIA(message);
+            }
+        });
+
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendButton.click();
+            }
+        });
+
+        // Mensaje inicial
+        addMessage('Hola, soy tu asistente con acceso a la base de datos. ¿Qué información necesitas?', false);
+    </script>
+</body>
+</html>

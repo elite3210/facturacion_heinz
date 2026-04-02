@@ -1,0 +1,1326 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Asistencia Laboral</title>
+    <script src="https://cdn.jsdelivr.net/npm/qr-scanner@1.4.2/qr-scanner.umd.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2ecc71;
+            --danger-color: #e74c3c;
+            --light-gray: #ecf0f1;
+            --dark-gray: #34495e;
+            --text-color: #2c3e50;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+        }
+
+        header {
+            background: var(--primary-color);
+            color: white;
+            padding: 15px 20px;
+            text-align: center;
+            border-top-left-radius: var(--border-radius);
+            border-top-right-radius: var(--border-radius);
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 1.8em;
+        }
+
+        nav {
+            display: flex;
+            justify-content: center;
+            background-color: var(--dark-gray);
+            padding: 0;
+            flex-wrap: wrap;
+        }
+
+        nav button {
+            background-color: transparent;
+            color: white;
+            border: none;
+            padding: 15px 20px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s ease;
+            flex-grow: 1;
+        }
+
+        nav button:hover, nav button.active {
+            background-color: var(--primary-color);
+        }
+
+        .tab-content {
+            display: none;
+            padding: 20px;
+            animation: fadeIn 0.5s;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h2 {
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--light-gray);
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="number"],
+        .form-group select {
+            width: calc(100% - 22px);
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: var(--border-radius);
+            box-sizing: border-box;
+        }
+
+        button, .button {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            margin-right: 5px;
+        }
+
+        button:hover, .button:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        button.secondary { background-color: var(--secondary-color); }
+        button.secondary:hover { background-color: #27ae60; }
+        button.danger { background-color: var(--danger-color); }
+        button.danger:hover { background-color: #c0392b; }
+        button.grey { background-color: #7f8c8d; }
+        button.grey:hover { background-color: #95a5a6; }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 1px solid var(--light-gray);
+        }
+
+        th {
+            background-color: var(--dark-gray);
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        tr:hover {
+            background-color: #e8f4f8;
+        }
+
+        /* QR Scanner Specific */
+        #qr-video {
+            width: 100%;
+            max-width: 500px;
+            border-radius: var(--border-radius);
+            border: 3px solid var(--dark-gray); /* Default border */
+            margin: 10px auto;
+            display: block;
+        }
+
+        #qr-video.scanning {
+            border-color: var(--danger-color);
+            animation: pulse-red 2s infinite;
+        }
+
+        #qr-video.captured {
+            border-color: var(--secondary-color);
+            animation: pulse-green 0.6s 2; /* Pulse green twice */
+        }
+
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(231, 76, 60, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
+        }
+        @keyframes pulse-green {
+            0% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(46, 204, 113, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0); }
+        }
+
+        /* Dashboard */
+        .dashboard-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #5dade2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .stat-card h3 {
+            margin-top: 0;
+            color: white;
+            font-size: 1.2em;
+        }
+        .stat-card p {
+            font-size: 2em;
+            margin-bottom: 0;
+            font-weight: bold;
+        }
+
+        /* Planilla Results */
+        .planilla-results {
+            background-color: var(--light-gray);
+            padding: 20px;
+            border-radius: var(--border-radius);
+            margin-top: 20px;
+        }
+        .planilla-results h3 {
+            margin-top: 0;
+            color: var(--primary-color);
+        }
+        .planilla-results p {
+            font-size: 1.1em;
+            margin: 8px 0;
+        }
+        .planilla-results strong {
+            color: var(--dark-gray);
+        }
+
+        /* Toast Notifications */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 20px;
+            border-radius: var(--border-radius);
+            color: white;
+            font-size: 0.9em;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.5s, bottom 0.5s;
+        }
+        .toast.show {
+            opacity: 1;
+            bottom: 30px;
+        }
+        .toast.success { background-color: var(--secondary-color); }
+        .toast.error { background-color: var(--danger-color); }
+        .toast.info { background-color: var(--primary-color); }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            background-color: var(--dark-gray);
+            color: var(--light-gray);
+            margin-top: auto; /* Pushes footer to bottom */
+            font-size: 0.9em;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            nav {
+                flex-direction: column;
+            }
+            nav button {
+                width: 100%;
+                text-align: left;
+            }
+            .form-group input[type="text"],
+            .form-group input[type="number"],
+            .form-group select {
+                width: calc(100% - 20px); /* Account for padding */
+            }
+            .dashboard-stats {
+                grid-template-columns: 1fr;
+            }
+        }
+         /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1001;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+            border-radius: var(--border-radius);
+            text-align: center;
+        }
+        .modal-content h3 { color: var(--primary-color); }
+        .modal-content p { margin-bottom: 20px; }
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close-button:hover,
+        .close-button:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏢 Control de Asistencia Laboral</h1>
+        </header>
+
+        <nav>
+            <button class="tab-button active" data-tab="dashboard">📊 Dashboard</button>
+            <button class="tab-button" data-tab="registro-qr">📷 Registro QR</button>
+            <button class="tab-button" data-tab="empleados">👥 Empleados</button>
+            <button class="tab-button" data-tab="registros">📋 Registros</button>
+            <button class="tab-button" data-tab="planilla">🧾 Planilla</button>
+            <button class="tab-button" data-tab="configuracion">⚙️ Configuración</button>
+        </nav>
+
+        <section id="dashboard" class="tab-content active">
+            <h2>📊 Dashboard en Tiempo Real</h2>
+            <div class="dashboard-stats">
+                <div class="stat-card">
+                    <h3>Total Empleados</h3>
+                    <p id="stat-total-employees">0</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Registros Hoy</h3>
+                    <p id="stat-records-today">0</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Empleados Presentes</h3>
+                    <p id="stat-employees-present">0</p>
+                </div>
+            </div>
+            <h3>Resumen Rápido de Actividad Reciente</h3>
+            <ul id="quick-activity-summary">
+                </ul>
+        </section>
+
+        <section id="registro-qr" class="tab-content">
+            <h2>📷 Registro de Asistencia con QR</h2>
+            <div class="form-group">
+                <label for="qr-employee-select">👤 Selecciona tu nombre:</label>
+                <select id="qr-employee-select"></select>
+            </div>
+            <button id="start-scan-btn" class="secondary">🔍 Iniciar Escaneo QR</button>
+            <button id="stop-scan-btn" class="danger" style="display:none;">🛑 Detener Escaneo</button>
+            <p id="qr-status">Estado: Inactivo</p>
+            <video id="qr-video" playsinline></video>
+            <div id="camera-diagnosis-output" style="margin-top:10px; font-size:0.9em;"></div>
+        </section>
+
+        <section id="empleados" class="tab-content">
+            <h2>👥 Gestión de Empleados</h2>
+            <form id="add-employee-form">
+                <div class="form-group">
+                    <label for="employee-name">Nombre Completo:</label>
+                    <input type="text" id="employee-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="employee-position">Cargo:</label>
+                    <input type="text" id="employee-position" required>
+                </div>
+                <div class="form-group">
+                    <label for="employee-rate">Tarifa por Hora (S/.):</label>
+                    <input type="number" id="employee-rate" step="0.01" min="0" required>
+                </div>
+                <button type="submit" class="secondary">➕ Agregar Empleado</button>
+            </form>
+            <h3>📜 Lista de Empleados</h3>
+            <table id="employees-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>Cargo</th>
+                        <th>Tarifa/Hora (S/.)</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </section>
+
+        <section id="registros" class="tab-content">
+            <h2>📋 Visualización de Registros</h2>
+            <div class="form-group">
+                <label for="filter-employee-records">Filtrar por Empleado:</label>
+                <select id="filter-employee-records">
+                    <option value="all">Todos los Empleados</option>
+                </select>
+            </div>
+            <table id="attendance-records-table">
+                <thead>
+                    <tr>
+                        <th>ID Registro</th>
+                        <th>Empleado</th>
+                        <th>Fecha</th>
+                        <th>Hora</th>
+                        <th>Tipo</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </section>
+
+        <section id="planilla" class="tab-content">
+            <h2>🧾 Cálculo de Boleta de Pagos / Planilla</h2>
+            <div class="form-group">
+                <label for="payroll-employee-select">Seleccionar Empleado:</label>
+                <select id="payroll-employee-select"></select>
+            </div>
+            <div class="form-group">
+                <label for="payroll-period-select">Seleccionar Periodo:</label>
+                <select id="payroll-period-select">
+                    <option value="current_week">Semana Actual</option>
+                    <option value="last_week">Semana Pasada</option>
+                    <option value="current_month">Mes Actual</option>
+                    <option value="last_month">Mes Pasado</option>
+                </select>
+            </div>
+            <button id="calculate-payroll-btn" class="secondary">🧮 Calcular Planilla</button>
+            <div id="payroll-results-container" class="planilla-results" style="display:none;">
+                <h3>Resultados de la Planilla</h3>
+                <p><strong>Empleado:</strong> <span id="payroll-employee-name"></span></p>
+                <p><strong>Periodo:</strong> <span id="payroll-period-display"></span></p>
+                <p><strong>Horas Trabajadas:</strong> <span id="payroll-total-hours"></span></p>
+                <p><strong>Sueldo Bruto (S/.):</strong> <span id="payroll-gross-salary"></span></p>
+                <p><strong>Bonificaciones (5%) (S/.):</strong> <span id="payroll-bonus"></span></p>
+                <p><strong>Descuentos (13%) (S/.):</strong> <span id="payroll-deductions"></span></p>
+                <p><strong>Sueldo Neto (S/.):</strong> <span id="payroll-net-salary"></span></p>
+            </div>
+        </section>
+
+        <section id="configuracion" class="tab-content">
+            <h2>⚙️ Configuración y Herramientas</h2>
+            <div class="form-group">
+                <button id="load-test-data-btn">🧪 Cargar Datos de Prueba</button>
+                <small>Carga empleados y registros ficticios.</small>
+            </div>
+            <div class="form-group">
+                <h3>🔑 Código QR Específico Requerido:</h3>
+                <p>El escáner SOLO aceptará un código QR que contenga EXACTAMENTE el siguiente texto:</p>
+                <strong id="required-qr-text" style="font-family: monospace; background: #eee; padding: 5px; border-radius: 4px;"></strong>
+                <button id="copy-qr-text-btn" class="grey" style="margin-left:10px;">📋 Copiar Texto</button>
+                <p><small>Puedes usar cualquier generador de QR online (ej: qrcode-monkey.com) para crear un QR con este texto.</small></p>
+            </div>
+            <div class="form-group">
+                <button id="diagnose-camera-btn">📹 Diagnóstico de Cámara</button>
+                <div id="camera-diagnosis-output-config" style="margin-top:10px; font-size:0.9em;"></div>
+            </div>
+            <div class="form-group">
+                <button id="export-data-btn" class="secondary">💾 Exportar Datos (JSON)</button>
+                <small>Descarga todos los empleados y registros en formato JSON.</small>
+            </div>
+            <div class="form-group">
+                <button id="clear-all-data-btn" class="danger">🗑️ Limpiar Todos los Datos</button>
+                <small>¡CUIDADO! Esto eliminará todos los empleados y registros permanentemente.</small>
+            </div>
+        </section>
+    </div>
+
+    <div id="toast-container" class="toast"></div>
+
+    <div id="confirmationModal" class="modal">
+      <div class="modal-content">
+        <span class="close-button" id="closeModalButton">&times;</span>
+        <h3 id="modalTitle">Confirmación</h3>
+        <p id="modalMessage">¿Estás seguro?</p>
+        <button id="confirmModalButton" class="danger">Confirmar</button>
+        <button id="cancelModalButton" class="grey">Cancelar</button>
+      </div>
+    </div>
+
+    <footer>
+        <p>&copy; <span id="currentYear"></span> Sistema de Control de Asistencia. Todos los derechos reservados.</p>
+    </footer>
+
+    <script>
+        // QR Scanner Library (already included via CDN)
+        // QrScanner = QrScanner; // If needed explicitly in a module
+
+        const App = {
+            DB_KEY_EMPLOYEES: 'attendance_employees',
+            DB_KEY_RECORDS: 'attendance_records',
+            REQUIRED_QR_CODE_TEXT: "20605216715|registroLaboral",
+            SCAN_COOLDOWN_MS: 30000, // 30 seconds
+            BONUS_RATE: 0.05, // 5%
+            DEDUCTION_RATE: 0.13, // 13%
+
+            qrScanner: null,
+            isScanning: false,
+            lastScanTime: 0,
+            audioContext: null,
+
+            state: {
+                employees: [],
+                records: []
+            },
+
+            // DOM Elements
+            elements: {
+                // Tabs
+                tabButtons: document.querySelectorAll('.tab-button'),
+                tabContents: document.querySelectorAll('.tab-content'),
+                // QR
+                qrEmployeeSelect: document.getElementById('qr-employee-select'),
+                startScanBtn: document.getElementById('start-scan-btn'),
+                stopScanBtn: document.getElementById('stop-scan-btn'),
+                qrStatus: document.getElementById('qr-status'),
+                qrVideo: document.getElementById('qr-video'),
+                cameraDiagnosisOutput: document.getElementById('camera-diagnosis-output'),
+                // Employees
+                addEmployeeForm: document.getElementById('add-employee-form'),
+                employeeNameInput: document.getElementById('employee-name'),
+                employeePositionInput: document.getElementById('employee-position'),
+                employeeRateInput: document.getElementById('employee-rate'),
+                employeesTableBody: document.querySelector('#employees-table tbody'),
+                // Records
+                filterEmployeeRecordsSelect: document.getElementById('filter-employee-records'),
+                attendanceRecordsTableBody: document.querySelector('#attendance-records-table tbody'),
+                // Payroll
+                payrollEmployeeSelect: document.getElementById('payroll-employee-select'),
+                payrollPeriodSelect: document.getElementById('payroll-period-select'),
+                calculatePayrollBtn: document.getElementById('calculate-payroll-btn'),
+                payrollResultsContainer: document.getElementById('payroll-results-container'),
+                payrollEmployeeName: document.getElementById('payroll-employee-name'),
+                payrollPeriodDisplay: document.getElementById('payroll-period-display'),
+                payrollTotalHours: document.getElementById('payroll-total-hours'),
+                payrollGrossSalary: document.getElementById('payroll-gross-salary'),
+                payrollBonus: document.getElementById('payroll-bonus'),
+                payrollDeductions: document.getElementById('payroll-deductions'),
+                payrollNetSalary: document.getElementById('payroll-net-salary'),
+                // Config
+                loadTestDataBtn: document.getElementById('load-test-data-btn'),
+                requiredQrTextElement: document.getElementById('required-qr-text'),
+                copyQrTextBtn: document.getElementById('copy-qr-text-btn'),
+                diagnoseCameraBtn: document.getElementById('diagnose-camera-btn'),
+                cameraDiagnosisOutputConfig: document.getElementById('camera-diagnosis-output-config'),
+                exportDataBtn: document.getElementById('export-data-btn'),
+                clearAllDataBtn: document.getElementById('clear-all-data-btn'),
+                // Dashboard
+                statTotalEmployees: document.getElementById('stat-total-employees'),
+                statRecordsToday: document.getElementById('stat-records-today'),
+                statEmployeesPresent: document.getElementById('stat-employees-present'),
+                quickActivitySummary: document.getElementById('quick-activity-summary'),
+                // Toast
+                toastContainer: document.getElementById('toast-container'),
+                // Modal
+                confirmationModal: document.getElementById('confirmationModal'),
+                closeModalButton: document.getElementById('closeModalButton'),
+                confirmModalButton: document.getElementById('confirmModalButton'),
+                cancelModalButton: document.getElementById('cancelModalButton'),
+                modalTitle: document.getElementById('modalTitle'),
+                modalMessage: document.getElementById('modalMessage'),
+                // Footer
+                currentYear: document.getElementById('currentYear'),
+            },
+
+            init() {
+                console.log("App initializing...");
+                this.elements.currentYear.textContent = new Date().getFullYear();
+                this.elements.requiredQrTextElement.textContent = this.REQUIRED_QR_CODE_TEXT;
+
+                this.loadData();
+                this.setupEventListeners();
+                this.populateEmployeeSelects();
+                this.renderEmployeesTable();
+                this.renderAttendanceRecordsTable();
+                this.updateDashboard();
+                this.setActiveTab('dashboard');
+
+                try {
+                    this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                } catch (e) {
+                    console.warn("Web Audio API is not supported in this browser.");
+                    this.showToast("Web Audio API no disponible, no habrá sonido de 'beep'.", "info");
+                }
+                console.log("App initialized.");
+            },
+
+            setupEventListeners() {
+                // Tab navigation
+                this.elements.tabButtons.forEach(button => {
+                    button.addEventListener('click', () => this.setActiveTab(button.dataset.tab));
+                });
+
+                // QR Scanner
+                this.elements.startScanBtn.addEventListener('click', () => this.startQrScan());
+                this.elements.stopScanBtn.addEventListener('click', () => this.stopQrScan());
+
+                // Employee Management
+                this.elements.addEmployeeForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.addEmployee();
+                });
+
+                // Records Filter
+                this.elements.filterEmployeeRecordsSelect.addEventListener('change', () => this.renderAttendanceRecordsTable());
+
+                // Payroll
+                this.elements.calculatePayrollBtn.addEventListener('click', () => this.calculatePayroll());
+
+                // Config
+                this.elements.loadTestDataBtn.addEventListener('click', () => this.loadTestData());
+                this.elements.copyQrTextBtn.addEventListener('click', () => this.copyQrTextToClipboard());
+                this.elements.diagnoseCameraBtn.addEventListener('click', () => this.diagnoseCamera(this.elements.cameraDiagnosisOutputConfig));
+                this.elements.exportDataBtn.addEventListener('click', () => this.exportData());
+                this.elements.clearAllDataBtn.addEventListener('click', () => {
+                    this.showConfirmationModal(
+                        "🗑️ Confirmar Limpieza Total",
+                        "¿Estás SEGURO de que quieres eliminar TODOS los empleados y registros? Esta acción no se puede deshacer.",
+                        () => {
+                            this.clearAllData();
+                            this.showToast("Todos los datos han sido eliminados.", "success");
+                        }
+                    );
+                });
+
+                // Modal
+                this.elements.closeModalButton.addEventListener('click', () => this.closeConfirmationModal());
+                this.elements.cancelModalButton.addEventListener('click', () => this.closeConfirmationModal());
+                window.addEventListener('click', (event) => {
+                    if (event.target == this.elements.confirmationModal) {
+                        this.closeConfirmationModal();
+                    }
+                });
+            },
+
+            showConfirmationModal(title, message, onConfirm) {
+                this.elements.modalTitle.textContent = title;
+                this.elements.modalMessage.innerHTML = message; // Use innerHTML if message contains HTML
+                this.elements.confirmationModal.style.display = "block";
+
+                // Clone and replace the confirm button to remove old event listeners
+                const oldConfirmButton = this.elements.confirmModalButton;
+                const newConfirmButton = oldConfirmButton.cloneNode(true);
+                oldConfirmButton.parentNode.replaceChild(newConfirmButton, oldConfirmButton);
+                this.elements.confirmModalButton = newConfirmButton; // Update reference
+
+                this.elements.confirmModalButton.onclick = () => {
+                    onConfirm();
+                    this.closeConfirmationModal();
+                };
+            },
+
+            closeConfirmationModal() {
+                this.elements.confirmationModal.style.display = "none";
+            },
+
+            setActiveTab(tabId) {
+                this.elements.tabContents.forEach(content => content.classList.remove('active'));
+                this.elements.tabButtons.forEach(button => button.classList.remove('active'));
+
+                document.getElementById(tabId).classList.add('active');
+                document.querySelector(`.tab-button[data-tab="${tabId}"]`).classList.add('active');
+                console.log(`Switched to tab: ${tabId}`);
+
+                // Special actions for QR tab
+                if (tabId !== 'registro-qr' && this.isScanning) {
+                    this.stopQrScan(false); // Stop scan if navigating away, no message
+                }
+            },
+
+            // --- Data Persistence (localStorage) ---
+            loadData() {
+                const employeesData = localStorage.getItem(this.DB_KEY_EMPLOYEES);
+                const recordsData = localStorage.getItem(this.DB_KEY_RECORDS);
+                this.state.employees = employeesData ? JSON.parse(employeesData) : [];
+                this.state.records = recordsData ? JSON.parse(recordsData) : [];
+                console.log("Data loaded from localStorage:", this.state);
+            },
+
+            saveData() {
+                localStorage.setItem(this.DB_KEY_EMPLOYEES, JSON.stringify(this.state.employees));
+                localStorage.setItem(this.DB_KEY_RECORDS, JSON.stringify(this.state.records));
+                console.log("Data saved to localStorage.");
+                this.updateDashboard(); // Update dashboard whenever data changes
+                this.populateEmployeeSelects(); // Refresh dropdowns
+            },
+
+            // --- QR Scanner Logic ---
+            async startQrScan() {
+                const selectedEmployeeId = this.elements.qrEmployeeSelect.value;
+                if (!selectedEmployeeId) {
+                    this.showToast("Por favor, selecciona un empleado antes de escanear.", "error");
+                    return;
+                }
+
+                if (this.isScanning) return;
+
+                const videoElem = this.elements.qrVideo;
+                this.elements.qrStatus.textContent = "Estado: Iniciando cámara...";
+                videoElem.classList.remove('captured');
+                videoElem.classList.add('scanning');
+
+                try {
+                    // Prefer rear camera on mobile
+                    const hasCamera = await QrScanner.hasCamera();
+                    if (!hasCamera) {
+                        this.showToast("No se encontró ninguna cámara.", "error");
+                        this.elements.qrStatus.textContent = "Error: No se encontró cámara.";
+                        this.diagnoseCamera(this.elements.cameraDiagnosisOutput);
+                        return;
+                    }
+
+                    this.qrScanner = new QrScanner(
+                        videoElem,
+                        result => this.onQrCodeScanned(result.data),
+                        {
+                            onDecodeError: error => {
+                                // console.warn(`QR Decode Error: ${error}`);
+                                // this.elements.qrStatus.textContent = "Estado: Buscando QR...";
+                            },
+                            preferredCamera: 'environment', // Prefer back camera
+                            highlightScanRegion: true,
+                            highlightCodeOutline: true,
+                        }
+                    );
+                    await this.qrScanner.start();
+                    this.isScanning = true;
+                    this.elements.startScanBtn.style.display = 'none';
+                    this.elements.stopScanBtn.style.display = 'inline-block';
+                    this.elements.qrStatus.textContent = "Estado: Escaneando... 🔍";
+                    videoElem.style.display = 'block';
+                    console.log("QR Scanner started.");
+                    this.diagnoseCamera(this.elements.cameraDiagnosisOutput);
+
+                } catch (error) {
+                    console.error("Error starting QR Scanner:", error);
+                    this.elements.qrStatus.textContent = `Error de cámara: ${error.message || error}`;
+                    videoElem.classList.remove('scanning', 'captured');
+                    this.showToast(`Error de cámara: ${error.message || error}`, "error");
+                    if (error.name === 'NotAllowedError') {
+                        this.elements.qrStatus.innerHTML += "<br>Por favor, permite el acceso a la cámara en tu navegador.";
+                    }
+                    this.diagnoseCamera(this.elements.cameraDiagnosisOutput);
+                }
+            },
+
+            stopQrScan(showMessage = true) {
+                if (this.qrScanner) {
+                    this.qrScanner.stop();
+                    this.qrScanner.destroy();
+                    this.qrScanner = null;
+                }
+                this.isScanning = false;
+                this.elements.startScanBtn.style.display = 'inline-block';
+                this.elements.stopScanBtn.style.display = 'none';
+                this.elements.qrVideo.classList.remove('scanning', 'captured');
+                // this.elements.qrVideo.style.display = 'none'; // Optional: hide video when not scanning
+                if (showMessage) this.elements.qrStatus.textContent = "Estado: Escaneo detenido.";
+                console.log("QR Scanner stopped.");
+            },
+
+            onQrCodeScanned(qrData) {
+                console.log(`QR Scanned: ${qrData}`);
+                const videoElem = this.elements.qrVideo;
+
+                const currentTime = Date.now();
+                if (currentTime - this.lastScanTime < this.SCAN_COOLDOWN_MS) {
+                    this.showToast(`Espera ${Math.round((this.SCAN_COOLDOWN_MS - (currentTime - this.lastScanTime))/1000)}s para volver a escanear.`, "info");
+                    console.log("Scan cooldown active.");
+                    return;
+                }
+
+                if (qrData === this.REQUIRED_QR_CODE_TEXT) {
+                    this.lastScanTime = currentTime;
+                    videoElem.classList.remove('scanning');
+                    videoElem.classList.add('captured');
+                    this.playBeep();
+                    this.showToast("✅ ¡QR Correcto Detectado!", "success");
+                    this.elements.qrStatus.textContent = "Estado: ¡QR Válido! Registrando...";
+
+                    this.registerAttendance();
+                    this.stopQrScan(false); // Stop after successful scan (single capture per session)
+                    this.elements.qrStatus.textContent = "Estado: Registro procesado. Escaneo detenido.";
+
+
+                    // Remove 'captured' class after animation
+                    setTimeout(() => videoElem.classList.remove('captured'), 1200); // Matches 2 pulses of 0.6s
+                } else {
+                    this.showToast("❌ QR Incorrecto. Intenta de nuevo.", "error");
+                    this.elements.qrStatus.textContent = "Estado: QR Inválido. Sigue escaneando...";
+                    console.warn("Incorrect QR code scanned:", qrData);
+                }
+            },
+
+            playBeep() {
+                if (!this.audioContext) return;
+                try {
+                    const oscillator = this.audioContext.createOscillator();
+                    const gainNode = this.audioContext.createGain();
+
+                    oscillator.connect(gainNode);
+                    gainNode.connect(this.audioContext.destination);
+
+                    gainNode.gain.setValueAtTime(0.5, this.audioContext.currentTime); // Volume
+                    oscillator.frequency.setValueAtTime(660, this.audioContext.currentTime); // Frequency in Herts (E5 note)
+                    oscillator.type = 'triangle'; // sine, square, sawtooth, triangle, sine
+
+                    oscillator.start();
+                    oscillator.stop(this.audioContext.currentTime + 0.15); // Beep duration
+                    console.log("Beep played.");
+                } catch (e) {
+                    console.error("Error playing beep:", e);
+                }
+            },
+
+            async diagnoseCamera(outputElement) {
+                outputElement.innerHTML = '<strong>Diagnóstico de Cámara:</strong><br>';
+                try {
+                    const hasCamera = await QrScanner.hasCamera();
+                    outputElement.innerHTML += `¿Cámara disponible? ${hasCamera ? '✔️ Sí' : '❌ No'}<br>`;
+                    if (hasCamera) {
+                        const cameras = await QrScanner.listCameras(true);
+                        if (cameras.length > 0) {
+                            outputElement.innerHTML += 'Cámaras encontradas:<br><ul>';
+                            cameras.forEach(cam => {
+                                outputElement.innerHTML += `<li>${cam.label || `Cámara ID: ${cam.id.substring(0,10)}...`} (${cam.id === this.qrScanner?._activeCameraId ? 'ACTIVA' : 'inactiva'})</li>`;
+                            });
+                            outputElement.innerHTML += '</ul>';
+                        } else {
+                            outputElement.innerHTML += 'No se encontraron cámaras específicas, pero QrScanner.hasCamera() fue true.<br>';
+                        }
+                    }
+                } catch (e) {
+                    outputElement.innerHTML += `Error al acceder a la información de la cámara: ${e.message}<br>`;
+                    console.error("Camera diagnosis error:", e);
+                }
+            },
+
+
+            // --- Employee Management ---
+            addEmployee() {
+                const name = this.elements.employeeNameInput.value.trim();
+                const position = this.elements.employeePositionInput.value.trim();
+                const rate = parseFloat(this.elements.employeeRateInput.value);
+
+                if (!name || !position || isNaN(rate) || rate <= 0) {
+                    this.showToast("Por favor, completa todos los campos correctamente.", "error");
+                    return;
+                }
+
+                const newEmployee = {
+                    id: `emp_${Date.now()}`,
+                    name: name,
+                    position: position,
+                    rate: rate
+                };
+
+                this.state.employees.push(newEmployee);
+                this.saveData();
+                this.renderEmployeesTable();
+                this.populateEmployeeSelects();
+                this.elements.addEmployeeForm.reset();
+                this.showToast(`✅ Empleado "${name}" agregado.`, "success");
+                console.log("Employee added:", newEmployee);
+            },
+
+            deleteEmployee(employeeId) {
+                this.showConfirmationModal(
+                    "🗑️ Confirmar Eliminación",
+                    `¿Estás seguro de que quieres eliminar a este empleado? Esto también eliminará todos sus registros de asistencia.`,
+                    () => {
+                        this.state.employees = this.state.employees.filter(emp => emp.id !== employeeId);
+                        // Optionally, also delete related attendance records
+                        this.state.records = this.state.records.filter(rec => rec.employeeId !== employeeId);
+                        this.saveData();
+                        this.renderEmployeesTable();
+                        this.populateEmployeeSelects();
+                        this.renderAttendanceRecordsTable(); // Records might have changed
+                        this.showToast("Empleado eliminado.", "success");
+                        console.log("Employee deleted:", employeeId);
+                    }
+                );
+            },
+
+            renderEmployeesTable() {
+                const tbody = this.elements.employeesTableBody;
+                tbody.innerHTML = ''; // Clear existing rows
+                if (this.state.employees.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No hay empleados registrados.</td></tr>';
+                    return;
+                }
+                this.state.employees.forEach(emp => {
+                    const row = tbody.insertRow();
+                    row.innerHTML = `
+                        <td>${emp.id}</td>
+                        <td>${emp.name}</td>
+                        <td>${emp.position}</td>
+                        <td>S/. ${emp.rate.toFixed(2)}</td>
+                        <td><button class="danger small-btn" data-id="${emp.id}">🗑️ Eliminar</button></td>
+                    `;
+                    row.querySelector('.danger').addEventListener('click', () => this.deleteEmployee(emp.id));
+                });
+            },
+
+            populateEmployeeSelects() {
+                const selects = [
+                    this.elements.qrEmployeeSelect,
+                    this.elements.filterEmployeeRecordsSelect,
+                    this.elements.payrollEmployeeSelect
+                ];
+
+                selects.forEach(select => {
+                    const currentValue = select.value; // Preserve selection if possible
+                    // For filter select, keep the "All" option
+                    const firstOptionHTML = select.id === 'filter-employee-records' ? '<option value="all">Todos los Empleados</option>' : '<option value="">-- Selecciona Empleado --</option>';
+                    select.innerHTML = firstOptionHTML;
+
+                    this.state.employees.forEach(emp => {
+                        const option = document.createElement('option');
+                        option.value = emp.id;
+                        option.textContent = emp.name;
+                        select.appendChild(option);
+                    });
+                    if (currentValue && select.querySelector(`option[value="${currentValue}"]`)) {
+                        select.value = currentValue;
+                    } else if (select.options.length > (select.id === 'filter-employee-records' ? 1:0) ) {
+                        // If previous selection is gone, select first actual employee if exists
+                         select.value = select.options[ (select.id === 'filter-employee-records' ? 1:0) ].value;
+                    }
+                });
+            },
+
+            // --- Attendance Registration & Records ---
+            registerAttendance() {
+                const employeeId = this.elements.qrEmployeeSelect.value;
+                if (!employeeId) {
+                    this.showToast("Error interno: ID de empleado no seleccionado.", "error");
+                    return;
+                }
+                const employee = this.state.employees.find(emp => emp.id === employeeId);
+                if (!employee) {
+                    this.showToast("Error: Empleado no encontrado.", "error");
+                    return;
+                }
+
+                const now = new Date();
+                const todayDate = now.toISOString().split('T')[0]; // YYYY-MM-DD
+
+                const employeeRecordsToday = this.state.records.filter(
+                    r => r.employeeId === employeeId && r.date === todayDate
+                ).sort((a,b) => new Date(a.datetime) - new Date(b.datetime));
+
+                const lastRecordType = employeeRecordsToday.length > 0 ? employeeRecordsToday[employeeRecordsToday.length - 1].type : null;
+                const newRecordType = (lastRecordType === "entrada") ? "salida" : "entrada";
+
+                const newRecord = {
+                    id: `rec_${Date.now()}`,
+                    employeeId: employee.id,
+                    employeeName: employee.name,
+                    date: todayDate,
+                    time: now.toTimeString().split(' ')[0], // HH:MM:SS
+                    datetime: now.toISOString(),
+                    type: newRecordType
+                };
+
+                this.state.records.push(newRecord);
+                this.saveData();
+                this.renderAttendanceRecordsTable();
+                this.showToast(`✅ ${employee.name} registró ${newRecordType} a las ${newRecord.time}.`, "success");
+                console.log("Attendance recorded:", newRecord);
+                this.updateQuickActivity(newRecord);
+            },
+
+            deleteAttendanceRecord(recordId) {
+                 this.showConfirmationModal(
+                    "🗑️ Confirmar Eliminación",
+                    `¿Estás seguro de que quieres eliminar este registro de asistencia?`,
+                    () => {
+                        this.state.records = this.state.records.filter(rec => rec.id !== recordId);
+                        this.saveData();
+                        this.renderAttendanceRecordsTable();
+                        this.showToast("Registro de asistencia eliminado.", "success");
+                        console.log("Attendance record deleted:", recordId);
+                    }
+                );
+            },
+
+            renderAttendanceRecordsTable() {
+                const tbody = this.elements.attendanceRecordsTableBody;
+                tbody.innerHTML = '';
+                const filterEmployeeId = this.elements.filterEmployeeRecordsSelect.value;
+
+                let filteredRecords = this.state.records;
+                if (filterEmployeeId !== "all") {
+                    filteredRecords = filteredRecords.filter(rec => rec.employeeId === filterEmployeeId);
+                }
+
+                // Sort by datetime descending (most recent first)
+                filteredRecords.sort((a,b) => new Date(b.datetime) - new Date(a.datetime));
+
+                if (filteredRecords.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No hay registros de asistencia.</td></tr>';
+                    return;
+                }
+
+                filteredRecords.forEach(rec => {
+                    const row = tbody.insertRow();
+                    row.innerHTML = `
+                        <td>${rec.id}</td>
+                        <td>${rec.employeeName}</td>
+                        <td>${rec.date}</td>
+                        <td>${rec.time}</td>
+                        <td>${rec.type === 'entrada' ? '➡️ Entrada' : '⬅️ Salida'}</td>
+                        <td><button class="danger small-btn" data-id="${rec.id}">🗑️ Eliminar</button></td>
+                    `;
+                    row.querySelector('.danger').addEventListener('click', () => this.deleteAttendanceRecord(rec.id));
+                });
+            },
+
+            // --- Payroll Calculation ---
+            calculatePayroll() {
+                const employeeId = this.elements.payrollEmployeeSelect.value;
+                const period = this.elements.payrollPeriodSelect.value;
+
+                if (!employeeId) {
+                    this.showToast("Por favor, selecciona un empleado.", "error");
+                    return;
+                }
+
+                const employee = this.state.employees.find(emp => emp.id === employeeId);
+                if (!employee) {
+                    this.showToast("Empleado no encontrado.", "error");
+                    return;
+                }
+
+                const { startDate, endDate, periodLabel } = this.getPeriodDates(period);
+                console.log(`Calculating payroll for ${employee.name} from ${startDate.toISOString()} to ${endDate.toISOString()}`);
+
+                const employeeRecordsInPeriod = this.state.records.filter(r =>
+                    r.employeeId === employeeId &&
+                    new Date(r.datetime) >= startDate &&
+                    new Date(r.datetime) < endDate // endDate is exclusive for the next day's start
+                ).sort((a, b) => new Date(a.datetime) - new Date(b.datetime));
+
+                let totalHoursWorked = 0;
+                let lastEntryTime = null;
+
+                for (const record of employeeRecordsInPeriod) {
+                    if (record.type === "entrada") {
+                        lastEntryTime = new Date(record.datetime);
+                    } else if (record.type === "salida" && lastEntryTime) {
+                        const exitTime = new Date(record.datetime);
+                        const durationMs = exitTime - lastEntryTime;
+                        totalHoursWorked += durationMs / (1000 * 60 * 60);
+                        lastEntryTime = null; // Reset for next pair
+                    }
+                }
+                 // If there's an unmatched entry at the end of the period, we might ignore it or handle as per business rule.
+                 // For now, only paired entries/exits are counted.
+
+                const grossSalary = totalHoursWorked * employee.rate;
+                const bonus = grossSalary * this.BONUS_RATE;
+                const deductions = grossSalary * this.DEDUCTION_RATE;
+                const netSalary = grossSalary + bonus - deductions;
+
+                this.elements.payrollEmployeeName.textContent = employee.name;
+                this.elements.payrollPeriodDisplay.textContent = periodLabel;
+                this.elements.payrollTotalHours.textContent = totalHoursWorked.toFixed(2);
+                this.elements.payrollGrossSalary.textContent = grossSalary.toFixed(2);
+                this.elements.payrollBonus.textContent = bonus.toFixed(2);
+                this.elements.payrollDeductions.textContent = deductions.toFixed(2);
+                this.elements.payrollNetSalary.textContent = netSalary.toFixed(2);
+
+                this.elements.payrollResultsContainer.style.display = 'block';
+                this.showToast(`Planilla calculada para ${employee.name}.`, "info");
+                console.log("Payroll results:", { totalHoursWorked, grossSalary, bonus, deductions, netSalary });
+            },
+
+            getPeriodDates(periodType) {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0); // Start of today
+                let startDate, endDate, periodLabel;
+
+                switch (periodType) {
+                    case 'current_week':
+                        startDate = new Date(today);
+                        startDate.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1)); // Monday
+                        endDate = new Date(startDate);
+                        endDate.setDate(startDate.getDate() + 7);
+                        periodLabel = `Semana Actual (${this.formatDate(startDate)} - ${this.formatDate(new Date(endDate.getTime() - 1))})`;
+                        break;
+                    case 'last_week':
+                        startDate = new Date(today);
+                        startDate.setDate(today.getDate() - today.getDay() - 6); // Last week's Monday
+                        endDate = new Date(startDate);
+                        endDate.setDate(startDate.getDate() + 7);
+                        periodLabel = `Semana Pasada (${this.formatDate(startDate)} - ${this.formatDate(new Date(endDate.getTime() - 1))})`;
+                        break;
+                    case 'current_month':
+                        startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+                        endDate = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+                        periodLabel = `Mes Actual (${startDate.toLocaleString('default', { month: 'long', year: 'numeric' })})`;
+                        break;
+                    case 'last_month':
+                        startDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                        endDate = new Date(today.getFullYear(), today.getMonth(), 1);
+                        periodLabel = `Mes Pasado (${startDate.toLocaleString('default', { month: 'long', year: 'numeric' })})`;
+                        break;
+                    default: // Should not happen
+                        startDate = new Date(today);
+                        endDate = new Date(today);
+                        endDate.setDate(today.getDate() + 1);
+                        periodLabel = "Desconocido";
+                }
+                return { startDate, endDate, periodLabel };
+            },
+
+            formatDate(date) {
+                return date.toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            },
+
+            // --- Config & Tools ---
+            loadTestData() {
+                this.showConfirmationModal(
+                    "🧪 Cargar Datos de Prueba",
+                    "Esto agregará empleados y registros de asistencia ficticios. Los datos existentes no se borrarán. ¿Continuar?",
+                    () => {
+                        const testEmployees = [
+                            { id: "emp_test_1", name: "Ana López", position: "Desarrolladora Frontend", rate: 30.50 },
+                            { id: "emp_test_2", name: "Carlos Pérez", position: "Diseñador UX", rate: 28.00 },
+                            { id: "emp_test_3", name: "Laura Gómez", position: "Project Manager", rate: 35.75 }
+                        ];
+                        const testRecords = [];
+                        const today = new Date();
+                        const yesterday = new Date(today);
+                        yesterday.setDate(today.getDate() -1);
+
+                        testEmployees.forEach((emp, index) => {
+                            // Add employee if not exists by name
+                            if (!this.state.employees.find(e => e.name === emp.name)) {
+                                this.state.employees.push({...emp, id: `emp_test_${Date.now()}_${index}`}); // Ensure unique ID
+                            }
+                            const currentEmp = this.state.employees.find(e => e.name === emp.name);
+
+                            // Yesterday's records
+                            let entryTimeY = new Date(yesterday);
+                            entryTimeY.setHours(9 + index, 0, 0, 0); // 09:00, 10:00, 11:00
+                            testRecords.push({
+                                id: `rec_test_${Date.now()}_${index}_1`, employeeId: currentEmp.id, employeeName: currentEmp.name,
+                                date: entryTimeY.toISOString().split('T')[0], time: entryTimeY.toTimeString().split(' ')[0],
+                                datetime: entryTimeY.toISOString(), type: "entrada"
+                            });
+                            let exitTimeY = new Date(yesterday);
+                            exitTimeY.setHours(17 + index, 30, 0, 0); // 17:30, 18:30, 19:30
+                            testRecords.push({
+                                id: `rec_test_${Date.now()}_${index}_2`, employeeId: currentEmp.id, employeeName: currentEmp.name,
+                                date: exitTimeY.toISOString().split('T')[0], time: exitTimeY.toTimeString().split(' ')[0],
+                                datetime: exitTimeY.toISOString(), type: "salida"
+                            });
+
+                            // Today's entry for first employee
+                            if (index === 0) {
+                                let entryTimeT = new Date(today);
+                                entryTimeT.setHours(9, 15, 0, 0);
+                                testRecords.push({
+                                    id: `rec_test_${Date.now()}_${index}_3`, employeeId: currentEmp.id, employeeName: currentEmp.name,
+                                    date: entryTimeT.toISOString().split('T')[0], time: entryTimeT.toTimeString().split(' ')[0],
+                                    datetime: entryTimeT.toISOString(), type: "entrada"
+                                });
+                            }
+                        });
+
+                        this.state.records.push(...testRecords);
+                        this.saveData();
+                        this.renderEmployeesTable();
+                        this.renderAttendanceRecordsTable();
+                        this.populateEmployeeSelects();
+                        this.showToast("🧪 Datos de prueba cargados.", "success");
+                        console.log("Test data loaded.");
+                    }
+                );
+            },
+
+            copyQrTextToClipboard() {
+                navigator.clipboard.writeText(this.REQUIRED_QR_CODE_TEXT)
+                    .then(() => {
+                        this.showToast("📋 Texto del QR copiado al portapapeles.", "success");
+                    })
+                    .catch(err => {
+                        this.showToast("Error al copiar texto. Intenta manualmente.", "error");
+                        console.error("Error copying QR text:", err);
+                    });
+            },
+
+            exportData() {
+                const dataToExport = {
+                    employees: this.state.employees,
+                    records: this.state.records,
+                    exportedAt: new Date().toISOString()
+                };
+                const jsonString = JSON.stringify(dataToExport, null, 2);
+                const blob = new Blob([jsonString], { type: "application/json" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `asistencia_backup_${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                this.showToast("💾 Datos exportados como JSON.", "success");
+                console.log("Data exported.");
+            },
+
+            clearAllData() {
+                // Confirmation is handled by the caller using showConfirmationModal
+                this.state.employees = [];
+                this.state.records = [];
+                this.saveData();//borra localStorage
+                this.renderEmployeesTable();
+                this.renderAttendanceRecordsTable();
+                this.populateEmployeeSelects();
+                // Don't show toast here, caller will do it.
+                console.log("All data cleared.");
+            },
+
+            // --- UI Utilities ---
+            showToast(message, type = "info", duration = 3000) {
+                const toast = this.elements.toastContainer;
+                toast.textContent = message;
+                toast.className = 'toast'; // Reset classes
+                toast.classList.add(type); // Add specific type (success, error, info)
+                toast.classList.add('show');
+
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, duration);
+                console.log(`Toast: [${type}] ${message}`);
+            },
+
+            // --- Dashboard ---
+            updateDashboard() {
+                this.elements.statTotalEmployees.textContent = this.state.employees.length;
+
+                const todayStr = new Date().toISOString().split('T')[0];
+                const recordsToday = this.state.records.filter(r => r.date === todayStr);
+                this.elements.statRecordsToday.textContent = recordsToday.length;
+
+                const presentEmployeeIds = new Set();
+                recordsToday.forEach(r => {
+                    const employeeLastRecordToday = this.state.records
+                        .filter(rec => rec.employeeId === r.employeeId && rec.date === todayStr)
+                        .sort((a,b) => new Date(b.datetime) - new Date(a.datetime))[0];
+                    if (employeeLastRecordToday && employeeLastRecordToday.type === 'entrada') {
+                        presentEmployeeIds.add(r.employeeId);
+                    }
+                });
+                this.elements.statEmployeesPresent.textContent = presentEmployeeIds.size;
+
+                // Quick activity (last 5 records)
+                this.elements.quickActivitySummary.innerHTML = '';
+                const recentRecords = [...this.state.records]
+                                        .sort((a,b) => new Date(b.datetime) - new Date(a.datetime))
+                                        .slice(0, 5);
+                if(recentRecords.length === 0){
+                    const li = document.createElement('li');
+                    li.textContent = "No hay actividad reciente.";
+                    this.elements.quickActivitySummary.appendChild(li);
+                } else {
+                    recentRecords.forEach(rec => {
+                        const li = document.createElement('li');
+                        const typeEmoji = rec.type === 'entrada' ? '➡️' : '⬅️';
+                        li.textContent = `${typeEmoji} ${rec.employeeName} - ${rec.type} (${rec.time} ${rec.date})`;
+                        this.elements.quickActivitySummary.appendChild(li);
+                    });
+                }
+                console.log("Dashboard updated.");
+            },
+
+            updateQuickActivity(newRecord) {
+                // This is called immediately after a record is added.
+                // The full updateDashboard will also run, but this gives a faster visual update to the list.
+                const ul = this.elements.quickActivitySummary;
+                const li = document.createElement('li');
+                const typeEmoji = newRecord.type === 'entrada' ? '➡️' : '⬅️';
+                li.textContent = `${typeEmoji} ${newRecord.employeeName} - ${newRecord.type} (${newRecord.time} ${newRecord.date})`;
+                if (ul.firstChild && ul.firstChild.textContent === "No hay actividad reciente."){
+                    ul.innerHTML = ''; // Clear "no activity" message
+                }
+                ul.insertBefore(li, ul.firstChild); // Add to top
+                if (ul.children.length > 5) {
+                    ul.removeChild(ul.lastChild); // Keep list to 5 items
+                }
+            }
+        };
+
+        // Initialize the application once the DOM is fully loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            App.init();
+        });
+
+    </script>
+</body>
+</html>

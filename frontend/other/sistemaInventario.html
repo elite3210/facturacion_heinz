@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Inventario - Calzados Mirla SAC</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .sidebar {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .nav-link {
+            color: rgba(255,255,255,0.8);
+            border-radius: 8px;
+            margin: 2px 0;
+        }
+        .nav-link:hover, .nav-link.active {
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .table th {
+            background: #f8f9fa;
+            border: none;
+        }
+        .badge-success { background: #28a745; }
+        .badge-warning { background: #ffc107; color: #000; }
+        .badge-danger { background: #dc3545; }
+        .badge-info { background: #17a2b8; }
+        .content-area {
+            background: #f8f9fa;
+            min-height: 100vh;
+        }
+        .stats-card {
+            border-left: 4px solid;
+        }
+        .stats-card.primary { border-left-color: #007bff; }
+        .stats-card.success { border-left-color: #28a745; }
+        .stats-card.warning { border-left-color: #ffc107; }
+        .stats-card.danger { border-left-color: #dc3545; }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse">
+                <div class="position-sticky pt-3">
+                    <div class="text-center mb-4">
+                        <h5 class="text-white">Calzados Mirla SAC</h5>
+                        <small class="text-light">Sistema de Inventarios</small>
+                    </div>
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="#" onclick="showSection('dashboard')">
+                                <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" onclick="showSection('movements')">
+                                <i class="fas fa-exchange-alt me-2"></i>Movimientos
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" onclick="showSection('warehouses')">
+                                <i class="fas fa-warehouse me-2"></i>Almacenes
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" onclick="showSection('transfers')">
+                                <i class="fas fa-truck me-2"></i>Transferencias
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" onclick="showSection('reports')">
+                                <i class="fas fa-chart-bar me-2"></i>Reportes
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <!-- Main content -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 content-area">
+                <!-- Dashboard Section -->
+                <div id="dashboard" class="section">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2">Dashboard</h1>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card stats-card primary">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Stock Total</div>
+                                            <div class="h5 mb-0 font-weight-bold" id="totalStock">0</div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-boxes fa-2x text-primary"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card stats-card success">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Valor Total (S/)</div>
+                                            <div class="h5 mb-0 font-weight-bold" id="totalValue">0.00</div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-dollar-sign fa-2x text-success"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card stats-card warning">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Almacenes Activos</div>
+                                            <div class="h5 mb-0 font-weight-bold" id="activeWarehouses">0</div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-warehouse fa-2x text-warning"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card stats-card danger">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Productos Perdidos</div>
+                                            <div class="h5 mb-0 font-weight-bold" id="lostProducts">0</div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-exclamation-triangle fa-2x text-danger"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Stock por Almacén</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Almacén</th>
+                                            <th>Encargado</th>
+                                            <th>Cantidad (pares)</th>
+                                            <th>Valor Total (S/)</th>
+                                            <th>Precio Promedio (S/)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="stockTable">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Movements Section -->
+                <div id="movements" class="section" style="display: none;">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2">Movimientos de Inventario</h1>
+                        <div class="btn-toolbar mb-2 mb-md-0">
+                            <div class="btn-group me-2">
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="showMovementModal('production')">
+                                    <i class="fas fa-plus me-1"></i>Producción
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="showMovementModal('sale')">
+                                    <i class="fas fa-shopping-cart me-1"></i>Venta
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="showMovementModal('return')">
+                                    <i class="fas fa-undo me-1"></i>Devolución
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="showMovementModal('loss')">
+                                    <i class="fas fa-exclamation-triangle me-1"></i>Pérdida
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Fecha</th>
+                                            <th>Tipo</th>
+                                            <th>Almacén Origen</th>
+                                            <th>Almacén Destino</th>
+                                            <th>Cantidad</th>
+                                            <th>Valor (S/)</th>
+                                            <th>Estado</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="movementsTable">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Warehouses Section -->
+                <div id="warehouses" class="section" style="display: none;">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2">Gestión de Almacenes</h1>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="card-title mb-0">Almacenes Registrados</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>Código</th>
+                                                    <th>Nombre</th>
+                                                    <th>Tipo</th>
+                                                    <th>Encargado</th>
+                                                    <th>Stock Actual</th>
+                                                    <th>Valor (S/)</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="warehousesTable">
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Transfers Section -->
+                <div id="transfers" class="section" style="display: none;">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2">Transferencias entre Almacenes</h1>
+                        <div class="btn-toolbar mb-2 mb-md-0">
+                            <button type="button" class="btn btn-primary" onclick="showTransferModal()">
+                                <i class="fas fa-plus me-1"></i>Nueva Transferencia
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Fecha</th>
+                                            <th>Origen</th>
+                                            <th>Destino</th>
+                                            <th>Cantidad</th>
+                                            <th>Valor (S/)</th>
+                                            <th>Estado</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="transfersTable">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reports Section -->
+                <div id="reports" class="section" style="display: none;">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2">Reportes</h1>
+                        <div class="btn-toolbar mb-2 mb-md-0">
+                            <div class="btn-group me-2">
+                                <button type="button" class="btn btn-outline-secondary" onclick="generateReport('warehouse')">
+                                    <i class="fas fa-file-alt me-1"></i>Por Almacén
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" onclick="generateReport('general')">
+                                    <i class="fas fa-chart-line me-1"></i>General
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <select class="form-select" id="reportWarehouse">
+                                <option value="">Todos los almacenes</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <input type="date" class="form-control" id="reportDateFrom">
+                        </div>
+                        <div class="col-md-3">
+                            <input type="date" class="form-control" id="reportDateTo">
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-primary w-100" onclick="filterReport()">Filtrar</button>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-body">
+                            <div id="reportContent">
+                                <p class="text-muted">Seleccione un tipo de reporte para comenzar</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Movement Modal -->
+    <div class="modal fade" id="movementModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Registrar Movimiento</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="movementForm">
+                        <input type="hidden" id="movementType">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Almacén Origen</label>
+                                <select class="form-select" id="originWarehouse" required>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Almacén Destino</label>
+                                <select class="form-select" id="destinationWarehouse" required>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Cantidad (pares)</label>
+                                <input type="number" class="form-control" id="quantity" min="1" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Valor Total (S/)</label>
+                                <input type="number" class="form-control" id="totalValue" step="0.01" min="0" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Observaciones</label>
+                            <textarea class="form-control" id="observations" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="saveMovement()">Guardar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transfer Modal -->
+    <div class="modal fade" id="transferModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Nueva Transferencia</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="transferForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Almacén Origen</label>
+                                <select class="form-select" id="transferOrigin" required>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Almacén Destino</label>
+                                <select class="form-select" id="transferDestination" required>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Cantidad (pares)</label>
+                            <input type="number" class="form-control" id="transferQuantity" min="1" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Observaciones</label>
+                            <textarea class="form-control" id="transferObservations" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="saveTransfer()">Crear Transferencia</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Clase principal del sistema de inventarios
+        class InventorySystem {
+            constructor() {
+                this.initializeData();
+                this.loadData();
+                this.updateDashboard();
+                this.updateAllTables();
+            }
+
+            initializeData() {
+                // Inicializar datos por defecto si no existen
+                if (!this.getData('warehouses')) {
+                    const defaultWarehouses = [
+                        {
+                            code: 'ALM-CENTRAL',
+                            name: 'Almacén Central',
+                            type: 'produccion',
+                            manager: 'Juan Pérez',
+                            stock: 0,
+                            value: 0,
+                            averagePrice: 0
+                        },
+                        {
+                            code: 'TDA-LIMA',
+                            name: 'Tienda Lima',
+                            type: 'tienda',
+                            manager: 'María González',
+                            stock: 0,
+                            value: 0,
+                            averagePrice: 0
+                        },
+                        {
+                            code: 'TDA-AREQUIPA',
+                            name: 'Tienda Arequipa',
+                            type: 'tienda',
+                            manager: 'Carlos Mendoza',
+                            stock: 0,
+                            value: 0,
+                            averagePrice: 0
+                        },
+                        {
+                            code: 'TDA-TRUJILLO',
+                            name: 'Tienda Trujillo',
+                            type: 'tienda',
+                            manager: 'Ana Rodríguez',
+                            stock: 0,
+                            value: 0,
+                            averagePrice: 0
+                        },
+                        {
+                            code: 'ALM-PERDIDOS',
+                            name: 'Productos Perdidos',
+                            type: 'virtual',
+                            manager: 'Sistema',
+                            stock: 0,
+                            value: 0,
+                            averagePrice: 0
+                        },
+                        {
+                            code: 'ALM-VENTAS',
+                            name: 'Ventas Realizadas',
+                            type: 'virtual',
+                            manager: 'Sistema',
+                            stock: 0,
+                            value: 0,
+                            averagePrice: 0
+                        }
+                    ];
+                    this.saveData('warehouses', defaultWarehouses);
+                }
+
+                if (!this.getData('movements')) {
+                    this.saveData('movements', []);
+                }
+
+                if (!this.getData('transfers')) {
+                    this.saveData('transfers', []);
+                }
+            }
+
+            saveData(key, data) {
+                try {
+                    // En lugar de localStorage, usaremos variables globales
+                    if (!window.appData) window.appData = {};
+                    window.appData[key] = JSON.stringify(data);
+                } catch (error) {
+                    console.error('Error al guardar datos:', error);
+                }
+            }
+
+            getData(key) {
+                try {
+                    if (!window.appData) window.appData = {};
+                    const data = window.appData[key];
+                    return data ? JSON.parse(data) : null;
+                } catch (error) {
+                    console.error('Error al cargar datos:', error);
+                    return null;
+                }
+            }
+
+            loadData() {
+                this.warehouses = this.getData('warehouses') || [];
+                this.movements = this.getData('movements') || [];
+                this.transfers = this.getData('transfers') || [];
+            }
+
+            generateId() {
+                return Date.now().toString(36) + Math.random().toString(36).substr(2);
+            }
+
+            getCurrentDateTime() {
+                return new Date().toISOString();
+            }
+
+            // Método para registrar movimientos con partida doble
+            registerMovement(type, originCode, destinationCode, quantity, value, observations = '') {
+                const movement = {
+                    id: this.generateId(),
+                    date: this.getCurrentDateTime(),
+                    type: type,
+                    origin: originCode,
+                    destination: destinationCode,
+                    quantity: quantity,
+                    value: value,
+                    averagePrice: value / quantity,
+                    observations: observations,
+                    status: 'completado'
+                };
+
+                // Aplicar partida doble
+                this.applyDoubleEntry(movement);
+                
+                this.movements.push(movement);
+                this.saveData('movements', this.movements);
+                this.updateDashboard();
+                this.updateAllTables();
+                
+                return movement;
+            }
+
+            applyDoubleEntry(movement) {
+                const { origin, destination, quantity, value } = movement;
+                
+                // Actualizar almacén origen (salida)
+                if (origin && origin !== 'SISTEMA') {
+                    const originWarehouse = this.warehouses.find(w => w.code === origin);
+                    if (originWarehouse) {
+                        originWarehouse.stock -= quantity;
+                        originWarehouse.value -= value;
+                        if (originWarehouse.stock > 0) {
+                            originWarehouse.averagePrice = originWarehouse.value / originWarehouse.stock;
+                        } else {
+                            originWarehouse.averagePrice = 0;
+                            originWarehouse.value = 0;
+                        }
+                    }
+                }
+
+                // Actualizar almacén destino (entrada)
+                if (destination && destination !== 'SISTEMA') {
+                    const destinationWarehouse = this.warehouses.find(w => w.code === destination);
+                    if (destinationWarehouse) {
+                        const newTotalValue = destinationWarehouse.value + value;
+                        const newTotalStock = destinationWarehouse.stock + quantity;
+                        
+                        destinationWarehouse.stock = newTotalStock;
+                        destinationWarehouse.value = newTotalValue;
+                        destinationWarehouse.averagePrice = newTotalValue / newTotalStock;
+                    }
+                }
+
+                this.saveData('warehouses', this.warehouses);
+            }
+
+            createTransfer(originCode, destinationCode, quantity, observations = '') {
+                const originWarehouse = this.warehouses.find(w => w.code === originCode);
+                
+                if (!originWarehouse || originWarehouse.stock < quantity) {
+                    throw new Error('Stock insuficiente en el almacén origen');
+                }
+
+                const transferValue = originWarehouse.averagePrice * quantity;
+                
+                const transfer = {
+                    id: this.generateId(),
+                    date: this.getCurrentDateTime(),
+                    origin: originCode,
+                    destination: destinationCode,
+                    quantity: quantity,
+                    value: transferValue,
+                    observations: observations,
+                    status: 'pendiente'
+                };
+
+                this.transfers.push(transfer);
+                this.saveData('transfers', this.transfers);
+                this.updateAllTables();
+
+                return transfer;
+            }
+
+            confirmTransfer(transferId) {
+                const transfer = this.transfers.find(t => t.id === transferId);
+                if (!transfer) throw new Error('Transferencia no encontrada');
+
+                // Crear movimiento de transferencia
+                this.registerMovement(
+                    'transferencia',
+                    transfer.origin,
+                    transfer.destination,
+                    transfer.quantity,
+                    transfer.value,
+                    `Transferencia confirmada: ${transfer.observations}`
+                );
+
+                transfer.status = 'completado';
+                this.saveData('transfers', this.transfers);
+                this.updateAllTables();
+            }
+
+            updateDashboard() {
+                const totalStock = this.warehouses
+                    .filter(w => w.type !== 'virtual' || w.code === 'ALM-PERDIDOS')
+                    .reduce((sum, w) => sum + w.stock, 0);
+                
+                const totalValue = this.warehouses
+                    .filter(w => w.type !== 'virtual' || w.code === 'ALM-PERDIDOS')
+                    .reduce((sum, w) => sum + w.value, 0);
+
+                const activeWarehouses = this.warehouses.filter(w => w.type !== 'virtual').length;
+                const lostProducts = this.warehouses.find(w => w.code === 'ALM-PERDIDOS')?.stock || 0;
+
+                document.getElementById('totalStock').textContent = totalStock.toLocaleString();
+                document.getElementById('totalValue').textContent = totalValue.toFixed(2);
+                document.getElementById('activeWarehouses').textContent = activeWarehouses;
+                document.getElementById('lostProducts').textContent = lostProducts;
+
+                this.updateStockTable();
+            }
+
+            updateStockTable() {
+                const stockTable = document.getElementById('stockTable');
+                stockTable.innerHTML = '';
+
+                this.warehouses.forEach(warehouse => {
+                    const row = stockTable.insertRow();
+                    row.innerHTML = `
+                        <td>${warehouse.name}</td>
+                        <td>${warehouse.manager}</td>
+                        <td>${warehouse.stock.toLocaleString()}</td>
+                        <td>S/ ${warehouse.value.toFixed(2)}</td>
+                        <td>S/ ${warehouse.averagePrice.toFixed(2)}</td>
+                    `;
+                });
+            }
+
+            updateMovementsTable() {
+                const movementsTable = document.getElementById('movementsTable');
+                movementsTable.innerHTML = '';
+
+                this.movements.slice(-20).reverse().forEach(movement => {
+                    const row = movementsTable.insertRow();
+                    const originName = this.warehouses.find(w => w.code === movement.origin)?.name || movement.origin;
+                    const destinationName = this.warehouses.find(w => w.code === movement.destination)?.name || movement.destination;
+                    
+                    row.innerHTML = `
+                        <td>${new Date(movement.date).toLocaleDateString()}</td>
+                        <td><span class="badge bg-primary">${movement.type}</span></td>
+                        <td>${originName}</td>
+                        <td>${destinationName}</td>
+                        <td>${movement.quantity.toLocaleString()}</td>
+                        <td>S/ ${movement.value.toFixed(2)}</td>
+                        <td><span class="badge bg-success">${movement.status}</span></td>
+                    `;
+                });
+            }
+                        <td><span class="badge badge-success">${movement.status}</span></td>

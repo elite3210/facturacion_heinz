@@ -1,0 +1,2475 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calzados Mirla SAC - Sistema de Inventario</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #0d6efd;
+            --sidebar-bg: #1e293b;
+            --content-bg: #f1f5f9;
+            --primary-gradient: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+            --sidebar-width: 280px;
+            --sidebar-collapsed: 80px;
+            --navbar-height: 60px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--content-bg);
+            overflow-x: hidden;
+        }
+
+        /* Login Styles */
+        .login-container {
+            min-height: 100vh;
+            background: var(--primary-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 40px;
+            width: 100%;
+            max-width: 450px;
+            position: relative;
+        }
+
+        .login-logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .login-logo i {
+            font-size: 4rem;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+        }
+
+        .login-logo h2 {
+            color: var(--sidebar-bg);
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .login-logo p {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+
+        .form-floating {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .form-floating > .form-control {
+            height: calc(3.5rem + 2px);
+            padding: 1rem 3rem 1rem 1rem;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .form-floating > .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+        }
+
+        .form-floating > label {
+            padding: 1rem 1rem;
+        }
+
+        .input-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+            z-index: 4;
+        }
+
+        .btn-login {
+            width: 100%;
+            height: 50px;
+            background: var(--primary-gradient);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(13, 110, 253, 0.3);
+        }
+
+        .login-footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #6c757d;
+            font-size: 0.85rem;
+        }
+
+        /* Sidebar Desktop */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background-color: var(--sidebar-bg);
+            z-index: 1000;
+            transition: all 0.3s ease;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .sidebar.collapsed {
+            width: var(--sidebar-collapsed);
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            position: relative;
+        }
+
+        .sidebar-toggle {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-toggle:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            color: white;
+            text-decoration: none;
+        }
+
+        .sidebar-logo i {
+            font-size: 2rem;
+            margin-right: 15px;
+            color: var(--primary-color);
+        }
+
+        .sidebar-logo-text {
+            opacity: 1;
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar.collapsed .sidebar-logo-text {
+            opacity: 0;
+        }
+
+        .sidebar-nav {
+            padding: 20px 0;
+        }
+
+        .nav-item {
+            margin-bottom: 5px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+            position: relative;
+        }
+
+        .nav-link:hover {
+            background-color: rgba(255,255,255,0.1);
+            color: white;
+        }
+
+        .nav-link.active {
+            background-color: rgba(13, 110, 253, 0.2);
+            color: white;
+            border-left-color: var(--primary-color);
+        }
+
+        .nav-link i {
+            width: 20px;
+            text-align: center;
+            margin-right: 15px;
+            font-size: 1.1rem;
+        }
+
+        .nav-text {
+            opacity: 1;
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar.collapsed .nav-text {
+            opacity: 0;
+        }
+
+        .sidebar-user {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 20px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            background-color: rgba(0,0,0,0.2);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            color: white;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .user-details {
+            opacity: 1;
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar.collapsed .user-details {
+            opacity: 0;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 2px;
+        }
+
+        .user-role {
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.6);
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            transition: margin-left 0.3s ease;
+            min-height: 100vh;
+            padding: 30px;
+        }
+
+        .main-content.expanded {
+            margin-left: var(--sidebar-collapsed);
+        }
+
+        /* Mobile Navigation */
+        .mobile-navbar {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: var(--navbar-height);
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 1001;
+            align-items: center;
+            padding: 0 15px;
+        }
+
+        .mobile-menu-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--sidebar-bg);
+        }
+
+        .mobile-logo {
+            flex: 1;
+            text-align: center;
+            font-weight: bold;
+            color: var(--sidebar-bg);
+        }
+
+        .mobile-user-btn {
+            background: none;
+            border: none;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: var(--primary-gradient);
+            color: white;
+            font-weight: bold;
+        }
+
+        .mobile-sidebar {
+            position: fixed;
+            top: 0;
+            width: 280px;
+            height: 100vh;
+            background: var(--sidebar-bg);
+            z-index: 1002;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+            overflow-y: auto;
+        }
+
+        .mobile-sidebar.show {
+            transform: translateX(0);
+        }
+
+        .mobile-sidebar-right {
+            right: 0;
+            transform: translateX(100%);
+        }
+
+        .mobile-sidebar-right.show {
+            transform: translateX(0);
+        }
+
+        .mobile-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1001;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .mobile-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Dashboard Cards */
+        .stats-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            border: none;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .stats-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+        }
+
+        .stats-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--primary-gradient);
+        }
+
+        .stats-card-icon {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 3rem;
+            opacity: 0.1;
+        }
+
+        .stats-card h3 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+            color: var(--sidebar-bg);
+        }
+
+        .stats-card p {
+            color: #6c757d;
+            font-weight: 500;
+            margin-bottom: 0;
+        }
+
+        /* Tables */
+        .custom-table {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+
+        .custom-table .table {
+            margin-bottom: 0;
+        }
+
+        .custom-table .table th {
+            background-color: #f8f9fa;
+            border-bottom: 2px solid var(--primary-color);
+            font-weight: 600;
+            color: var(--sidebar-bg);
+            padding: 15px;
+        }
+
+        .custom-table .table td {
+            padding: 15px;
+            vertical-align: middle;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .custom-table .table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        /* Buttons */
+        .btn-primary {
+            background: var(--primary-gradient);
+            border: none;
+            border-radius: 10px;
+            padding: 10px 20px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(13, 110, 253, 0.3);
+        }
+
+        /* Modals */
+        .modal-content {
+            border-radius: 15px;
+            border: none;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+
+        .modal-header {
+            background: var(--primary-gradient);
+            color: white;
+            border-radius: 15px 15px 0 0;
+            padding: 20px 25px;
+        }
+
+        .modal-header .btn-close {
+            filter: invert(1);
+        }
+
+        .modal-body {
+            padding: 25px;
+        }
+
+        /* Alerts */
+        .alert {
+            border-radius: 10px;
+            border: none;
+            padding: 15px 20px;
+        }
+
+        .alert-success {
+            background-color: #d1f2eb;
+            color: #0c5460;
+        }
+
+        .alert-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .sidebar {
+                display: none;
+            }
+
+            .mobile-navbar {
+                display: flex;
+            }
+
+            .main-content {
+                margin-left: 0;
+                margin-top: var(--navbar-height);
+                padding: 20px 15px;
+            }
+
+            .main-content.expanded {
+                margin-left: 0;
+            }
+
+            .stats-card {
+                margin-bottom: 20px;
+            }
+
+            .stats-card h3 {
+                font-size: 2rem;
+            }
+
+            .stats-card-icon {
+                font-size: 2rem;
+            }
+        }
+
+        /* Utility Classes */
+        .text-gradient {
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .bg-gradient {
+            background: var(--primary-gradient);
+        }
+
+        .badge-status {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-success {
+            background-color: #d1f2eb;
+            color: #0c5460;
+        }
+
+        .badge-warning {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .badge-info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="loginScreen" class="login-container">
+        <div class="login-card">
+            <div class="login-logo">
+                <i class="fas fa-shoe-prints"></i>
+                <h2>Calzados Mirla SAC</h2>
+                <p>Sistema de Gestión de Inventario</p>
+            </div>
+            <form id="loginForm">
+                <div class="form-floating">
+                    <input type="text" class="form-control" id="username" placeholder="Usuario" required>
+                    <label for="username">Usuario</label>
+                    <i class="fas fa-user input-icon"></i>
+                </div>
+                <div class="form-floating">
+                    <input type="password" class="form-control" id="password" placeholder="Contraseña" required>
+                    <label for="password">Contraseña</label>
+                    <i class="fas fa-lock input-icon"></i>
+                </div>
+                <button type="submit" class="btn btn-login">
+                    <span class="login-text">Iniciar Sesión</span>
+                    <span class="loading hidden"></span>
+                </button>
+            </form>
+            <div class="login-footer">
+                <p>Sistema de Inventario v2.0 - Calzados Mirla SAC</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Navigation -->
+    <nav class="mobile-navbar">
+        <button class="mobile-menu-btn" id="mobileMenuBtn">
+            <i class="fas fa-bars"></i>
+        </button>
+        <div class="mobile-logo">
+            <i class="fas fa-shoe-prints"></i> Calzados Mirla
+        </div>
+        <button class="mobile-user-btn" id="mobileUserBtn">
+            <span id="mobileUserInitials">A</span>
+        </button>
+    </nav>
+
+    <!-- Mobile Overlay -->
+    <div class="mobile-overlay" id="mobileOverlay"></div>
+
+    <!-- Mobile Sidebar Menu -->
+    <div class="mobile-sidebar" id="mobileSidebarMenu">
+        <div class="sidebar-header">
+            <a href="#" class="sidebar-logo">
+                <i class="fas fa-shoe-prints"></i>
+                <div class="sidebar-logo-text">
+                    <h5 class="mb-0">Calzados Mirla</h5>
+                    <small>Sistema de Inventario</small>
+                </div>
+            </a>
+        </div>
+        <nav class="sidebar-nav" id="mobileNavigation">
+            <!-- Navigation items will be populated by JavaScript -->
+        </nav>
+    </div>
+
+    <!-- Mobile Sidebar User -->
+    <div class="mobile-sidebar mobile-sidebar-right" id="mobileSidebarUser">
+        <div class="sidebar-header">
+            <div class="user-info">
+                <div class="user-avatar" id="mobileUserAvatar">A</div>
+                <div class="user-details">
+                    <div class="user-name" id="mobileUserName">Usuario</div>
+                    <div class="user-role" id="mobileUserRole">Rol</div>
+                </div>
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-item">
+                <a href="#" class="nav-link" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span class="nav-text">Cerrar Sesión</span>
+                </a>
+            </div>
+        </nav>
+    </div>
+
+    <!-- Desktop Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <button class="sidebar-toggle" id="sidebarToggle">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <a href="#" class="sidebar-logo">
+                <i class="fas fa-shoe-prints"></i>
+                <div class="sidebar-logo-text">
+                    <h5 class="mb-0">Calzados Mirla</h5>
+                    <small>Sistema de Inventario</small>
+                </div>
+            </a>
+        </div>
+        
+        <nav class="sidebar-nav" id="navigation">
+            <!-- Navigation items will be populated by JavaScript -->
+        </nav>
+
+        <div class="sidebar-user">
+            <div class="user-info">
+                <div class="user-avatar" id="userAvatar">A</div>
+                <div class="user-details">
+                    <div class="user-name" id="userName">Usuario</div>
+                    <div class="user-role" id="userRole">Rol</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+        <!-- Dashboard -->
+        <div id="dashboardSection">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="text-gradient">Dashboard</h1>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-primary" onclick="showMovementModal()">
+                        <i class="fas fa-plus"></i> Nuevo Movimiento
+                    </button>
+                    <button class="btn btn-outline-primary" onclick="showTransferModal()">
+                        <i class="fas fa-exchange-alt"></i> Transferencia
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="row mb-4">
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <div class="stats-card">
+                        <i class="fas fa-boxes stats-card-icon"></i>
+                        <h3 id="totalStock">0</h3>
+                        <p>Stock Total (pares)</p>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <div class="stats-card">
+                        <i class="fas fa-dollar-sign stats-card-icon"></i>
+                        <h3 id="totalValue">S/ 0</h3>
+                        <p>Valor Total</p>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <div class="stats-card">
+                        <i class="fas fa-chart-line stats-card-icon"></i>
+                        <h3 id="todayMovements">0</h3>
+                        <p>Movimientos Hoy</p>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <div class="stats-card">
+                        <i class="fas fa-calculator stats-card-icon"></i>
+                        <h3 id="avgPrice">S/ 0</h3>
+                        <p>Precio Promedio</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stock por Almacén -->
+            <div class="row">
+                <div class="col-lg-8 mb-4">
+                    <div class="custom-table">
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Almacén</th>
+                                        <th>Encargado</th>
+                                        <th>Ubicación</th>
+                                        <th>Stock</th>
+                                        <th>Valor</th>
+                                        <th>Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="stockTable">
+                                    <!-- Populated by JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="custom-table">
+                        <div class="table-responsive">
+                            <h5 class="p-3 mb-0 border-bottom">Actividad Reciente</h5>
+                            <div class="p-3" id="recentActivity">
+                                <!-- Populated by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Movimientos Section -->
+        <div id="movimientosSection" class="hidden">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="text-gradient">Movimientos</h1>
+                <button class="btn btn-primary" onclick="showMovementModal()">
+                    <i class="fas fa-plus"></i> Nuevo Movimiento
+                </button>
+            </div>
+            <div class="custom-table">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Tipo</th>
+                                <th>Origen</th>
+                                <th>Destino</th>
+                                <th>Cantidad</th>
+                                <th>Valor</th>
+                                <th>Usuario</th>
+                                <th>Observaciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="movementsTable">
+                            <!-- Populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Transferencias Section -->
+        <div id="transferenciasSection" class="hidden">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="text-gradient">Transferencias</h1>
+                <button class="btn btn-primary" onclick="showTransferModal()">
+                    <i class="fas fa-exchange-alt"></i> Nueva Transferencia
+                </button>
+            </div>
+            <div class="custom-table">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Origen</th>
+                                <th>Destino</th>
+                                <th>Cantidad</th>
+                                <th>Precio</th>
+                                <th>Valor Total</th>
+                                <th>Estado</th>
+                                <th>Usuario</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transfersTable">
+                            <!-- Populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reportes Section -->
+        <div id="reportesSection" class="hidden">
+            <h1 class="text-gradient mb-4">Reportes</h1>
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <div class="custom-table">
+                        <h5 class="p-3 border-bottom">Resumen por Almacén</h5>
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Almacén</th>
+                                        <th>Stock</th>
+                                        <th>Valor</th>
+                                        <th>Precio Prom.</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="warehouseReportTable">
+                                    <!-- Populated by JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-4">
+                    <div class="custom-table">
+                        <h5 class="p-3 border-bottom">Verificación Contable</h5>
+                        <div class="p-3" id="accountingVerification">
+                            <!-- Populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Auditoría Section -->
+        <div id="auditoriaSection" class="hidden">
+            <h1 class="text-gradient mb-4">Auditoría</h1>
+            <div class="custom-table">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Fecha/Hora</th>
+                                <th>Usuario</th>
+                                <th>Acción</th>
+                                <th>Detalles</th>
+                            </tr>
+                        </thead>
+                        <tbody id="auditTable">
+                            <!-- Populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Usuarios Section -->
+        <div id="usuariosSection" class="hidden">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="text-gradient">Gestión de Usuarios</h1>
+                <button class="btn btn-primary" onclick="showUserModal()">
+                    <i class="fas fa-user-plus"></i> Nuevo Usuario
+                </button>
+            </div>
+            <div class="custom-table">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Usuario</th>
+                                <th>Nombre</th>
+                                <th>Rol</th>
+                                <th>Almacenes</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTable">
+                            <!-- Populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Movement Modal -->
+    <div class="modal fade" id="movementModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Nuevo Movimiento</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="movementForm">
+                        <div class="mb-3">
+                            <label class="form-label">Tipo de Movimiento</label>
+                            <select class="form-select" id="movementType" required>
+                                <option value="">Seleccionar tipo...</option>
+                                <option value="produccion">Producción</option>
+                                <option value="venta">Venta</option>
+                                <option value="devolucion">Devolución</option>
+                                <option value="perdida">Pérdida</option>
+                                <option value="merma">Merma por Deterioro</option>
+                            </select>
+                        </div>
+                        <div class="mb-3" id="warehouseFromGroup">
+                            <label class="form-label">Almacén Origen</label>
+                            <select class="form-select" id="warehouseFrom">
+                                <option value="">Seleccionar almacén...</option>
+                            </select>
+                        </div>
+                        <div class="mb-3" id="warehouseToGroup">
+                            <label class="form-label">Almacén Destino</label>
+                            <select class="form-select" id="warehouseTo">
+                                <option value="">Seleccionar almacén...</option>
+                            </select>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Cantidad (pares)</label>
+                                    <input type="number" class="form-control" id="movementQuantity" min="1" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Precio por Par (S/)</label>
+                                    <input type="number" class="form-control" id="movementPrice" step="0.01" min="0">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Valor Total (S/)</label>
+                            <input type="number" class="form-control" id="movementValue" step="0.01" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Observaciones</label>
+                            <textarea class="form-control" id="movementObservations" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="saveMovement()">Guardar Movimiento</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transfer Modal -->
+    <div class="modal fade" id="transferModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Nueva Transferencia</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="transferForm">
+                        <div class="mb-3">
+                            <label class="form-label">Almacén Origen</label>
+                            <select class="form-select" id="transferFrom" required>
+                                <option value="">Seleccionar almacén...</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Almacén Destino</label>
+                            <select class="form-select" id="transferTo" required>
+                                <option value="">Seleccionar almacén...</option>
+                            </select>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Cantidad (pares)</label>
+                                    <input type="number" class="form-control" id="transferQuantity" min="1" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Precio por Par (S/)</label>
+                                    <input type="number" class="form-control" id="transferPrice" step="0.01" min="0" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Valor Total (S/)</label>
+                            <input type="number" class="form-control" id="transferValue" step="0.01" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Observaciones</label>
+                            <textarea class="form-control" id="transferObservations" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="saveTransfer()">Crear Transferencia</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Modal -->
+    <div class="modal fade" id="userModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Gestión de Usuario</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="userForm">
+                        <div class="mb-3">
+                            <label class="form-label">Usuario</label>
+                            <input type="text" class="form-control" id="userUsername" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Nombre Completo</label>
+                            <input type="text" class="form-control" id="userFullName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Contraseña</label>
+                            <input type="password" class="form-control" id="userPassword" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Rol</label>
+                            <select class="form-select" id="userRole" required>
+                                <option value="">Seleccionar rol...</option>
+                                <option value="admin">Administrador</option>
+                                <option value="manager">Encargado</option>
+                                <option value="operator">Operador</option>
+                                <option value="viewer">Solo Consulta</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Almacenes Asignados</label>
+                            <div id="userWarehouses">
+                                <!-- Populated by JavaScript -->
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="saveUser()">Guardar Usuario</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alert Container -->
+    <div id="alertContainer" style="position: fixed; top: 20px; right: 20px; z-index: 9999; max-width: 400px;">
+        <!-- Alerts will be inserted here -->
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Global Variables
+        let currentUser = null;
+        let inventoryData = {
+            warehouses: {},
+            movements: [],
+            transfers: [],
+            users: {},
+            auditLog: []
+        };
+
+        // Warehouse Configuration
+        const warehouseConfig = {
+            'central': { 
+                name: 'Almacén Central', 
+                manager: 'Juan Pérez', 
+                location: 'Planta de Producción', 
+                type: 'physical' 
+            },
+            'lima': { 
+                name: 'Tienda Lima', 
+                manager: 'María González', 
+                location: 'Lima Centro', 
+                type: 'physical' 
+            },
+            'huancayo': { 
+                name: 'Tienda Huancayo', 
+                manager: 'Carlos Mendoza', 
+                location: 'Huancayo', 
+                type: 'physical' 
+            },
+            'huaraz': { 
+                name: 'Tienda Huaraz', 
+                manager: 'Ana Rodríguez', 
+                location: 'Huaraz', 
+                type: 'physical' 
+            },
+            'transito': { 
+                name: 'En Tránsito', 
+                manager: 'Sistema', 
+                location: 'Virtual', 
+                type: 'transit' 
+            },
+            'perdidos': { 
+                name: 'Productos Perdidos', 
+                manager: 'Sistema', 
+                location: 'Virtual', 
+                type: 'virtual' 
+            },
+            'ventas': { 
+                name: 'Ventas Realizadas', 
+                manager: 'Sistema', 
+                location: 'Virtual', 
+                type: 'virtual' 
+            },
+            'dañados': { 
+                name: 'Productos Dañados', 
+                manager: 'Sistema', 
+                location: 'Virtual', 
+                type: 'virtual' 
+            }
+        };
+
+        // User Configuration
+        const defaultUsers = {
+            'admin': {
+                username: 'admin',
+                password: 'admin123',
+                fullName: 'Administrador Sistema',
+                role: 'admin',
+                warehouses: Object.keys(warehouseConfig),
+                active: true
+            },
+            'maria.gonzalez': {
+                username: 'maria.gonzalez',
+                password: 'lima123',
+                fullName: 'María González',
+                role: 'manager',
+                warehouses: ['lima'],
+                active: true
+            },
+            'carlos.mendoza': {
+                username: 'carlos.mendoza',
+                password: 'huancayo123',
+                fullName: 'Carlos Mendoza',
+                role: 'manager',
+                warehouses: ['huancayo'],
+                active: true
+            },
+            'operador': {
+                username: 'operador',
+                password: 'operador123',
+                fullName: 'Operador Sistema',
+                role: 'operator',
+                warehouses: ['central', 'lima'],
+                active: true
+            },
+            'consulta': {
+                username: 'consulta',
+                password: 'consulta123',
+                fullName: 'Usuario Consulta',
+                role: 'viewer',
+                warehouses: Object.keys(warehouseConfig),
+                active: true
+            }
+        };
+
+        // Navigation Configuration
+        const navigationConfig = {
+            admin: [
+                { id: 'dashboard', icon: 'fas fa-tachometer-alt', text: 'Dashboard' },
+                { id: 'movimientos', icon: 'fas fa-arrows-alt', text: 'Movimientos' },
+                { id: 'transferencias', icon: 'fas fa-exchange-alt', text: 'Transferencias' },
+                { id: 'reportes', icon: 'fas fa-chart-bar', text: 'Reportes' },
+                { id: 'auditoria', icon: 'fas fa-history', text: 'Auditoría' },
+                { id: 'usuarios', icon: 'fas fa-users', text: 'Usuarios' }
+            ],
+            manager: [
+                { id: 'dashboard', icon: 'fas fa-tachometer-alt', text: 'Dashboard' },
+                { id: 'movimientos', icon: 'fas fa-arrows-alt', text: 'Movimientos' },
+                { id: 'transferencias', icon: 'fas fa-exchange-alt', text: 'Transferencias' },
+                { id: 'reportes', icon: 'fas fa-chart-bar', text: 'Reportes' }
+            ],
+            operator: [
+                { id: 'dashboard', icon: 'fas fa-tachometer-alt', text: 'Dashboard' },
+                { id: 'movimientos', icon: 'fas fa-arrows-alt', text: 'Movimientos' },
+                { id: 'transferencias', icon: 'fas fa-exchange-alt', text: 'Transferencias' }
+            ],
+            viewer: [
+                { id: 'dashboard', icon: 'fas fa-tachometer-alt', text: 'Dashboard' },
+                { id: 'reportes', icon: 'fas fa-chart-bar', text: 'Reportes' }
+            ]
+        };
+
+        // Initialize Application
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+        });
+
+        function initializeApp() {
+            loadData();
+            setupEventListeners();
+            checkSession();
+        }
+
+        function loadData() {
+            // Load data from localStorage or initialize with defaults
+            const savedData = localStorage.getItem('calzadosMirlaData');
+            if (savedData) {
+                inventoryData = JSON.parse(savedData);
+            } else {
+                // Initialize with default data
+                initializeDefaultData();
+            }
+
+            // Ensure users are loaded
+            if (Object.keys(inventoryData.users).length === 0) {
+                inventoryData.users = { ...defaultUsers };
+            }
+
+            saveData();
+        }
+
+        function initializeDefaultData() {
+            // Initialize warehouses with zero stock
+            Object.keys(warehouseConfig).forEach(warehouseId => {
+                inventoryData.warehouses[warehouseId] = {
+                    stock: 0,
+                    value: 0,
+                    avgPrice: 0
+                };
+            });
+
+            // Initialize users
+            inventoryData.users = { ...defaultUsers };
+
+            // Add initial production movement
+            const initialMovement = {
+                id: generateId(),
+                type: 'produccion',
+                from: 'sistema',
+                to: 'central',
+                quantity: 1000,
+                price: 50,
+                value: 50000,
+                date: new Date().toISOString(),
+                user: 'admin',
+                observations: 'Stock inicial del sistema'
+            };
+
+            inventoryData.movements.push(initialMovement);
+            processMovement(initialMovement);
+
+            addAuditLog('system', 'Inicialización', 'Sistema inicializado con stock base');
+        }
+
+        function saveData() {
+            localStorage.setItem('calzadosMirlaData', JSON.stringify(inventoryData));
+        }
+
+        function setupEventListeners() {
+            // Login form
+            document.getElementById('loginForm').addEventListener('submit', handleLogin);
+
+            // Sidebar toggle
+            document.getElementById('sidebarToggle').addEventListener('click', toggleSidebar);
+
+            // Mobile navigation
+            document.getElementById('mobileMenuBtn').addEventListener('click', toggleMobileMenu);
+            document.getElementById('mobileUserBtn').addEventListener('click', toggleMobileUser);
+            document.getElementById('mobileOverlay').addEventListener('click', closeMobileSidebars);
+
+            // Movement form calculations
+            document.getElementById('movementQuantity').addEventListener('input', calculateMovementValue);
+            document.getElementById('movementPrice').addEventListener('input', calculateMovementValue);
+            document.getElementById('movementType').addEventListener('change', updateMovementWarehouses);
+
+            // Transfer form calculations
+            document.getElementById('transferQuantity').addEventListener('input', calculateTransferValue);
+            document.getElementById('transferPrice').addEventListener('input', calculateTransferValue);
+
+            // Auto-collapse sidebar when clicking outside
+            document.addEventListener('click', function(e) {
+                const sidebar = document.getElementById('sidebar');
+                const sidebarToggle = document.getElementById('sidebarToggle');
+                
+                if (!sidebar.contains(e.target) && !sidebarToggle.contains(e.target)) {
+                    if (!sidebar.classList.contains('collapsed')) {
+                        toggleSidebar();
+                    }
+                }
+            });
+
+            // Keyboard shortcuts
+            document.addEventListener('keydown', function(e) {
+                if (e.ctrlKey && e.key === 's') {
+                    e.preventDefault();
+                    if (currentUser && currentUser.role === 'admin') {
+                        exportData();
+                    }
+                }
+                if (e.key === 'Escape') {
+                    closeMobileSidebars();
+                    // Close any open modals
+                    const modals = document.querySelectorAll('.modal.show');
+                    modals.forEach(modal => {
+                        const bsModal = bootstrap.Modal.getInstance(modal);
+                        if (bsModal) bsModal.hide();
+                    });
+                }
+            });
+        }
+
+        function generateId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2);
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const loginBtn = e.target.querySelector('.btn-login');
+            const loginText = loginBtn.querySelector('.login-text');
+            const loading = loginBtn.querySelector('.loading');
+
+            // Show loading
+            loginText.classList.add('hidden');
+            loading.classList.remove('hidden');
+            loginBtn.disabled = true;
+
+            setTimeout(() => {
+                if (inventoryData.users[username] && 
+                    inventoryData.users[username].password === password && 
+                    inventoryData.users[username].active) {
+                    
+                    currentUser = inventoryData.users[username];
+                    sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
+                    addAuditLog(username, 'Login', 'Usuario inició sesión');
+                    showMainApp();
+                } else {
+                    showAlert('Usuario o contraseña incorrectos', 'danger');
+                    // Hide loading
+                    loginText.classList.remove('hidden');
+                    loading.classList.add('hidden');
+                    loginBtn.disabled = false;
+                }
+            }, 1000);
+        }
+
+        function checkSession() {
+            const savedUser = sessionStorage.getItem('currentUser');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                showMainApp();
+            }
+        }
+
+        function logout() {
+            if (currentUser) {
+                addAuditLog(currentUser.username, 'Logout', 'Usuario cerró sesión');
+            }
+            currentUser = null;
+            sessionStorage.removeItem('currentUser');
+            document.getElementById('loginScreen').style.display = 'flex';
+            document.querySelector('.sidebar').style.display = 'none';
+            document.querySelector('.mobile-navbar').style.display = 'none';
+            document.querySelector('.main-content').style.display = 'none';
+            document.getElementById('loginForm').reset();
+        }
+
+        function showMainApp() {
+            document.getElementById('loginScreen').style.display = 'none';
+            document.querySelector('.sidebar').style.display = 'block';
+            document.querySelector('.mobile-navbar').style.display = window.innerWidth <= 768 ? 'flex' : 'none';
+            document.querySelector('.main-content').style.display = 'block';
+            
+            updateUserInterface();
+            setupNavigation();
+            showSection('dashboard');
+            updateDashboard();
+        }
+
+        function updateUserInterface() {
+            const initials = currentUser.fullName.split(' ').map(n => n[0]).join('').toUpperCase();
+            
+            // Update desktop user info
+            document.getElementById('userAvatar').textContent = initials;
+            document.getElementById('userName').textContent = currentUser.fullName;
+            document.getElementById('userRole').textContent = getRoleDisplayName(currentUser.role);
+            
+            // Update mobile user info
+            document.getElementById('mobileUserInitials').textContent = initials;
+            document.getElementById('mobileUserAvatar').textContent = initials;
+            document.getElementById('mobileUserName').textContent = currentUser.fullName;
+            document.getElementById('mobileUserRole').textContent = getRoleDisplayName(currentUser.role);
+        }
+
+        function getRoleDisplayName(role) {
+            const roleNames = {
+                admin: 'Administrador',
+                manager: 'Encargado',
+                operator: 'Operador',
+                viewer: 'Solo Consulta'
+            };
+            return roleNames[role] || role;
+        }
+
+        function setupNavigation() {
+            const navigation = navigationConfig[currentUser.role] || [];
+            const desktopNav = document.getElementById('navigation');
+            const mobileNav = document.getElementById('mobileNavigation');
+            
+            let navHTML = '';
+            navigation.forEach(item => {
+                navHTML += `
+                    <div class="nav-item">
+                        <a href="#" class="nav-link" data-section="${item.id}">
+                            <i class="${item.icon}"></i>
+                            <span class="nav-text">${item.text}</span>
+                        </a>
+                    </div>
+                `;
+            });
+            
+            desktopNav.innerHTML = navHTML;
+            mobileNav.innerHTML = navHTML;
+            
+            // Add click listeners
+            document.querySelectorAll('.nav-link[data-section]').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    showSection(link.dataset.section);
+                    closeMobileSidebars();
+                });
+            });
+        }
+
+        function showSection(sectionId) {
+            // Hide all sections
+            document.querySelectorAll('[id$="Section"]').forEach(section => {
+                section.classList.add('hidden');
+            });
+            
+            // Show selected section
+            document.getElementById(sectionId + 'Section').classList.remove('hidden');
+            
+            // Update navigation active state
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            document.querySelectorAll(`[data-section="${sectionId}"]`).forEach(link => {
+                link.classList.add('active');
+            });
+            
+            // Load section data
+            switch(sectionId) {
+                case 'dashboard':
+                    updateDashboard();
+                    break;
+                case 'movimientos':
+                    updateMovementsTable();
+                    break;
+                case 'transferencias':
+                    updateTransfersTable();
+                    break;
+                case 'reportes':
+                    updateReports();
+                    break;
+                case 'auditoria':
+                    updateAuditTable();
+                    break;
+                case 'usuarios':
+                    updateUsersTable();
+                    break;
+            }
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+            const toggleIcon = document.querySelector('.sidebar-toggle i');
+            
+            sidebar.classList.toggle('collapsed');
+            mainContent.classList.toggle('expanded');
+            
+            if (sidebar.classList.contains('collapsed')) {
+                toggleIcon.className = 'fas fa-chevron-right';
+            } else {
+                toggleIcon.className = 'fas fa-chevron-left';
+            }
+        }
+
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileSidebarMenu');
+            const overlay = document.getElementById('mobileOverlay');
+            
+            menu.classList.toggle('show');
+            overlay.classList.toggle('show');
+        }
+
+        function toggleMobileUser() {
+            const user = document.getElementById('mobileSidebarUser');
+            const overlay = document.getElementById('mobileOverlay');
+            
+            user.classList.toggle('show');
+            overlay.classList.toggle('show');
+        }
+
+        function closeMobileSidebars() {
+            document.getElementById('mobileSidebarMenu').classList.remove('show');
+            document.getElementById('mobileSidebarUser').classList.remove('show');
+            document.getElementById('mobileOverlay').classList.remove('show');
+        }
+
+        function updateDashboard() {
+            updateStatsCards();
+            updateStockTable();
+            updateRecentActivity();
+        }
+
+        function updateStatsCards() {
+            const physicalWarehouses = ['central', 'lima', 'huancayo', 'huaraz'];
+            let totalStock = 0;
+            let totalValue = 0;
+            
+            physicalWarehouses.forEach(warehouseId => {
+                const warehouse = inventoryData.warehouses[warehouseId];
+                totalStock += warehouse.stock;
+                totalValue += warehouse.value;
+            });
+            
+            // Include transit
+            if (inventoryData.warehouses['transito']) {
+                totalStock += inventoryData.warehouses['transito'].stock;
+                totalValue += inventoryData.warehouses['transito'].value;
+            }
+            
+            const avgPrice = totalStock > 0 ? totalValue / totalStock : 0;
+            
+            // Count today's movements
+            const today = new Date().toDateString();
+            const todayMovements = inventoryData.movements.filter(m => 
+                new Date(m.date).toDateString() === today
+            ).length;
+            
+            document.getElementById('totalStock').textContent = totalStock.toLocaleString();
+            document.getElementById('totalValue').textContent = `S/ ${totalValue.toLocaleString('es-PE', {minimumFractionDigits: 2})}`;
+            document.getElementById('todayMovements').textContent = todayMovements;
+            document.getElementById('avgPrice').textContent = `S/ ${avgPrice.toLocaleString('es-PE', {minimumFractionDigits: 2})}`;
+        }
+
+        function updateStockTable() {
+            const tableBody = document.getElementById('stockTable');
+            let html = '';
+            
+            Object.keys(warehouseConfig).forEach(warehouseId => {
+                const config = warehouseConfig[warehouseId];
+                const warehouse = inventoryData.warehouses[warehouseId];
+                
+                // Only show if user has access
+                if (!currentUser.warehouses.includes(warehouseId) && currentUser.role !== 'admin') {
+                    return;
+                }
+                
+                const statusClass = config.type === 'physical' ? 'success' : 
+                                   config.type === 'transit' ? 'warning' : 'info';
+                const statusText = config.type === 'physical' ? 'Activo' : 
+                                  config.type === 'transit' ? 'Tránsito' : 'Virtual';
+                
+                html += `
+                    <tr>
+                        <td><strong>${config.name}</strong></td>
+                        <td>${config.manager}</td>
+                        <td>${config.location}</td>
+                        <td>${warehouse.stock.toLocaleString()}</td>
+                        <td>S/ ${warehouse.value.toLocaleString('es-PE', {minimumFractionDigits: 2})}</td>
+                        <td><span class="badge badge-${statusClass}">${statusText}</span></td>
+                    </tr>
+                `;
+            });
+            
+            tableBody.innerHTML = html;
+        }
+
+        function updateRecentActivity() {
+            if (currentUser.role !== 'admin') {
+                document.getElementById('recentActivity').innerHTML = '<p class="text-muted">Acceso restringido</p>';
+                return;
+            }
+            
+            const recentMovements = inventoryData.movements
+                .slice(-5)
+                .reverse();
+            
+            let html = '';
+            recentMovements.forEach(movement => {
+                const date = new Date(movement.date);
+                const timeAgo = getTimeAgo(date);
+                
+                html += `
+                    <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+                        <div>
+                            <small class="text-muted">${timeAgo}</small>
+                            <div>${movement.type.charAt(0).toUpperCase() + movement.type.slice(1)}</div>
+                            <small>${movement.quantity} pares - S/ ${movement.value.toLocaleString('es-PE', {minimumFractionDigits: 2})}</small>
+                        </div>
+                        <small class="text-muted">${movement.user}</small>
+                    </div>
+                `;
+            });
+            
+            if (html === '') {
+                html = '<p class="text-muted">No hay actividad reciente</p>';
+            }
+            
+            document.getElementById('recentActivity').innerHTML = html;
+        }
+
+        function getTimeAgo(date) {
+            const now = new Date();
+            const diffInSeconds = Math.floor((now - date) / 1000);
+            
+            if (diffInSeconds < 60) return 'Hace un momento';
+            if (diffInSeconds < 3600) return `Hace ${Math.floor(diffInSeconds / 60)} min`;
+            if (diffInSeconds < 86400) return `Hace ${Math.floor(diffInSeconds / 3600)} h`;
+            return date.toLocaleDateString('es-PE');
+        }
+
+        function showMovementModal() {
+            updateMovementWarehouses();
+            document.getElementById('movementForm').reset();
+            new bootstrap.Modal(document.getElementById('movementModal')).show();
+        }
+
+        function updateMovementWarehouses() {
+            const type = document.getElementById('movementType').value;
+            const fromGroup = document.getElementById('warehouseFromGroup');
+            const toGroup = document.getElementById('warehouseToGroup');
+            const fromSelect = document.getElementById('warehouseFrom');
+            const toSelect = document.getElementById('warehouseTo');
+            
+            // Clear options
+            fromSelect.innerHTML = '<option value="">Seleccionar almacén...</option>';
+            toSelect.innerHTML = '<option value="">Seleccionar almacén...</option>';
+            
+            if (!type) {
+                fromGroup.style.display = 'none';
+                toGroup.style.display = 'none';
+                return;
+            }
+            
+            const userWarehouses = currentUser.warehouses;
+            
+            switch (type) {
+                case 'produccion':
+                    fromGroup.style.display = 'none';
+                    toGroup.style.display = 'block';
+                    // Only central warehouse and only if user has access
+                    if (userWarehouses.includes('central') || currentUser.role === 'admin') {
+                        toSelect.innerHTML = '<option value="central">Almacén Central</option>';
+                    }
+                    break;
+                    
+                case 'venta':
+                    fromGroup.style.display = 'block';
+                    toGroup.style.display = 'none';
+                    // Physical warehouses where user has access
+                    ['central', 'lima', 'huancayo', 'huaraz'].forEach(id => {
+                        if (userWarehouses.includes(id)) {
+                            fromSelect.innerHTML += `<option value="${id}">${warehouseConfig[id].name}</option>`;
+                        }
+                    });
+                    break;
+                    
+                case 'devolucion':
+                    fromGroup.style.display = 'none';
+                    toGroup.style.display = 'block';
+                    // Physical warehouses where user has access
+                    ['central', 'lima', 'huancayo', 'huaraz'].forEach(id => {
+                        if (userWarehouses.includes(id)) {
+                            toSelect.innerHTML += `<option value="${id}">${warehouseConfig[id].name}</option>`;
+                        }
+                    });
+                    break;
+                    
+                case 'perdida':
+                case 'merma':
+                    fromGroup.style.display = 'block';
+                    toGroup.style.display = 'none';
+                    // Physical warehouses where user has access
+                    ['central', 'lima', 'huancayo', 'huaraz'].forEach(id => {
+                        if (userWarehouses.includes(id)) {
+                            fromSelect.innerHTML += `<option value="${id}">${warehouseConfig[id].name}</option>`;
+                        }
+                    });
+                    break;
+            }
+        }
+
+        function calculateMovementValue() {
+            const quantity = parseFloat(document.getElementById('movementQuantity').value) || 0;
+            const price = parseFloat(document.getElementById('movementPrice').value) || 0;
+            const value = quantity * price;
+            document.getElementById('movementValue').value = value.toFixed(2);
+        }
+
+        function saveMovement() {
+            const type = document.getElementById('movementType').value;
+            const warehouseFrom = document.getElementById('warehouseFrom').value;
+            const warehouseTo = document.getElementById('warehouseTo').value;
+            const quantity = parseInt(document.getElementById('movementQuantity').value);
+            const price = parseFloat(document.getElementById('movementPrice').value) || 0;
+            const observations = document.getElementById('movementObservations').value;
+            
+            // Validations
+            if (!type || !quantity || quantity <= 0) {
+                showAlert('Por favor complete todos los campos requeridos', 'danger');
+                return;
+            }
+            
+            // Check permissions for production
+            if (type === 'produccion') {
+                if (currentUser.role !== 'admin' && !currentUser.warehouses.includes('central')) {
+                    showAlert('No tiene permisos para realizar producción', 'danger');
+                    return;
+                }
+            }
+            
+            // Check stock for movements that require it
+            if (['venta', 'perdida', 'merma'].includes(type)) {
+                if (!warehouseFrom) {
+                    showAlert('Debe seleccionar el almacén origen', 'danger');
+                    return;
+                }
+                
+                const warehouse = inventoryData.warehouses[warehouseFrom];
+                if (warehouse.stock < quantity) {
+                    showAlert(`Stock insuficiente. Disponible: ${warehouse.stock} pares`, 'danger');
+                    return;
+                }
+            }
+            
+            // Calculate price if not provided
+            let finalPrice = price;
+            if (type === 'devolucion' && price === 0) {
+                finalPrice = 50; // Default price for returns
+            }
+            if (type === 'produccion' && price === 0) {
+                finalPrice = 50; // Default production price
+            }
+            
+            const movement = {
+                id: generateId(),
+                type: type,
+                from: warehouseFrom || 'sistema',
+                to: warehouseTo || getDestinationForMovement(type),
+                quantity: quantity,
+                price: finalPrice,
+                value: quantity * finalPrice,
+                date: new Date().toISOString(),
+                user: currentUser.username,
+                observations: observations
+            };
+            
+            inventoryData.movements.push(movement);
+            processMovement(movement);
+            
+            addAuditLog(currentUser.username, 'Movimiento', 
+                `${type}: ${quantity} pares ${movement.from ? 'de ' + warehouseConfig[movement.from].name : ''} ${movement.to ? 'a ' + warehouseConfig[movement.to].name : ''}`);
+            
+            saveData();
+            updateDashboard();
+            updateMovementsTable();
+            
+            bootstrap.Modal.getInstance(document.getElementById('movementModal')).hide();
+            showAlert('Movimiento registrado exitosamente', 'success');
+        }
+
+        function getDestinationForMovement(type) {
+            switch (type) {
+                case 'venta':
+                    return 'ventas';
+                case 'perdida':
+                    return 'perdidos';
+                case 'merma':
+                    return 'dañados';
+                default:
+                    return null;
+            }
+        }
+
+        function processMovement(movement) {
+            // Process double-entry accounting
+            if (movement.from && movement.from !== 'sistema') {
+                // Decrease from origin
+                const fromWarehouse = inventoryData.warehouses[movement.from];
+                fromWarehouse.stock -= movement.quantity;
+                
+                // Recalculate average price for origin
+                if (fromWarehouse.stock > 0) {
+                    fromWarehouse.value -= movement.quantity * fromWarehouse.avgPrice;
+                    fromWarehouse.avgPrice = fromWarehouse.value / fromWarehouse.stock;
+                } else {
+                    fromWarehouse.value = 0;
+                    fromWarehouse.avgPrice = 0;
+                }
+            }
+            
+            if (movement.to) {
+                // Increase to destination
+                const toWarehouse = inventoryData.warehouses[movement.to];
+                const oldStock = toWarehouse.stock;
+                const oldValue = toWarehouse.value;
+                
+                toWarehouse.stock += movement.quantity;
+                toWarehouse.value += movement.value;
+                
+                // Recalculate weighted average price
+                toWarehouse.avgPrice = toWarehouse.value / toWarehouse.stock;
+            }
+        }
+
+        function showTransferModal() {
+            populateTransferWarehouses();
+            document.getElementById('transferForm').reset();
+            new bootstrap.Modal(document.getElementById('transferModal')).show();
+        }
+
+        function populateTransferWarehouses() {
+            const fromSelect = document.getElementById('transferFrom');
+            const toSelect = document.getElementById('transferTo');
+            
+            fromSelect.innerHTML = '<option value="">Seleccionar almacén...</option>';
+            toSelect.innerHTML = '<option value="">Seleccionar almacén...</option>';
+            
+            const physicalWarehouses = ['central', 'lima', 'huancayo', 'huaraz'];
+            const userWarehouses = currentUser.warehouses;
+            
+            physicalWarehouses.forEach(id => {
+                if (userWarehouses.includes(id) || currentUser.role === 'admin') {
+                    const option = `<option value="${id}">${warehouseConfig[id].name}</option>`;
+                    fromSelect.innerHTML += option;
+                    toSelect.innerHTML += option;
+                }
+            });
+        }
+
+        function calculateTransferValue() {
+            const quantity = parseFloat(document.getElementById('transferQuantity').value) || 0;
+            const price = parseFloat(document.getElementById('transferPrice').value) || 0;
+            const value = quantity * price;
+            document.getElementById('transferValue').value = value.toFixed(2);
+        }
+
+        function saveTransfer() {
+            const from = document.getElementById('transferFrom').value;
+            const to = document.getElementById('transferTo').value;
+            const quantity = parseInt(document.getElementById('transferQuantity').value);
+            const price = parseFloat(document.getElementById('transferPrice').value);
+            const observations = document.getElementById('transferObservations').value;
+            
+            // Validations
+            if (!from || !to || !quantity || !price || quantity <= 0 || price <= 0) {
+                showAlert('Por favor complete todos los campos requeridos', 'danger');
+                return;
+            }
+            
+            if (from === to) {
+                showAlert('El almacén origen y destino no pueden ser el mismo', 'danger');
+                return;
+            }
+            
+            // Check stock
+            const warehouse = inventoryData.warehouses[from];
+            if (warehouse.stock < quantity) {
+                showAlert(`Stock insuficiente. Disponible: ${warehouse.stock} pares`, 'danger');
+                return;
+            }
+            
+            // Create transfer
+            const transfer = {
+                id: generateId(),
+                from: from,
+                to: to,
+                quantity: quantity,
+                price: price,
+                value: quantity * price,
+                status: 'pending',
+                date: new Date().toISOString(),
+                user: currentUser.username,
+                observations: observations
+            };
+            
+            inventoryData.transfers.push(transfer);
+            
+            // Move to transit
+            const exitMovement = {
+                id: generateId(),
+                type: 'transferencia_salida',
+                from: from,
+                to: 'transito',
+                quantity: quantity,
+                price: price,
+                value: quantity * price,
+                date: new Date().toISOString(),
+                user: currentUser.username,
+                observations: `Transferencia a ${warehouseConfig[to].name} - ${observations}`,
+                transferId: transfer.id
+            };
+            
+            inventoryData.movements.push(exitMovement);
+            processMovement(exitMovement);
+            
+            addAuditLog(currentUser.username, 'Transferencia', 
+                `Iniciada: ${quantity} pares de ${warehouseConfig[from].name} a ${warehouseConfig[to].name}`);
+            
+            saveData();
+            updateDashboard();
+            updateTransfersTable();
+            
+            bootstrap.Modal.getInstance(document.getElementById('transferModal')).hide();
+            showAlert('Transferencia iniciada exitosamente', 'success');
+        }
+
+        function confirmTransfer(transferId) {
+            const transfer = inventoryData.transfers.find(t => t.id === transferId);
+            if (!transfer || transfer.status !== 'pending') {
+                showAlert('Transferencia no encontrada o ya procesada', 'danger');
+                return;
+            }
+            
+            // Check permissions
+            if (currentUser.role !== 'admin' && !currentUser.warehouses.includes(transfer.to)) {
+                showAlert('No tiene permisos para confirmar esta transferencia', 'danger');
+                return;
+            }
+            
+            // Move from transit to destination
+            const entryMovement = {
+                id: generateId(),
+                type: 'transferencia_entrada',
+                from: 'transito',
+                to: transfer.to,
+                quantity: transfer.quantity,
+                price: transfer.price,
+                value: transfer.value,
+                date: new Date().toISOString(),
+                user: currentUser.username,
+                observations: `Recepción de transferencia desde ${warehouseConfig[transfer.from].name}`,
+                transferId: transfer.id
+            };
+            
+            inventoryData.movements.push(entryMovement);
+            processMovement(entryMovement);
+            
+            // Update transfer status
+            transfer.status = 'completed';
+            transfer.confirmedBy = currentUser.username;
+            transfer.confirmedDate = new Date().toISOString();
+            
+            addAuditLog(currentUser.username, 'Transferencia', 
+                `Confirmada: ${transfer.quantity} pares en ${warehouseConfig[transfer.to].name}`);
+            
+            saveData();
+            updateDashboard();
+            updateTransfersTable();
+            
+            showAlert('Transferencia confirmada exitosamente', 'success');
+        }
+
+        function updateMovementsTable() {
+            const tableBody = document.getElementById('movementsTable');
+            let html = '';
+            
+            const userMovements = inventoryData.movements.filter(movement => {
+                // Filter based on user permissions
+                if (currentUser.role === 'admin') return true;
+                if (currentUser.role === 'viewer') return true;
+                
+                // Check if user has access to origin or destination warehouse
+                const hasFromAccess = !movement.from || movement.from === 'sistema' || currentUser.warehouses.includes(movement.from);
+                const hasToAccess = !movement.to || currentUser.warehouses.includes(movement.to);
+                
+                return hasFromAccess || hasToAccess;
+            });
+            
+            userMovements.reverse().forEach(movement => {
+                const date = new Date(movement.date).toLocaleString('es-PE');
+                const fromName = movement.from === 'sistema' ? 'Sistema' : (warehouseConfig[movement.from]?.name || movement.from);
+                const toName = warehouseConfig[movement.to]?.name || movement.to;
+                
+                html += `
+                    <tr>
+                        <td>${date}</td>
+                        <td><span class="badge badge-info">${movement.type.replace('_', ' ')}</span></td>
+                        <td>${fromName}</td>
+                        <td>${toName}</td>
+                        <td>${movement.quantity.toLocaleString()}</td>
+                        <td>S/ ${movement.value.toLocaleString('es-PE', {minimumFractionDigits: 2})}</td>
+                        <td>${movement.user}</td>
+                        <td>${movement.observations || '-'}</td>
+                    </tr>
+                `;
+            });
+            
+            if (html === '') {
+                html = '<tr><td colspan="8" class="text-center text-muted">No hay movimientos registrados</td></tr>';
+            }
+            
+            tableBody.innerHTML = html;
+        }
+
+        function updateTransfersTable() {
+            const tableBody = document.getElementById('transfersTable');
+            let html = '';
+            
+            const userTransfers = inventoryData.transfers.filter(transfer => {
+                if (currentUser.role === 'admin') return true;
+                if (currentUser.role === 'viewer') return true;
+                return currentUser.warehouses.includes(transfer.from) || currentUser.warehouses.includes(transfer.to);
+            });
+            
+            userTransfers.reverse().forEach(transfer => {
+                const date = new Date(transfer.date).toLocaleString('es-PE');
+                const statusClass = transfer.status === 'completed' ? 'success' : 'warning';
+                const statusText = transfer.status === 'completed' ? 'Completada' : 'Pendiente';
+                
+                let actions = '';
+                if (transfer.status === 'pending' && 
+                    (currentUser.role === 'admin' || currentUser.warehouses.includes(transfer.to))) {
+                    actions = `<button class="btn btn-sm btn-success" onclick="confirmTransfer('${transfer.id}')">Confirmar</button>`;
+                } else {
+                    actions = '-';
+                }
+                
+                html += `
+                    <tr>
+                        <td>${date}</td>
+                        <td>${warehouseConfig[transfer.from].name}</td>
+                        <td>${warehouseConfig[transfer.to].name}</td>
+                        <td>${transfer.quantity.toLocaleString()}</td>
+                        <td>S/ ${transfer.price.toLocaleString('es-PE', {minimumFractionDigits: 2})}</td>
+                        <td>S/ ${transfer.value.toLocaleString('es-PE', {minimumFractionDigits: 2})}</td>
+                        <td><span class="badge badge-${statusClass}">${statusText}</span></td>
+                        <td>${transfer.user}</td>
+                        <td>${actions}</td>
+                    </tr>
+                `;
+            });
+            
+            if (html === '') {
+                html = '<tr><td colspan="9" class="text-center text-muted">No hay transferencias registradas</td></tr>';
+            }
+            
+            tableBody.innerHTML = html;
+        }
+
+        function updateReports() {
+            updateWarehouseReport();
+            updateAccountingVerification();
+        }
+
+        function updateWarehouseReport() {
+            const tableBody = document.getElementById('warehouseReportTable');
+            let html = '';
+            
+            Object.keys(warehouseConfig).forEach(warehouseId => {
+                if (!currentUser.warehouses.includes(warehouseId) && currentUser.role !== 'admin') {
+                    return;
+                }
+                
+                const warehouse = inventoryData.warehouses[warehouseId];
+                const avgPrice = warehouse.stock > 0 ? warehouse.value / warehouse.stock : 0;
+                
+                html += `
+                    <tr>
+                        <td>${warehouseConfig[warehouseId].name}</td>
+                        <td>${warehouse.stock.toLocaleString()}</td>
+                        <td>S/ ${warehouse.value.toLocaleString('es-PE', {minimumFractionDigits: 2})}</td>
+                        <td>S/ ${avgPrice.toLocaleString('es-PE', {minimumFractionDigits: 2})}</td>
+                    </tr>
+                `;
+            });
+            
+            tableBody.innerHTML = html;
+        }
+
+        function updateAccountingVerification() {
+            let totalStock = 0;
+            let totalValue = 0;
+            
+            Object.keys(inventoryData.warehouses).forEach(warehouseId => {
+                const warehouse = inventoryData.warehouses[warehouseId];
+                totalStock += warehouse.stock;
+                totalValue += warehouse.value;
+            });
+            
+            // Verify movements balance
+            let entriesTotal = 0;
+            let exitsTotal = 0;
+            
+            inventoryData.movements.forEach(movement => {
+                if (movement.from === 'sistema' || !movement.from) {
+                    entriesTotal += movement.quantity;
+                } else {
+                    exitsTotal += movement.quantity;
+                }
+                
+                if (movement.to && movement.to !== 'sistema') {
+                    // This is an entry to the system
+                    if (movement.from === 'sistema') {
+                        entriesTotal += movement.quantity;
+                    }
+                }
+            });
+            
+            const isBalanced = Math.abs(totalStock - (entriesTotal - exitsTotal)) < 0.01;
+            
+            document.getElementById('accountingVerification').innerHTML = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Stock Total Sistema</h6>
+                        <p class="h4">${totalStock.toLocaleString()} pares</p>
+                        <small class="text-muted">Valor: S/ ${totalValue.toLocaleString('es-PE', {minimumFractionDigits: 2})}</small>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Estado Contable</h6>
+                        <p class="h4 ${isBalanced ? 'text-success' : 'text-danger'}">
+                            ${isBalanced ? 'Balanceado' : 'Desbalanceado'}
+                        </p>
+                        <small class="text-muted">
+                            Entradas: ${entriesTotal.toLocaleString()}<br>
+                            Salidas: ${exitsTotal.toLocaleString()}
+                        </small>
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateAuditTable() {
+            if (currentUser.role !== 'admin') {
+                document.getElementById('auditTable').innerHTML = 
+                    '<tr><td colspan="4" class="text-center text-muted">Acceso restringido</td></tr>';
+                return;
+            }
+            
+            const tableBody = document.getElementById('auditTable');
+            let html = '';
+            
+            inventoryData.auditLog.reverse().forEach(log => {
+                const date = new Date(log.timestamp).toLocaleString('es-PE');
+                
+                html += `
+                    <tr>
+                        <td>${date}</td>
+                        <td>${log.user}</td>
+                        <td><span class="badge badge-info">${log.action}</span></td>
+                        <td>${log.details}</td>
+                    </tr>
+                `;
+            });
+            
+            if (html === '') {
+                html = '<tr><td colspan="4" class="text-center text-muted">No hay registros de auditoría</td></tr>';
+            }
+            
+            tableBody.innerHTML = html;
+        }
+
+        function updateUsersTable() {
+            if (currentUser.role !== 'admin') {
+                document.getElementById('usersTable').innerHTML = 
+                    '<tr><td colspan="6" class="text-center text-muted">Acceso restringido</td></tr>';
+                return;
+            }
+            
+            const tableBody = document.getElementById('usersTable');
+            let html = '';
+            
+            Object.keys(inventoryData.users).forEach(username => {
+                const user = inventoryData.users[username];
+                const warehouseNames = user.warehouses.map(id => warehouseConfig[id]?.name || id).join(', ');
+                const statusClass = user.active ? 'success' : 'danger';
+                const statusText = user.active ? 'Activo' : 'Inactivo';
+                
+                html += `
+                    <tr>
+                        <td>${user.username}</td>
+                        <td>${user.fullName}</td>
+                        <td><span class="badge badge-info">${getRoleDisplayName(user.role)}</span></td>
+                        <td><small>${warehouseNames}</small></td>
+                        <td><span class="badge badge-${statusClass}">${statusText}</span></td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary" onclick="editUser('${username}')">Editar</button>
+                            <button class="btn btn-sm btn-outline-${user.active ? 'danger' : 'success'}" 
+                                    onclick="toggleUserStatus('${username}')">
+                                ${user.active ? 'Desactivar' : 'Activar'}
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            tableBody.innerHTML = html;
+        }
+
+        function showUserModal(username = null) {
+            if (currentUser.role !== 'admin') {
+                showAlert('No tiene permisos para gestionar usuarios', 'danger');
+                return;
+            }
+            
+            const modal = new bootstrap.Modal(document.getElementById('userModal'));
+            const form = document.getElementById('userForm');
+            
+            // Populate warehouse checkboxes
+            const warehouseContainer = document.getElementById('userWarehouses');
+            let warehouseHTML = '';
+            
+            Object.keys(warehouseConfig).forEach(warehouseId => {
+                warehouseHTML += `
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="${warehouseId}" id="warehouse_${warehouseId}">
+                        <label class="form-check-label" for="warehouse_${warehouseId}">
+                            ${warehouseConfig[warehouseId].name}
+                        </label>
+                    </div>
+                `;
+            });
+            
+            warehouseContainer.innerHTML = warehouseHTML;
+            
+            if (username) {
+                // Edit mode
+                const user = inventoryData.users[username];
+                document.getElementById('userUsername').value = user.username;
+                document.getElementById('userUsername').disabled = true;
+                document.getElementById('userFullName').value = user.fullName;
+                document.getElementById('userPassword').value = user.password;
+                document.getElementById('userRole').value = user.role;
+                
+                // Check assigned warehouses
+                user.warehouses.forEach(warehouseId => {
+                    document.getElementById(`warehouse_${warehouseId}`).checked = true;
+                });
+                
+                document.querySelector('#userModal .modal-title').textContent = 'Editar Usuario';
+            } else {
+                // Create mode
+                form.reset();
+                document.getElementById('userUsername').disabled = false;
+                document.querySelector('#userModal .modal-title').textContent = 'Nuevo Usuario';
+            }
+            
+            modal.show();
+        }
+
+        function saveUser() {
+            const username = document.getElementById('userUsername').value;
+            const fullName = document.getElementById('userFullName').value;
+            const password = document.getElementById('userPassword').value;
+            const role = document.getElementById('userRole').value;
+            
+            if (!username || !fullName || !password || !role) {
+                showAlert('Por favor complete todos los campos requeridos', 'danger');
+                return;
+            }
+            
+            // Get selected warehouses
+            const selectedWarehouses = [];
+            document.querySelectorAll('#userWarehouses .form-check-input:checked').forEach(checkbox => {
+                selectedWarehouses.push(checkbox.value);
+            });
+            
+            if (selectedWarehouses.length === 0) {
+                showAlert('Debe asignar al menos un almacén', 'danger');
+                return;
+            }
+            
+            const user = {
+                username: username,
+                password: password,
+                fullName: fullName,
+                role: role,
+                warehouses: selectedWarehouses,
+                active: true
+            };
+            
+            inventoryData.users[username] = user;
+            
+            addAuditLog(currentUser.username, 'Usuario', 
+                `${inventoryData.users[username] ? 'Editado' : 'Creado'}: ${username}`);
+            
+            saveData();
+            updateUsersTable();
+            
+            bootstrap.Modal.getInstance(document.getElementById('userModal')).hide();
+            showAlert('Usuario guardado exitosamente', 'success');
+        }
+
+        function editUser(username) {
+            showUserModal(username);
+        }
+
+        function toggleUserStatus(username) {
+            if (username === 'admin') {
+                showAlert('No se puede desactivar el usuario administrador', 'danger');
+                return;
+            }
+            
+            const user = inventoryData.users[username];
+            user.active = !user.active;
+            
+            addAuditLog(currentUser.username, 'Usuario', 
+                `${user.active ? 'Activado' : 'Desactivado'}: ${username}`);
+            
+            saveData();
+            updateUsersTable();
+            
+            showAlert(`Usuario ${user.active ? 'activado' : 'desactivado'} exitosamente`, 'success');
+        }
+
+        function addAuditLog(user, action, details) {
+            inventoryData.auditLog.push({
+                timestamp: new Date().toISOString(),
+                user: user,
+                action: action,
+                details: details
+            });
+        }
+
+        function showAlert(message, type = 'info') {
+            const alertContainer = document.getElementById('alertContainer');
+            const alertId = 'alert_' + Date.now();
+            
+            const alertHTML = `
+                <div id="${alertId}" class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    <i class="fas fa-${getAlertIcon(type)} me-2"></i>
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            
+            alertContainer.insertAdjacentHTML('beforeend', alertHTML);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                const alert = document.getElementById(alertId);
+                if (alert) {
+                    const bsAlert = bootstrap.Alert.getInstance(alert);
+                    if (bsAlert) bsAlert.close();
+                }
+            }, 5000);
+        }
+
+        function getAlertIcon(type) {
+            switch (type) {
+                case 'success': return 'check-circle';
+                case 'danger': return 'exclamation-circle';
+                case 'warning': return 'exclamation-triangle';
+                default: return 'info-circle';
+            }
+        }
+
+        function exportData() {
+            if (currentUser.role !== 'admin') {
+                showAlert('No tiene permisos para exportar datos', 'danger');
+                return;
+            }
+            
+            const dataToExport = {
+                ...inventoryData,
+                exportDate: new Date().toISOString(),
+                exportedBy: currentUser.username
+            };
+            
+            const dataStr = JSON.stringify(dataToExport, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(dataBlob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `calzados_mirla_backup_${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            URL.revokeObjectURL(url);
+            
+            addAuditLog(currentUser.username, 'Exportación', 'Datos exportados a JSON');
+            showAlert('Datos exportados exitosamente', 'success');
+        }
+
+        // Window resize handler for responsive behavior
+        window.addEventListener('resize', function() {
+            const mobileNavbar = document.querySelector('.mobile-navbar');
+            if (window.innerWidth > 768) {
+                mobileNavbar.style.display = 'none';
+                closeMobileSidebars();
+            } else {
+                if (currentUser) {
+                    mobileNavbar.style.display = 'flex';
+                }
+            }
+        });
+
+        console.log('Calzados Mirla SAC - Sistema de Inventario v2.0 inicializado correctamente');
+    </script>
+</body>
+</html>

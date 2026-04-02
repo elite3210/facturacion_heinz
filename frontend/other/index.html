@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Facturas Electrónicas UBL 2.0 - Perú</title>
+    <style>
+        /* Estilos generales */
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #1e40af;
+            --accent-color: #f59e0b;
+            --light-color: #f3f4f6;
+            --dark-color: #1f2937;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9fafb;
+            color: var(--dark-color);
+        }
+
+        .container {
+            margin: 0px 10px 0px 10px;
+            margin: 0 auto;
+            padding: 5px;
+        }
+
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        h1,
+        h2,
+        h3 {
+            margin-top: 0;
+        }
+
+        /* Diseño de secciones */
+        .main-content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .card {
+            background-color: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-upload {
+
+            min-width: 300px;
+        }
+
+        td {
+            margin: 2px;
+        }
+
+        #upload-form {
+            display: flex;
+        }
+
+        #upload-button {
+            margin: 30px 0px 30px 0px;
+        }
+
+        .section-list {
+            flex: 2;
+            width: 20%;
+            height: 80vh;
+        }
+
+        .section-viewer {
+            flex: 8;
+            width: 80%;
+        }
+
+        /* Formularios y controles */
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        input[type="file"] {
+            display: block;
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.25rem;
+            margin-bottom: 1rem;
+        }
+
+        button {
+            padding: 0.5rem 1rem;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: var(--secondary-color);
+        }
+
+        button:disabled {
+            background-color: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        .button-danger {
+            background-color: var(--danger-color);
+        }
+
+        .button-danger:hover {
+            background-color: #dc2626;
+        }
+
+        /* Lista de facturas */
+        .list-facturas {
+            /*max-height: 400px;*/
+            height: 100vh;
+            width: 100vh;
+            overflow-y: auto;
+            border: 1px solid #d1d5db;
+            border-radius: 0.25rem;
+        }
+
+        .factura-item {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #e5e7eb;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .factura-item:hover {
+            background-color: #f3f4f6;
+        }
+
+        .factura-item.selected {
+            background-color: #dbeafe;
+            border-left: 3px solid var(--primary-color);
+        }
+
+        .factura-item:last-child {
+            border-bottom: none;
+        }
+
+        .factura-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.25rem;
+        }
+
+        .factura-item-title {
+            font-weight: 600;
+        }
+
+        .factura-item-meta {
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+
+        /* Visor de facturas */
+        .factura-viewer {
+            border: 1px solid #d1d5db;
+            border-radius: 0.25rem;
+            padding: 1.5rem;
+            background-color: white;
+        }
+
+        .factura-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .detail-group {
+            margin-bottom: 1rem;
+        }
+
+        .detail-group label {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-bottom: 0.25rem;
+        }
+
+        .detail-group .value {
+            font-weight: 500;
+        }
+
+        .factura-items {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .factura-items th {
+            text-align: left;
+            padding: 0.75rem;
+            background-color: #f3f4f6;
+            border-bottom: 2px solid #d1d5db;
+        }
+
+        .factura-items td {
+            padding: 0.75rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .factura-items tr:last-child td {
+            border-bottom: none;
+        }
+
+        .factura-totals {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            margin-top: 1rem;
+            border-top: 2px solid #e5e7eb;
+            padding-top: 1rem;
+        }
+
+        .total-line {
+            display: flex;
+            justify-content: space-between;
+            width: 250px;
+            margin-bottom: 0.5rem;
+        }
+
+        .grand-total {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--primary-color);
+        }
+
+        /* Estados y notificaciones */
+        .message {
+            padding: 0.75rem 1rem;
+            margin-bottom: 1rem;
+            border-radius: 0.25rem;
+        }
+
+        .message-success {
+            background-color: #d1fae5;
+            color: #065f46;
+            border-left: 4px solid #10b981;
+        }
+
+        .message-error {
+            background-color: #fee2e2;
+            color: #991b1b;
+            border-left: 4px solid #ef4444;
+        }
+
+        .message-info {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border-left: 4px solid #3b82f6;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 1rem;
+            height: 1rem;
+            border: 2px solid rgba(0, 0, 0, 0.1);
+            border-left-color: var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 0.5rem;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="container">
+            <h1>Sistema de Facturas Electrónicas UBL 2.0 - Perú</h1>
+        </div>
+    </header>
+
+    <div class="container">
+        <div id="messages-container"></div>
+
+        <!-- Sección de carga de facturas -->
+        <div class="section-upload card">
+            <h2>Cargar Factura</h2>
+            <form id="upload-form">
+                <div class="form-group">
+                    <label for="xml-file">Seleccionar archivo XML:</label>
+                    <input type="file" id="xml-file" accept=".xml" required>
+                </div>
+                <button type="submit" id="upload-button">
+                    Subir Factura
+                    <span id="upload-loading" class="loading hidden"></span>
+                </button>
+            </form>
+        </div>
+
+        <div class="main-content">
+            <!-- Sección de lista de facturas -->
+            <div class="section-list card">
+                <h2>
+                    Facturas Disponibles
+                    <button id="refresh-list" class="button-small"
+                        style="float: right; padding: 0.25rem 0.5rem; font-size: 0.875rem;">
+                        Actualizar
+                        <span id="list-loading" class="loading hidden"></span>
+                    </button>
+                </h2>
+                <div id="facturas-list" class="list-facturas">
+                    <div class="factura-item">Cargando facturas...</div>
+                </div>
+            </div>
+
+            <!-- Sección de visualización de factura -->
+            <div class="section-viewer card">
+                <h2>Visualización de Factura</h2>
+                <div id="factura-viewer" class="factura-viewer">
+                    <div id="factura-placeholder" class="text-center">
+                        <p>Seleccione una factura de la lista para visualizarla</p>
+                    </div>
+                    <div id="factura-content" class="hidden">
+                        <!-- El contenido de la factura se mostrará aquí -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuración de la API
+        const API_URL = 'https://www.heinzsport.com/facturacion/backend/api/apiFactura.php'; // Cambiar según la ubicación de tu API
+
+        // Referencias a elementos del DOM
+        const uploadForm = document.getElementById('upload-form');
+        const xmlFileInput = document.getElementById('xml-file');
+        const uploadButton = document.getElementById('upload-button');
+        const uploadLoading = document.getElementById('upload-loading');
+        const refreshListBtn = document.getElementById('refresh-list');
+        const listLoading = document.getElementById('list-loading');
+        const facturasListEl = document.getElementById('facturas-list');
+        const facturaPlaceholder = document.getElementById('factura-placeholder');
+        const facturaContent = document.getElementById('factura-content');
+        const messagesContainer = document.getElementById('messages-container');
+
+        // Variable para almacenar el ID de la factura seleccionada
+        let selectedFacturaId = null;
+
+        // Cargar la lista de facturas al iniciar
+        document.addEventListener('DOMContentLoaded', () => {
+            cargarListaFacturas();
+        });
+
+        // Event listeners
+        uploadForm.addEventListener('submit', subirFactura);
+        refreshListBtn.addEventListener('click', cargarListaFacturas);
+
+        // Función para mostrar mensajes al usuario
+        function mostrarMensaje(tipo, mensaje, duracion = 5000) {
+            const messageEl = document.createElement('div');
+            messageEl.className = `message message-${tipo}`;
+            messageEl.textContent = mensaje;
+
+            messagesContainer.appendChild(messageEl);
+
+            // Eliminar el mensaje después de la duración especificada
+            if (duracion > 0) {
+                setTimeout(() => {
+                    messageEl.remove();
+                }, duracion);
+            }
+
+            return messageEl;
+        }
+
+        // Función para subir una factura XML
+        async function subirFactura(event) {
+            event.preventDefault();
+
+            // Validar que se haya seleccionado un archivo
+            if (!xmlFileInput.files || xmlFileInput.files.length === 0) {
+                mostrarMensaje('error', 'Por favor seleccione un archivo XML');
+                return;
+            }
+
+            const file = xmlFileInput.files[0];
+
+            // Validar que sea un archivo XML
+            if (!file.name.toLowerCase().endsWith('.xml')) {
+                mostrarMensaje('error', 'El archivo debe ser XML');
+                return;
+            }
+
+            // Preparar FormData para enviar el archivo
+            const formData = new FormData();
+            formData.append('xml_file', file);
+
+            // Mostrar indicador de carga
+            uploadButton.disabled = true;
+            uploadLoading.classList.remove('hidden');
+
+            try {
+                const response = await fetch(`${API_URL}?action=subir`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.exito) {
+                    mostrarMensaje('success', result.mensaje);
+                    uploadForm.reset();
+
+                    // Recargar la lista de facturas
+                    cargarListaFacturas();
+                } else {
+                    mostrarMensaje('error', result.mensaje);
+                }
+            } catch (error) {
+                mostrarMensaje('error', `Error: ${error.message}`);
+                console.error('Error al subir archivo:', error);
+            } finally {
+                // Ocultar indicador de carga
+                uploadButton.disabled = false;
+                uploadLoading.classList.add('hidden');
+            }
+        }
+
+        // Función para cargar la lista de facturas
+        async function cargarListaFacturas() {
+            // Mostrar indicador de carga
+            refreshListBtn.disabled = true;
+            listLoading.classList.remove('hidden');
+            facturasListEl.innerHTML = '<div class="factura-item">Cargando facturas...</div>';
+
+            try {
+                const response = await fetch(`${API_URL}?action=listar`);
+                const result = await response.json();
+
+                if (result.exito) {
+                    mostrarListaFacturas(result.datos);
+                } else {
+                    facturasListEl.innerHTML = `<div class="factura-item">Error: ${result.mensaje}</div>`;
+                }
+            } catch (error) {
+                facturasListEl.innerHTML = `<div class="factura-item">Error: ${error.message}</div>`;
+                console.error('Error al cargar lista:', error);
+            } finally {
+                // Ocultar indicador de carga
+                refreshListBtn.disabled = false;
+                listLoading.classList.add('hidden');
+            }
+        }
+
+        // Función para mostrar la lista de facturas
+        function mostrarListaFacturas(facturas) {
+            const facturaTabla = document.createElement('table');
+            const facturaBody = document.createElement('tbody')
+            const titulo = `<tr><th>NUMERO</th><th>FECHA</th><th>RUC</th><th>IMPORTE</th></tr>`
+            facturaBody.innerHTML = titulo;
+
+            facturasListEl.innerHTML = '';
+
+            if (!facturas || facturas.length === 0) {
+                facturasListEl.innerHTML = '<div class="factura-item">No hay facturas disponibles</div>';
+                return;
+            }
+
+            facturas.forEach(factura => {
+                const facturaItem = document.createElement('tr');
+                facturaItem.className = 'factura-item';
+                facturaItem.dataset.id = factura.id;
+
+                // Si esta factura está seleccionada, añadir clase 'selected'
+                if (factura.id === selectedFacturaId) {
+                    facturaItem.classList.add('selected');
+                }
+
+                // Formato de fecha
+                const fecha = factura.fecha_emision ? new Date(factura.fecha_emision) : new Date(factura.fecha_creacion);
+                const fechaFormateada = fecha.toLocaleDateString('es-PE');
+
+                // Contenido del item
+                facturaItem.innerHTML = `
+                    
+                        <td class="factura-item-title">${factura.numero_factura || factura.nombre_archivo}</td>
+                    
+                    
+                        <td>${fechaFormateada}</td>
+                        ${factura.ruc_receptor ? `<td>${factura.ruc_receptor}</td>` : ''}
+                        ${factura.monto_total ? `<td>${parseFloat(factura.monto_total).toFixed(2)}</td>` : ''}
+                    
+                `;
+
+                // Event listener para seleccionar factura
+                facturaItem.addEventListener('click', () => seleccionarFactura(factura.id));
+                facturaBody.appendChild(facturaItem)
+
+            });
+            facturaTabla.appendChild(facturaBody)
+            facturasListEl.appendChild(facturaTabla);
+        }
+
+        // Función para seleccionar una factura
+        function seleccionarFactura(id) {
+            // Actualizar la factura seleccionada
+            selectedFacturaId = id;
+
+            // Actualizar clases 'selected' en la lista
+            document.querySelectorAll('.factura-item').forEach(item => {
+                if (item.dataset.id === id) {
+                    item.classList.add('selected');
+                } else {
+                    item.classList.remove('selected');
+                }
+            });
+
+            // Cargar y mostrar la factura
+            cargarFactura(id);
+        }
+
+        // Función para cargar una factura por su ID
+        async function cargarFactura(id) {
+            // Mostrar placeholder y ocultar contenido
+            facturaPlaceholder.textContent = 'Cargando factura...';
+            facturaPlaceholder.classList.remove('hidden');
+            facturaContent.classList.add('hidden');
+
+            try {
+                const response = await fetch(`${API_URL}?action=obtener&id=${id}`);
+                const result = await response.json();
+
+                if (result.exito) {
+                    // Decodificar el XML de base64
+                    const xmlString = atob(result.datos.contenido_xml);
+
+                    // Renderizar la factura
+                    renderizarFactura(xmlString, result.datos);
+                } else {
+                    facturaPlaceholder.textContent = `Error: ${result.mensaje}`;
+                }
+            } catch (error) {
+                facturaPlaceholder.textContent = `Error: ${error.message}`;
+                console.error('Error al cargar factura:', error);
+            }
+        }
+
+        // Función para renderizar una factura a partir del XML
+        function renderizarFactura(xmlString, datosDB) {
+            try {
+                // Parsear el XML
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(xmlString, 'text/xml');
+
+                // Verificar si hubo error al parsear
+                if (xmlDoc.getElementsByTagName('parsererror').length > 0) {
+                    throw new Error('Error al parsear el XML');
+                }
+
+                // Registrar namespaces para XPath
+                const nsResolver = xmlDoc.createNSResolver(xmlDoc.documentElement);
+
+                // Función para obtener valor de un elemento por XPath
+                function getXPathValue(xpath) {
+                    try {
+                        const evaluator = new XPathEvaluator();
+                        const result = evaluator.evaluate(xpath, xmlDoc, nsResolver, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
+                        return result.singleNodeValue ? result.singleNodeValue.textContent.trim() : '';
+                    } catch (e) {
+                        console.warn(`Error al evaluar XPath: ${xpath}`, e);
+                        return '';
+                    }
+                }
+
+                // Extraer información relevante del XML
+                // Nota: Estos XPath pueden necesitar ajustes según la estructura exacta del XML UBL 2.0 de Perú
+                const datosFactura = {
+                    numero: getXPathValue('//cbc:ID') || datosDB.numero_factura || 'No disponible',
+                    serie: getXPathValue('//cbc:ID').split('-')[0] || '',
+                    correlativo: getXPathValue('//cbc:ID').split('-')[1] || '',
+                    fechaEmision: getXPathValue('//cbc:IssueDate') || datosDB.fecha_emision || 'No disponible',
+                    horaEmision: getXPathValue('//cbc:IssueTime') || '',
+                    tipoDocumento: getXPathValue('//cbc:InvoiceTypeCode') || 'No disponible',
+                    moneda: getXPathValue('//cbc:DocumentCurrencyCode') || 'PEN',
+
+                    // Datos del emisor
+                    emisorRuc: getXPathValue('//cac:AccountingSupplierParty//cbc:CompanyID') || datosDB.ruc_emisor || 'No disponible',
+                    emisorRazonSocial: getXPathValue('//cac:AccountingSupplierParty//cbc:RegistrationName') || 'No disponible',
+                    emisorDireccion: getXPathValue('//cac:AccountingSupplierParty/cac:Party/cac:PartyLegalEntity/cac:RegistrationAddress/cac:AddressLine/cbc:Line') || 'N/A',
+
+                    // Datos del receptor
+                    receptorRuc: getXPathValue('//cac:AccountingCustomerParty//cbc:CompanyID') || datosDB.ruc_receptor || 'No disponible',
+                    receptorRazonSocial: getXPathValue('//cac:AccountingCustomerParty//cbc:RegistrationName') || 'N/A',
+                    receptorDireccion: getXPathValue('//cac:AccountingCustomerParty/cac:Party/cac:PartyLegalEntity/cac:RegistrationAddress/cac:AddressLine/cbc:Line') || 'N/A',
+                    // Totales
+                    totalIgv: getXPathValue('//cac:TaxTotal/cbc:TaxAmount') || '0.00',
+                    totalVenta: getXPathValue('//cac:LegalMonetaryTotal/cbc:PayableAmount') || datosDB.monto_total || '0.00',
+                    subtotal: getXPathValue('//cac:LegalMonetaryTotal/cbc:LineExtensionAmount') || '0.00'
+                };
+
+                // Formatear la fecha
+                const fechaEmision = datosFactura.fechaEmision ? new Date(datosFactura.fechaEmision) : null;
+                const fechaFormateada = fechaEmision ? fechaEmision.toLocaleDateString('es-PE') : 'No disponible';
+
+                // Extraer ítems de la factura
+                const itemsNodes = xmlDoc.getElementsByTagNameNS('urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2', 'InvoiceLine');
+                const items = [];
+
+                for (let i = 0; i < itemsNodes.length; i++) {
+                    const item = itemsNodes[i];
+
+                    // Función para obtener valor dentro del nodo actual
+                    function getNodeValue(tagName, namespace = 'urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2') {
+                        const elements = item.getElementsByTagNameNS(namespace, tagName);
+                        return elements.length > 0 ? elements[0].textContent.trim() : '';
+                    }
+                    //'./cac:Price/cbc:PriceAmount'
+                    items.push({
+                        descripcion: getNodeValue('Description') || 'No disponible',
+                        cantidad: getNodeValue('InvoicedQuantity') || '0',
+                        unidad: item.getElementsByTagNameNS('urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2', 'InvoicedQuantity')[0]?.getAttribute('unitCode') || 'UND',
+                        precioUnitario: getNodeValue('PriceAmount') || '0.00',
+                        subtotal: getNodeValue('LineExtensionAmount') || '0.00'
+
+                    });
+                }
+
+                // Construir el HTML para la visualización de la factura
+                let facturaHTML = `
+                    <div class="factura-header">
+                        <h2>Factura Electrónica: ${datosFactura.numero}</h2>
+                    </div>
+                    
+                    <div class="factura-details">
+                        <div class="detail-section">
+                            <h3>Información General</h3>
+                            <div class="detail-group">
+                                <label>Número:</label>
+                                <div class="value">${datosFactura.numero}</div>
+                            </div>
+                            <div class="detail-group">
+                                <label>Fecha de Emisión:</label>
+                                <div class="value">${fechaFormateada}</div>
+                            </div>
+                            <div class="detail-group">
+                                <label>Moneda:</label>
+                                <div class="value">${datosFactura.moneda}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-section">
+                            <h3>Emisor</h3>
+                            <div class="detail-group">
+                                <label>RUC:</label>
+                                <div class="value">${datosFactura.emisorRuc}</div>
+                            </div>
+                            <div class="detail-group">
+                                <label>Razón Social:</label>
+                                <div class="value">${datosFactura.emisorRazonSocial}</div>
+                            </div>
+                            <div class="detail-group">
+                                <label>Dirección:</label>
+                                <div class="value">${datosFactura.emisorDireccion}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-section">
+                            <h3>Cliente</h3>
+                            <div class="detail-group">
+                                <label>RUC:</label>
+                                <div class="value">${datosFactura.receptorRuc}</div>
+                            </div>
+                            <div class="detail-group">
+                                <label>Razón Social:</label>
+                                <div class="value">${datosFactura.receptorRazonSocial}</div>
+                            </div>
+                            <div class="detail-group">
+                                <label>Dirección:</label>
+                                <div class="value">${datosFactura.receptorDireccion}</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h3>Detalle de Ítems</h3>
+                    <table class="factura-items">
+                        <thead>
+                            <tr>
+                                <th>Descripción</th>
+                                <th>Cantidad</th>
+                                <th>Unidad</th>
+                                <th>Precio Unit.</th>
+                                <th>Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                // Añadir filas para cada ítem
+                if (items.length > 0) {
+                    items.forEach(item => {
+                        facturaHTML += `
+                            <tr>
+                                <td>${item.descripcion}</td>
+                                <td>${item.cantidad}</td>
+                                <td>${item.unidad}</td>
+                                <td>${parseFloat(item.precioUnitario).toFixed(2)}</td>
+                                <td>${parseFloat(item.subtotal).toFixed(2)}</td>
+                            </tr>
+                        `;
+                    });
+                } else {
+                    facturaHTML += `<tr><td colspan="5">No hay ítems disponibles</td></tr>`;
+                }
+
+                // Añadir totales
+                facturaHTML += `
+                        </tbody>
+                    </table>
+                    
+                    <div class="factura-totals">
+                        <div class="total-line">
+                            <span>Subtotal:</span>
+                            <span>${parseFloat(datosFactura.subtotal).toFixed(2)} ${datosFactura.moneda}</span>
+                        </div>
+                        <div class="total-line">
+                            <span>IGV:</span>
+                            <span>${parseFloat(datosFactura.totalIgv).toFixed(2)} ${datosFactura.moneda}</span>
+                        </div>
+                        <div class="total-line grand-total">
+                            <span>TOTAL:</span>
+                            <span>${parseFloat(datosFactura.totalVenta).toFixed(2)} ${datosFactura.moneda}</span>
+                        </div>
+                    </div>
+                `;
+
+                // Mostrar el contenido de la factura
+                facturaContent.innerHTML = facturaHTML;
+                facturaPlaceholder.classList.add('hidden');
+                facturaContent.classList.remove('hidden');
+
+            } catch (error) {
+                facturaPlaceholder.textContent = `Error al renderizar factura: ${error.message}`;
+                facturaPlaceholder.classList.remove('hidden');
+                facturaContent.classList.add('hidden');
+                console.error('Error al renderizar factura:', error);
+            }
+        }
+    </script>
+</body>
+
+</html>

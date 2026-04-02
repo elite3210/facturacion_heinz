@@ -1,0 +1,1879 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gestión de Inventario - Lotes y Partida Doble</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .navbar-brand { font-weight: bold; }
+        .card-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .scanner-input { font-size: 1.2rem; border: 2px solid #007bff; }
+        .product-card { transition: transform 0.2s; }
+        .product-card:hover { transform: translateY(-2px); }
+        .status-badge { font-size: 0.8rem; }
+        .history-item { border-left: 3px solid #007bff; padding-left: 15px; margin-bottom: 10px; }
+        .scan-area { background: #f8f9fa; border: 2px dashed #dee2e6; border-radius: 10px; padding: 30px; text-align: center; margin-bottom: 20px; }
+        .scan-area.active { border-color: #007bff; background: #e3f2fd; }
+        .lot-card { border: 2px solid #28a745; }
+        .lot-progress { height: 10px; }
+        .document-header { background: #f8f9fa; border: 1px solid #dee2e6; padding: 15px; margin-bottom: 20px; }
+        .kardex-entry { font-family: 'Courier New', monospace; }
+        .balance-positive { color: #28a745; font-weight: bold; }
+        .balance-negative { color: #dc3545; font-weight: bold; }
+        .transit-badge { background: #ffc107; color: #000; }
+        .print-btn { margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="#"><i class="fas fa-boxes"></i> Sistema de Inventario Pro</a>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text me-3" id="currentLocation">Ubicación: Almacén Principal</span>
+                <div class="dropdown">
+                    <button class="btn btn-outline-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-map-marker-alt"></i> Cambiar Ubicación
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item location-item" href="#" data-location="warehouse">Almacén Principal</a></li>
+                        <li><a class="dropdown-item location-item" href="#" data-location="transit">En Tránsito</a></li>
+                        <li><a class="dropdown-item location-item" href="#" data-location="store_001">Tienda Centro</a></li>
+                        <li><a class="dropdown-item location-item" href="#" data-location="store_002">Tienda Norte</a></li>
+                        <li><a class="dropdown-item location-item" href="#" data-location="store_003">Tienda Sur</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Tabs -->
+        <ul class="nav nav-tabs" id="mainTabs" role="tablist">
+            <li class="nav-item"><button class="nav-link active" id="scanner-tab" data-bs-toggle="tab" data-bs-target="#scanner" type="button"><i class="fas fa-qrcode"></i> Escáner</button></li>
+            <li class="nav-item"><button class="nav-link" id="products-tab" data-bs-toggle="tab" data-bs-target="#products" type="button"><i class="fas fa-box"></i> Productos</button></li>
+            <li class="nav-item"><button class="nav-link" id="lots-tab" data-bs-toggle="tab" data-bs-target="#lots" type="button"><i class="fas fa-layer-group"></i> Lotes</button></li>
+            <li class="nav-item"><button class="nav-link" id="inventory-tab" data-bs-toggle="tab" data-bs-target="#inventory" type="button"><i class="fas fa-warehouse"></i> Inventario</button></li>
+            <li class="nav-item"><button class="nav-link" id="documents-tab" data-bs-toggle="tab" data-bs-target="#documents" type="button"><i class="fas fa-file-alt"></i> Documentos</button></li>
+            <li class="nav-item"><button class="nav-link" id="kardex-tab" data-bs-toggle="tab" data-bs-target="#kardex" type="button"><i class="fas fa-chart-line"></i> Kardex</button></li>
+            <li class="nav-item"><button class="nav-link" id="sales-tab" data-bs-toggle="tab" data-bs-target="#sales" type="button"><i class="fas fa-shopping-cart"></i> Ventas</button></li>
+        </ul>
+
+        <div class="tab-content mt-3" id="mainTabContent">
+            <!-- Scanner Tab -->
+            <div class="tab-pane fade show active" id="scanner" role="tabpanel">
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5><i class="fas fa-qrcode"></i> Escáner de Códigos de Barras</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="scan-area" id="scanArea">
+                                    <i class="fas fa-qrcode fa-3x text-muted mb-3"></i>
+                                    <h5>Escanear Código de Barras</h5>
+                                    <p class="text-muted">Escanee lote, número de serie o código de producto</p>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="barcodeInput" class="form-label">Código de Barras / Número de Serie / Lote</label>
+                                    <input type="text" class="form-control scanner-input" id="barcodeInput" placeholder="Escanee o ingrese el código...">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="operationType" class="form-label">Tipo de Operación</label>
+                                    <select class="form-select" id="operationType">
+                                        <option value="receive_lot">Recibir Lote Completo</option>
+                                        <option value="receive_serial">Recibir por N° Serie</option>
+                                        <option value="transfer_lot">Transferir Lote Completo</option>
+                                        <option value="transfer_serial">Transferir por N° Serie</option>
+                                        <option value="confirm_receipt">Confirmar Recepción</option>
+                                        <option value="sale">Venta</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="mb-3" id="transferOptions" style="display: none;">
+                                    <label for="transferTo" class="form-label">Transferir a:</label>
+                                    <select class="form-select" id="transferTo">
+                                        <option value="warehouse">Almacén Principal</option>
+                                        <option value="transit">En Tránsito</option>
+                                        <option value="store_001">Tienda Centro</option>
+                                        <option value="store_002">Tienda Norte</option>
+                                        <option value="store_003">Tienda Sur</option>
+                                    </select>
+                                </div>
+                                
+                                <button type="button" class="btn btn-primary btn-lg w-100" id="processBtn">
+                                    <i class="fas fa-check"></i> Procesar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6><i class="fas fa-info-circle"></i> Información</h6>
+                            </div>
+                            <div class="card-body" id="productInfo">
+                                <p class="text-muted text-center">Escanee un código para ver la información</p>
+                            </div>
+                        </div>
+                        
+                        <div class="card mt-3">
+                            <div class="card-header">
+                                <h6><i class="fas fa-history"></i> Movimientos Recientes</h6>
+                            </div>
+                            <div class="card-body" id="recentHistory">
+                                <p class="text-muted text-center">No hay movimientos recientes</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Products Tab -->
+            <div class="tab-pane fade" id="products" role="tabpanel">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5><i class="fas fa-box"></i> Gestión de Productos</h5>
+                        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#productModal">
+                            <i class="fas fa-plus"></i> Nuevo Producto
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="row" id="productsList"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lots Tab -->
+            <div class="tab-pane fade" id="lots" role="tabpanel">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5><i class="fas fa-layer-group"></i> Gestión de Lotes</h5>
+                        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#lotModal">
+                            <i class="fas fa-plus"></i> Crear Lote
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="row" id="lotsList"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Inventory Tab -->
+            <div class="tab-pane fade" id="inventory" role="tabpanel">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-warehouse"></i> Inventario por Ubicación</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Lote</th>
+                                        <th>Número de Serie</th>
+                                        <th>Producto</th>
+                                        <th>Ubicación</th>
+                                        <th>Estado</th>
+                                        <th>Fecha</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="inventoryTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Documents Tab -->
+            <div class="tab-pane fade" id="documents" role="tabpanel">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5><i class="fas fa-file-alt"></i> Documentos de Transferencia</h5>
+                        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#transferModal">
+                            <i class="fas fa-plus"></i> Nueva Transferencia
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div id="documentsList"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Kardex Tab -->
+            <div class="tab-pane fade" id="kardex" role="tabpanel">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-chart-line"></i> Kardex de Inventario</h5>
+                        <div class="row mt-2">
+                            <div class="col-md-4">
+                                <select class="form-select" id="kardexProduct">
+                                    <option value="">Todos los productos</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <select class="form-select" id="kardexLocation">
+                                    <option value="">Todas las ubicaciones</option>
+                                    <option value="warehouse">Almacén Principal</option>
+                                    <option value="transit">En Tránsito</option>
+                                    <option value="store_001">Tienda Centro</option>
+                                    <option value="store_002">Tienda Norte</option>
+                                    <option value="store_003">Tienda Sur</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <button class="btn btn-primary" onclick="app.loadKardex()">Filtrar</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm kardex-entry">
+                                <thead>
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Documento</th>
+                                        <th>Detalle</th>
+                                        <th>Entrada</th>
+                                        <th>Salida</th>
+                                        <th>Saldo</th>
+                                        <th>Ubicación</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="kardexTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sales Tab -->
+            <div class="tab-pane fade" id="sales" role="tabpanel">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-shopping-cart"></i> Historial de Ventas</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Documento</th>
+                                        <th>Lote</th>
+                                        <th>N° Serie</th>
+                                        <th>Producto</th>
+                                        <th>Precio</th>
+                                        <th>Ubicación</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="salesTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Modal -->
+    <div class="modal fade" id="productModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Nuevo Producto</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="productForm">
+                        <div class="mb-3">
+                            <label for="productCode" class="form-label">Código del Producto</label>
+                            <input type="text" class="form-control" id="productCode" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="productName" class="form-label">Nombre del Producto</label>
+                            <input type="text" class="form-control" id="productName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="productSize" class="form-label">Talla</label>
+                            <select class="form-select" id="productSize" required>
+                                <option value="">Seleccione talla</option>
+                                <option value="35">35</option>
+                                <option value="36">36</option>
+                                <option value="37">37</option>
+                                <option value="38">38</option>
+                                <option value="39">39</option>
+                                <option value="40">40</option>
+                                <option value="41">41</option>
+                                <option value="42">42</option>
+                                <option value="43">43</option>
+                                <option value="44">44</option>
+                                <option value="45">45</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="productPrice" class="form-label">Precio</label>
+                            <input type="number" class="form-control" id="productPrice" step="0.01" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="saveProduct">Guardar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lot Modal -->
+    <div class="modal fade" id="lotModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Crear Lote</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="lotForm">
+                        <div class="mb-3">
+                            <label for="lotProduct" class="form-label">Producto</label>
+                            <select class="form-select" id="lotProduct" required></select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="lotQuantity" class="form-label">Cantidad de Pares</label>
+                            <input type="number" class="form-control" id="lotQuantity" value="12" min="1" max="50" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="lotSupplier" class="form-label">Proveedor</label>
+                            <input type="text" class="form-control" id="lotSupplier" placeholder="Nombre del proveedor">
+                        </div>
+                        <div class="mb-3">
+                            <label for="lotPurchaseOrder" class="form-label">Orden de Compra</label>
+                            <input type="text" class="form-control" id="lotPurchaseOrder" placeholder="PO-001">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="saveLot">Crear Lote</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transfer Modal -->
+    <div class="modal fade" id="transferModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Nueva Transferencia Masiva</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="transferForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label for="transferFromLocation" class="form-label">Desde</label>
+                                <select class="form-select" id="transferFromLocation" required>
+                                    <option value="warehouse">Almacén Principal</option>
+                                    <option value="store_001">Tienda Centro</option>
+                                    <option value="store_002">Tienda Norte</option>
+                                    <option value="store_003">Tienda Sur</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="transferToLocation" class="form-label">Hacia</label>
+                                <select class="form-select" id="transferToLocation" required>
+                                    <option value="transit">En Tránsito</option>
+                                    <option value="warehouse">Almacén Principal</option>
+                                    <option value="store_001">Tienda Centro</option>
+                                    <option value="store_002">Tienda Norte</option>
+                                    <option value="store_003">Tienda Sur</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <label for="transferReference" class="form-label">Referencia</label>
+                            <input type="text" class="form-control" id="transferReference" placeholder="Motivo de transferencia">
+                        </div>
+                        <div class="mt-3">
+                            <h6>Productos a Transferir</h6>
+                            <div id="transferItems">
+                                <div class="row align-items-end mb-2">
+                                    <div class="col-md-5">
+                                        <label class="form-label">Lote</label>
+                                        <select class="form-select lot-select" required>
+                                            <option value="">Seleccione lote</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Cantidad</label>
+                                        <input type="number" class="form-control quantity-input" min="1" value="1">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <button type="button" class="btn btn-success" onclick="app.addTransferItem()">
+                                            <i class="fas fa-plus"></i> Agregar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="selectedItems" class="mt-3"></div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="saveTransfer">Crear Transferencia</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Document View Modal -->
+    <div class="modal fade" id="documentModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Documento de Transferencia</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="documentContent"></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-primary" onclick="window.print()">
+                        <i class="fas fa-print"></i> Imprimir
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // ==================== MODELS ====================
+        class Product {
+            constructor(code, name, size, price) {
+                this.id = Date.now() + Math.random();
+                this.code = code;
+                this.name = name;
+                this.size = size;
+                this.fullCode = `${code}-${size}`;
+                this.fullName = `${name} Talla ${size}`;
+                this.price = parseFloat(price);
+                this.barcode = this.fullCode;
+                this.createdAt = new Date();
+            }
+        }
+
+        class Lot {
+            constructor(lotNumber, productId, quantity = 12, supplier = null, purchaseOrder = null) {
+                this.id = Date.now() + Math.random();
+                this.lotNumber = lotNumber;
+                this.productId = productId;
+                this.quantity = quantity;
+                this.status = 'active';
+                this.supplier = supplier;
+                this.purchaseOrder = purchaseOrder;
+                this.createdAt = new Date();
+                this.expirationDate = null;
+            }
+        }
+
+        class SerialNumber {
+            constructor(serialNumber, productId, lotId, pairPosition) {
+                this.id = Date.now() + Math.random();
+                this.serialNumber = serialNumber;
+                this.productId = productId;
+                this.lotId = lotId;
+                this.barcode = serialNumber;
+                this.status = 'available';
+                this.currentLocation = 'warehouse';
+                this.pairPosition = pairPosition;
+                this.createdAt = new Date();
+            }
+        }
+
+        class StockMove {
+            constructor(serialNumberId, fromLocation, toLocation, moveType, reference = null, documentId = null) {
+                this.id = Date.now() + Math.random();
+                this.serialNumberId = serialNumberId;
+                this.fromLocation = fromLocation;
+                this.toLocation = toLocation;
+                this.moveType = moveType;
+                this.moveDate = new Date();
+                this.reference = reference;
+                this.documentId = documentId;
+                this.userId = 'current_user';
+                this.confirmed = moveType === 'in' || moveType === 'sale';
+            }
+        }
+
+        class TransferDocument {
+            constructor(fromLocation, toLocation, reference, items) {
+                this.id = Date.now() + Math.random();
+                this.documentNumber = `TR-${Date.now().toString().slice(-8)}`;
+                this.fromLocation = fromLocation;
+                this.toLocation = toLocation;
+                this.reference = reference;
+                this.items = items; // Array of {lotId, serialIds, quantity}
+                this.status = 'pending'; // pending, in_transit, received
+                this.createdAt = new Date();
+                this.confirmedAt = null;
+                this.createdBy = 'current_user';
+            }
+        }
+
+        class Sale {
+            constructor(serialNumberId, amount, documentNumber, customerInfo = null) {
+                this.id = Date.now() + Math.random();
+                this.serialNumberId = serialNumberId;
+                this.documentNumber = documentNumber;
+                this.saleDate = new Date();
+                this.amount = parseFloat(amount);
+                this.customerInfo = customerInfo;
+            }
+        }
+
+        class KardexEntry {
+            constructor(productId, location, moveType, quantity, balance, reference, documentId) {
+                this.id = Date.now() + Math.random();
+                this.productId = productId;
+                this.location = location;
+                this.moveType = moveType; // 'in', 'out', 'transfer_in', 'transfer_out'
+                this.quantity = quantity;
+                this.balance = balance;
+                this.reference = reference;
+                this.documentId = documentId;
+                this.date = new Date();
+            }
+        }
+
+        // ==================== DATA MANAGER ====================
+        class DataManager {
+            constructor() {
+                this.initializeData();
+            }
+
+            initializeData() {
+                if (!localStorage.getItem('products')) {
+                    const sampleProducts = [
+                        new Product('CAL001', 'Zapato Formal Negro', '38', 150.00),
+                        new Product('CAL001', 'Zapato Formal Negro', '39', 150.00),
+                        new Product('CAL001', 'Zapato Formal Negro', '40', 150.00),
+                        new Product('CAL002', 'Zapato Deportivo Blanco', '38', 120.00),
+                        new Product('CAL002', 'Zapato Deportivo Blanco', '39', 120.00),
+                        new Product('CAL003', 'Sandalia de Cuero', '38', 80.00),
+                        new Product('CAL003', 'Sandalia de Cuero', '39', 80.00)
+                    ];
+                    localStorage.setItem('products', JSON.stringify(sampleProducts));
+                }
+
+                // Initialize other collections
+                ['lots', 'serialNumbers', 'stockMoves', 'transferDocuments', 'sales', 'kardexEntries'].forEach(collection => {
+                    if (!localStorage.getItem(collection)) {
+                        localStorage.setItem(collection, JSON.stringify([]));
+                    }
+                });
+            }
+
+            // Generic CRUD operations
+            getCollection(name) {
+                return JSON.parse(localStorage.getItem(name) || '[]');
+            }
+
+            saveToCollection(name, item) {
+                const collection = this.getCollection(name);
+                collection.push(item);
+                localStorage.setItem(name, JSON.stringify(collection));
+                return item;
+            }
+
+            updateInCollection(name, id, updates) {
+                const collection = this.getCollection(name);
+                const index = collection.findIndex(item => item.id === id);
+                if (index !== -1) {
+                    Object.assign(collection[index], updates);
+                    localStorage.setItem(name, JSON.stringify(collection));
+                    return collection[index];
+                }
+                return null;
+            }
+
+            findInCollection(name, predicate) {
+                return this.getCollection(name).find(predicate);
+            }
+
+            // Specific methods
+            getProducts() { return this.getCollection('products'); }
+            getLots() { return this.getCollection('lots'); }
+            getSerialNumbers() { return this.getCollection('serialNumbers'); }
+            getStockMoves() { return this.getCollection('stockMoves'); }
+            getTransferDocuments() { return this.getCollection('transferDocuments'); }
+            getSales() { return this.getCollection('sales'); }
+            getKardexEntries() { return this.getCollection('kardexEntries'); }
+
+            saveProduct(product) { return this.saveToCollection('products', product); }
+            saveLot(lot) { return this.saveToCollection('lots', lot); }
+            saveSerialNumber(serial) { return this.saveToCollection('serialNumbers', serial); }
+            saveStockMove(move) { return this.saveToCollection('stockMoves', move); }
+            saveTransferDocument(doc) { return this.saveToCollection('transferDocuments', doc); }
+            saveSale(sale) { return this.saveToCollection('sales', sale); }
+            saveKardexEntry(entry) { return this.saveToCollection('kardexEntries', entry); }
+
+            updateSerialNumber(id, updates) { return this.updateInCollection('serialNumbers', id, updates); }
+            updateTransferDocument(id, updates) { return this.updateInCollection('transferDocuments', id, updates); }
+
+            findSerialByBarcode(barcode) {
+                return this.findInCollection('serialNumbers', s => s.barcode === barcode || s.serialNumber === barcode);
+            }
+
+            findLotByNumber(lotNumber) {
+                return this.findInCollection('lots', l => l.lotNumber === lotNumber);
+            }
+
+            findProductByBarcode(barcode) {
+                return this.findInCollection('products', p => p.barcode === barcode || p.fullCode === barcode);
+            }
+
+            findProductById(id) {
+                return this.findInCollection('products', p => p.id === id);
+            }
+
+            findLotById(id) {
+                return this.findInCollection('lots', l => l.id === id);
+            }
+
+            getSerialsByLot(lotId) {
+                return this.getSerialNumbers().filter(s => s.lotId === lotId);
+            }
+
+            getAvailableSerialsByLocation(location) {
+                return this.getSerialNumbers().filter(s => s.currentLocation === location && s.status === 'available');
+            }
+
+            // Kardex calculations
+            calculateBalance(productId, location, upToDate = new Date()) {
+                const entries = this.getKardexEntries()
+                    .filter(e => e.productId === productId && e.location === location && new Date(e.date) <= upToDate)
+                    .sort((a, b) => new Date(a.date) - new Date(b.date));
+                
+                return entries.length > 0 ? entries[entries.length - 1].balance : 0;
+            }
+
+            createKardexEntry(productId, location, moveType, quantity, reference, documentId = null) {
+                const currentBalance = this.calculateBalance(productId, location);
+                const newBalance = moveType.includes('in') || moveType === 'in' ? 
+                    currentBalance + quantity : currentBalance - quantity;
+                
+                const entry = new KardexEntry(productId, location, moveType, quantity, newBalance, reference, documentId);
+                return this.saveKardexEntry(entry);
+            }
+        }
+
+        // ==================== LOT MANAGER ====================
+        class LotManager {
+            static generateLotNumber(productCode) {
+                const timestamp = Date.now().toString().slice(-6);
+                return `${productCode}-L${timestamp}`;
+            }
+
+            static generateSerialInLot(lotNumber, position) {
+                return `${lotNumber}-${position.toString().padStart(2, '0')}`;
+            }
+
+            static createLotWithSerials(productId, quantity, supplier, purchaseOrder, dataManager) {
+                const product = dataManager.findProductById(productId);
+                const lotNumber = this.generateLotNumber(product.fullCode);
+                
+                // Create lot
+                const lot = new Lot(lotNumber, productId, quantity, supplier, purchaseOrder);
+                dataManager.saveLot(lot);
+                
+                // Create serial numbers for the lot
+                const serials = [];
+                for (let i = 1; i <= quantity; i++) {
+                    const serialNumber = this.generateSerialInLot(lotNumber, i);
+                    const serial = new SerialNumber(serialNumber, productId, lot.id, i);
+                    serials.push(serial);
+                    dataManager.saveSerialNumber(serial);
+                }
+
+                // Create Kardex entry for lot creation
+                dataManager.createKardexEntry(
+                    productId, 
+                    'warehouse', 
+                    'in', 
+                    quantity, 
+                    `Lote creado: ${lotNumber}`,
+                    null
+                );
+                
+                return { lot, serials };
+            }
+        }
+
+        // ==================== INVENTORY CONTROLLER ====================
+        class InventoryController {
+            constructor() {
+                this.dataManager = new DataManager();
+                this.currentLocation = 'warehouse';
+                this.view = new InventoryView(this);
+                this.initializeApp();
+            }
+
+            initializeApp() {
+                this.view.initialize();
+                this.setupEventListeners();
+                this.loadInitialData();
+            }
+
+            setupEventListeners() {
+                // Scanner events
+                document.getElementById('barcodeInput').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.processScan();
+                });
+
+                document.getElementById('processBtn').addEventListener('click', () => this.processScan());
+
+                document.getElementById('operationType').addEventListener('change', (e) => {
+                    const showTransfer = e.target.value.includes('transfer');
+                    this.view.toggleTransferOptions(showTransfer);
+                });
+
+                // Location change
+                document.querySelectorAll('.location-item').forEach(item => {
+                    item.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        this.changeLocation(e.target.dataset.location);
+                    });
+                });
+
+                // Form submissions
+                document.getElementById('saveProduct').addEventListener('click', () => this.saveProduct());
+                document.getElementById('saveLot').addEventListener('click', () => this.saveLot());
+                document.getElementById('saveTransfer').addEventListener('click', () => this.saveTransfer());
+
+                // Tab changes
+                document.querySelectorAll('[data-bs-toggle="tab"]').forEach(tab => {
+                    tab.addEventListener('shown.bs.tab', (e) => this.onTabChange(e.target.id));
+                });
+            }
+
+            loadInitialData() {
+                this.view.loadProducts();
+                this.view.loadLots();
+                this.view.loadInventory();
+                this.view.loadDocuments();
+                this.view.loadSales();
+                this.view.loadKardex();
+                this.view.populateProductSelects();
+            }
+
+            changeLocation(location) {
+                this.currentLocation = location;
+                this.view.updateCurrentLocation(location);
+                this.view.loadInventory();
+            }
+
+            processScan() {
+                const barcode = document.getElementById('barcodeInput').value.trim();
+                const operationType = document.getElementById('operationType').value;
+                
+                if (!barcode) {
+                    this.view.showAlert('Por favor ingrese un código', 'warning');
+                    return;
+                }
+
+                const result = this.processBarcodeScan(barcode, operationType);
+                this.view.displayScanResult(result);
+                
+                if (result.success) {
+                    document.getElementById('barcodeInput').value = '';
+                    this.view.loadInventory();
+                    this.view.loadDocuments();
+                    this.view.loadSales();
+                    this.view.loadKardex();
+                }
+            }
+
+            processBarcodeScan(barcode, operationType) {
+                // Try to find serial, lot, or product
+                let serial = this.dataManager.findSerialByBarcode(barcode);
+                let lot = this.dataManager.findLotByNumber(barcode);
+                let product = this.dataManager.findProductByBarcode(barcode);
+
+                // If serial found, get its lot and product
+                if (serial) {
+                    lot = this.dataManager.findLotById(serial.lotId);
+                    product = this.dataManager.findProductById(serial.productId);
+                }
+
+                // If lot found, get its product
+                if (lot && !product) {
+                    product = this.dataManager.findProductById(lot.productId);
+                }
+
+                switch (operationType) {
+                    case 'receive_lot':
+                        return this.processReceiveLot(barcode, product, lot);
+                    case 'receive_serial':
+                        return this.processReceiveSerial(barcode, product, serial);
+                    case 'transfer_lot':
+                        return this.processTransferLot(barcode, product, lot);
+                    case 'transfer_serial':
+                        return this.processTransferSerial(barcode, product, serial);
+                    case 'confirm_receipt':
+                        return this.processConfirmReceipt(barcode, serial);
+                    case 'sale':
+                        return this.processSale(barcode, product, serial);
+                    default:
+                        return { success: false, error: 'Tipo de operación no válido' };
+                }
+            }
+
+            processReceiveLot(barcode, product, lot) {
+                if (lot) {
+                    return { success: false, error: 'Este lote ya existe en el sistema' };
+                }
+
+                if (!product) {
+                    return { success: false, error: 'Producto no encontrado' };
+                }
+
+                // Create lot with default 12 serials
+                const result = LotManager.createLotWithSerials(product.id, 12, null, null, this.dataManager);
+                
+                return {
+                    success: true,
+                    operation: 'receive_lot',
+                    product: product,
+                    lot: result.lot,
+                    serials: result.serials,
+                    message: `Lote ${result.lot.lotNumber} recibido con ${result.serials.length} pares`
+                };
+            }
+
+            processReceiveSerial(barcode, product, serial) {
+                if (serial) {
+                    return { success: false, error: 'Este número de serie ya existe' };
+                }
+
+                if (!product) {
+                    return { success: false, error: 'Producto no encontrado' };
+                }
+
+                // Create individual serial (orphan)
+                const newSerial = new SerialNumber(barcode, product.id, null, null);
+                newSerial.currentLocation = this.currentLocation;
+                this.dataManager.saveSerialNumber(newSerial);
+
+                // Create stock move and kardex entry
+                const move = new StockMove(newSerial.id, 'supplier', this.currentLocation, 'in');
+                this.dataManager.saveStockMove(move);
+                
+                this.dataManager.createKardexEntry(
+                    product.id, 
+                    this.currentLocation, 
+                    'in', 
+                    1, 
+                    `Recepción individual: ${barcode}`
+                );
+
+                return {
+                    success: true,
+                    operation: 'receive_serial',
+                    product: product,
+                    serial: newSerial,
+                    message: 'Número de serie recibido exitosamente'
+                };
+            }
+
+            processTransferLot(barcode, product, lot) {
+                if (!lot) {
+                    return { success: false, error: 'Lote no encontrado' };
+                }
+
+                const transferTo = document.getElementById('transferTo').value;
+                if (transferTo === this.currentLocation) {
+                    return { success: false, error: 'No se puede transferir a la misma ubicación' };
+                }
+
+                const serials = this.dataManager.getSerialsByLot(lot.id)
+                    .filter(s => s.currentLocation === this.currentLocation && s.status === 'available');
+
+                if (serials.length === 0) {
+                    return { success: false, error: 'No hay productos de este lote en la ubicación actual' };
+                }
+
+                // Create transfer document
+                const transferDoc = new TransferDocument(
+                    this.currentLocation,
+                    transferTo,
+                    `Transferencia de lote ${lot.lotNumber}`,
+                    [{ lotId: lot.id, serialIds: serials.map(s => s.id), quantity: serials.length }]
+                );
+                this.dataManager.saveTransferDocument(transferDoc);
+
+                // Move serials to transit or destination
+                const finalLocation = transferTo === 'transit' ? 'transit' : transferTo;
+                serials.forEach(serial => {
+                    this.dataManager.updateSerialNumber(serial.id, { currentLocation: finalLocation });
+                    
+                    const move = new StockMove(
+                        serial.id, 
+                        this.currentLocation, 
+                        finalLocation, 
+                        'transfer',
+                        `Transferencia lote: ${lot.lotNumber}`,
+                        transferDoc.id
+                    );
+                    move.confirmed = finalLocation !== 'transit';
+                    this.dataManager.saveStockMove(move);
+                });
+
+                // Kardex entries (double entry)
+                this.dataManager.createKardexEntry(
+                    product.id, 
+                    this.currentLocation, 
+                    'transfer_out', 
+                    serials.length, 
+                    `Transferencia a ${this.getLocationName(transferTo)}`,
+                    transferDoc.id
+                );
+
+                if (finalLocation !== 'transit') {
+                    this.dataManager.createKardexEntry(
+                        product.id, 
+                        finalLocation, 
+                        'transfer_in', 
+                        serials.length, 
+                        `Recibido de ${this.getLocationName(this.currentLocation)}`,
+                        transferDoc.id
+                    );
+                }
+
+                return {
+                    success: true,
+                    operation: 'transfer_lot',
+                    product: product,
+                    lot: lot,
+                    quantity: serials.length,
+                    transferTo: transferTo,
+                    documentNumber: transferDoc.documentNumber,
+                    message: `Lote transferido (${serials.length} pares) - Doc: ${transferDoc.documentNumber}`
+                };
+            }
+
+            processTransferSerial(barcode, product, serial) {
+                if (!serial) {
+                    return { success: false, error: 'Número de serie no encontrado' };
+                }
+
+                if (serial.currentLocation !== this.currentLocation) {
+                    return { success: false, error: `El producto no está en ${this.getLocationName(this.currentLocation)}` };
+                }
+
+                if (serial.status !== 'available') {
+                    return { success: false, error: 'Este producto no está disponible' };
+                }
+
+                const transferTo = document.getElementById('transferTo').value;
+                
+                // Create individual transfer document
+                const transferDoc = new TransferDocument(
+                    this.currentLocation,
+                    transferTo,
+                    `Transferencia individual: ${serial.serialNumber}`,
+                    [{ lotId: serial.lotId, serialIds: [serial.id], quantity: 1 }]
+                );
+                this.dataManager.saveTransferDocument(transferDoc);
+
+                const finalLocation = transferTo === 'transit' ? 'transit' : transferTo;
+                
+                // Update serial location
+                this.dataManager.updateSerialNumber(serial.id, { currentLocation: finalLocation });
+                
+                // Create stock move
+                const move = new StockMove(
+                    serial.id, 
+                    this.currentLocation, 
+                    finalLocation, 
+                    'transfer',
+                    `Transferencia individual`,
+                    transferDoc.id
+                );
+                move.confirmed = finalLocation !== 'transit';
+                this.dataManager.saveStockMove(move);
+
+                // Kardex entries
+                this.dataManager.createKardexEntry(
+                    product.id, 
+                    this.currentLocation, 
+                    'transfer_out', 
+                    1, 
+                    `Transferencia a ${this.getLocationName(transferTo)}`,
+                    transferDoc.id
+                );
+
+                if (finalLocation !== 'transit') {
+                    this.dataManager.createKardexEntry(
+                        product.id, 
+                        finalLocation, 
+                        'transfer_in', 
+                        1, 
+                        `Recibido de ${this.getLocationName(this.currentLocation)}`,
+                        transferDoc.id
+                    );
+                }
+
+                return {
+                    success: true,
+                    operation: 'transfer_serial',
+                    product: product,
+                    serial: serial,
+                    transferTo: transferTo,
+                    documentNumber: transferDoc.documentNumber,
+                    message: `Producto transferido - Doc: ${transferDoc.documentNumber}`
+                };
+            }
+
+            processConfirmReceipt(barcode, serial) {
+                if (!serial) {
+                    return { success: false, error: 'Número de serie no encontrado' };
+                }
+
+                if (serial.currentLocation !== 'transit') {
+                    return { success: false, error: 'El producto no está en tránsito' };
+                }
+
+                // Find pending move
+                const pendingMoves = this.dataManager.getStockMoves()
+                    .filter(m => m.serialNumberId === serial.id && !m.confirmed && m.toLocation === 'transit');
+
+                if (pendingMoves.length === 0) {
+                    return { success: false, error: 'No hay movimiento pendiente para este producto' };
+                }
+
+                const pendingMove = pendingMoves[0];
+                const transferDoc = this.dataManager.getTransferDocuments()
+                    .find(d => d.id === pendingMove.documentId);
+
+                if (!transferDoc) {
+                    return { success: false, error: 'Documento de transferencia no encontrado' };
+                }
+
+                // Update serial to current location
+                this.dataManager.updateSerialNumber(serial.id, { currentLocation: this.currentLocation });
+
+                // Confirm the move
+                this.dataManager.updateInCollection('stockMoves', pendingMove.id, { 
+                    confirmed: true,
+                    toLocation: this.currentLocation 
+                });
+
+                // Create final stock move
+                const finalMove = new StockMove(
+                    serial.id,
+                    'transit',
+                    this.currentLocation,
+                    'transfer',
+                    'Confirmación de recepción',
+                    transferDoc.id
+                );
+                this.dataManager.saveStockMove(finalMove);
+
+                // Create kardex entry for receipt
+                const product = this.dataManager.findProductById(serial.productId);
+                this.dataManager.createKardexEntry(
+                    product.id,
+                    this.currentLocation,
+                    'transfer_in',
+                    1,
+                    `Confirmación recepción desde tránsito`,
+                    transferDoc.id
+                );
+
+                // Update transfer document status if all items confirmed
+                // (This would require checking all serials in the transfer)
+
+                return {
+                    success: true,
+                    operation: 'confirm_receipt',
+                    product: product,
+                    serial: serial,
+                    documentNumber: transferDoc.documentNumber,
+                    message: `Recepción confirmada - Doc: ${transferDoc.documentNumber}`
+                };
+            }
+
+            processSale(barcode, product, serial) {
+                if (!serial) {
+                    return { success: false, error: 'Número de serie no encontrado' };
+                }
+
+                if (serial.currentLocation !== this.currentLocation) {
+                    return { success: false, error: `El producto no está en ${this.getLocationName(this.currentLocation)}` };
+                }
+
+                if (serial.status !== 'available') {
+                    return { success: false, error: 'Este producto no está disponible para venta' };
+                }
+
+                if (this.currentLocation === 'warehouse' || this.currentLocation === 'transit') {
+                    return { success: false, error: 'Las ventas solo se pueden realizar desde las tiendas' };
+                }
+
+                // Generate sale document number
+                const saleDocNumber = `VT-${Date.now().toString().slice(-8)}`;
+
+                // Create sale
+                const sale = new Sale(serial.id, product.price, saleDocNumber);
+                this.dataManager.saveSale(sale);
+
+                // Update serial status
+                this.dataManager.updateSerialNumber(serial.id, { status: 'sold' });
+
+                // Create stock move
+                const move = new StockMove(
+                    serial.id, 
+                    this.currentLocation, 
+                    'customer', 
+                    'sale',
+                    `Venta: ${saleDocNumber}`
+                );
+                this.dataManager.saveStockMove(move);
+
+                // Kardex entry
+                this.dataManager.createKardexEntry(
+                    product.id,
+                    this.currentLocation,
+                    'out',
+                    1,
+                    `Venta: ${saleDocNumber}`
+                );
+
+                return {
+                    success: true,
+                    operation: 'sale',
+                    product: product,
+                    serial: serial,
+                    amount: product.price,
+                    documentNumber: saleDocNumber,
+                    message: `Venta realizada por ${product.price.toFixed(2)} - Doc: ${saleDocNumber}`
+                };
+            }
+
+            saveProduct() {
+                const code = document.getElementById('productCode').value.trim();
+                const name = document.getElementById('productName').value.trim();
+                const size = document.getElementById('productSize').value;
+                const price = document.getElementById('productPrice').value.trim();
+
+                if (!code || !name || !size || !price) {
+                    this.view.showAlert('Complete todos los campos requeridos', 'warning');
+                    return;
+                }
+
+                const product = new Product(code, name, size, price);
+                this.dataManager.saveProduct(product);
+
+                this.view.showAlert('Producto guardado exitosamente', 'success');
+                this.view.loadProducts();
+                this.view.populateProductSelects();
+                
+                document.getElementById('productForm').reset();
+                bootstrap.Modal.getInstance(document.getElementById('productModal')).hide();
+            }
+
+            saveLot() {
+                const productId = document.getElementById('lotProduct').value;
+                const quantity = parseInt(document.getElementById('lotQuantity').value);
+                const supplier = document.getElementById('lotSupplier').value.trim();
+                const purchaseOrder = document.getElementById('lotPurchaseOrder').value.trim();
+
+                if (!productId || !quantity) {
+                    this.view.showAlert('Complete los campos requeridos', 'warning');
+                    return;
+                }
+
+                const result = LotManager.createLotWithSerials(
+                    productId, 
+                    quantity, 
+                    supplier || null, 
+                    purchaseOrder || null,
+                    this.dataManager
+                );
+
+                this.view.showAlert(`Lote ${result.lot.lotNumber} creado con ${quantity} números de serie`, 'success');
+                this.view.loadLots();
+                this.view.loadInventory();
+                this.view.loadKardex();
+                
+                document.getElementById('lotForm').reset();
+                bootstrap.Modal.getInstance(document.getElementById('lotModal')).hide();
+            }
+
+            saveTransfer() {
+                // This would implement the bulk transfer functionality
+                this.view.showAlert('Función de transferencia masiva pendiente de implementación', 'info');
+            }
+
+            addTransferItem() {
+                // This would add items to the transfer list
+                this.view.showAlert('Función pendiente de implementación', 'info');
+            }
+
+            getLocationName(location) {
+                const locations = {
+                    'warehouse': 'Almacén Principal',
+                    'transit': 'En Tránsito',
+                    'store_001': 'Tienda Centro',
+                    'store_002': 'Tienda Norte',
+                    'store_003': 'Tienda Sur',
+                    'customer': 'Cliente',
+                    'supplier': 'Proveedor'
+                };
+                return locations[location] || location;
+            }
+
+            onTabChange(tabId) {
+                switch (tabId) {
+                    case 'products-tab':
+                        this.view.loadProducts();
+                        break;
+                    case 'lots-tab':
+                        this.view.loadLots();
+                        break;
+                    case 'inventory-tab':
+                        this.view.loadInventory();
+                        break;
+                    case 'documents-tab':
+                        this.view.loadDocuments();
+                        break;
+                    case 'kardex-tab':
+                        this.view.loadKardex();
+                        break;
+                    case 'sales-tab':
+                        this.view.loadSales();
+                        break;
+                }
+            }
+
+            showSerialHistory(serialNumber) {
+                const moves = this.dataManager.getStockMoves()
+                    .filter(move => {
+                        const serial = this.dataManager.getSerialNumbers()
+                            .find(s => s.id === move.serialNumberId);
+                        return serial && serial.serialNumber === serialNumber;
+                    })
+                    .sort((a, b) => new Date(b.moveDate) - new Date(a.moveDate));
+
+                this.view.showHistoryModal(serialNumber, moves);
+            }
+
+            showDocument(documentId) {
+                const doc = this.dataManager.getTransferDocuments().find(d => d.id === documentId);
+                if (doc) {
+                    this.view.showDocumentModal(doc);
+                }
+            }
+
+            loadKardex() {
+                this.view.loadKardex();
+            }
+        }
+
+        // ==================== VIEW ====================
+        class InventoryView {
+            constructor(controller) {
+                this.controller = controller;
+            }
+
+            initialize() {
+                this.setupScanArea();
+            }
+
+            setupScanArea() {
+                const scanArea = document.getElementById('scanArea');
+                const barcodeInput = document.getElementById('barcodeInput');
+
+                scanArea.addEventListener('click', () => {
+                    barcodeInput.focus();
+                    scanArea.classList.add('active');
+                });
+
+                barcodeInput.addEventListener('focus', () => {
+                    scanArea.classList.add('active');
+                });
+
+                barcodeInput.addEventListener('blur', () => {
+                    scanArea.classList.remove('active');
+                });
+            }
+
+            updateCurrentLocation(location) {
+                const locationNames = {
+                    'warehouse': 'Almacén Principal',
+                    'transit': 'En Tránsito',
+                    'store_001': 'Tienda Centro',
+                    'store_002': 'Tienda Norte',
+                    'store_003': 'Tienda Sur'
+                };
+                document.getElementById('currentLocation').textContent = 
+                    `Ubicación: ${locationNames[location]}`;
+            }
+
+            toggleTransferOptions(show) {
+                document.getElementById('transferOptions').style.display = show ? 'block' : 'none';
+            }
+
+            displayScanResult(result) {
+                const productInfo = document.getElementById('productInfo');
+                
+                if (result.success) {
+                    const lotInfo = result.lot ? `<p class="mb-1"><strong>Lote:</strong> ${result.lot.lotNumber}</p>` : '';
+                    const serialInfo = result.serial ? `<p class="mb-1"><strong>N° Serie:</strong> ${result.serial.serialNumber}</p>` : '';
+                    const quantityInfo = result.quantity ? `<p class="mb-1"><strong>Cantidad:</strong> ${result.quantity} pares</p>` : '';
+                    const docInfo = result.documentNumber ? `<p class="mb-1"><strong>Documento:</strong> ${result.documentNumber}</p>` : '';
+                    
+                    productInfo.innerHTML = `
+                        <div class="alert alert-success">
+                            <strong><i class="fas fa-check-circle"></i> ${result.message}</strong>
+                        </div>
+                        <div class="product-details">
+                            <h6><strong>${result.product.fullName}</strong></h6>
+                            <p class="mb-1"><strong>Código:</strong> ${result.product.fullCode}</p>
+                            <p class="mb-1"><strong>Precio:</strong> ${result.product.price.toFixed(2)}</p>
+                            ${lotInfo}
+                            ${serialInfo}
+                            ${quantityInfo}
+                            ${docInfo}
+                        </div>
+                    `;
+                    this.showAlert(result.message, 'success');
+                    this.addToRecentHistory(result);
+                } else {
+                    productInfo.innerHTML = `
+                        <div class="alert alert-danger">
+                            <strong><i class="fas fa-exclamation-triangle"></i> Error</strong><br>
+                            ${result.error}
+                        </div>
+                    `;
+                    this.showAlert(result.error, 'danger');
+                }
+            }
+
+            addToRecentHistory(result) {
+                const recentHistory = document.getElementById('recentHistory');
+                const timestamp = new Date().toLocaleString();
+                const operationIcons = {
+                    'receive_lot': 'fas fa-arrow-down text-success',
+                    'receive_serial': 'fas fa-arrow-down text-info',
+                    'transfer_lot': 'fas fa-exchange-alt text-primary',
+                    'transfer_serial': 'fas fa-exchange-alt text-info',
+                    'confirm_receipt': 'fas fa-check text-success',
+                    'sale': 'fas fa-shopping-cart text-warning'
+                };
+
+                const historyItem = document.createElement('div');
+                historyItem.className = 'history-item';
+                historyItem.innerHTML = `
+                    <div class="d-flex align-items-center mb-1">
+                        <i class="${operationIcons[result.operation]} me-2"></i>
+                        <small><strong>${result.product.fullName}</strong></small>
+                    </div>
+                    <small class="text-muted">${result.documentNumber || 'Sin documento'} - ${timestamp}</small>
+                `;
+
+                if (recentHistory.children.length === 0 || recentHistory.firstChild.textContent.includes('No hay movimientos')) {
+                    recentHistory.innerHTML = '';
+                }
+
+                recentHistory.insertBefore(historyItem, recentHistory.firstChild);
+
+                // Keep only last 5 items
+                while (recentHistory.children.length > 5) {
+                    recentHistory.removeChild(recentHistory.lastChild);
+                }
+            }
+
+            populateProductSelects() {
+                const products = this.controller.dataManager.getProducts();
+                const selects = ['lotProduct', 'kardexProduct'];
+                
+                selects.forEach(selectId => {
+                    const select = document.getElementById(selectId);
+                    if (select) {
+                        const currentValue = select.value;
+                        select.innerHTML = selectId === 'kardexProduct' ? '<option value="">Todos los productos</option>' : '<option value="">Seleccione producto</option>';
+                        
+                        products.forEach(product => {
+                            const option = document.createElement('option');
+                            option.value = product.id;
+                            option.textContent = `${product.fullCode} - ${product.fullName}`;
+                            select.appendChild(option);
+                        });
+                        
+                        if (currentValue) select.value = currentValue;
+                    }
+                });
+            }
+
+            loadProducts() {
+                const products = this.controller.dataManager.getProducts();
+                const productsList = document.getElementById('productsList');
+
+                if (products.length === 0) {
+                    productsList.innerHTML = '<div class="col-12"><p class="text-center text-muted">No hay productos registrados</p></div>';
+                    return;
+                }
+
+                productsList.innerHTML = products.map(product => `
+                    <div class="col-md-6 col-lg-4 mb-3">
+                        <div class="card product-card h-100">
+                            <div class="card-body">
+                                <h6 class="card-title">${product.fullName}</h6>
+                                <p class="card-text">
+                                    <strong>Código:</strong> ${product.fullCode}<br>
+                                    <strong>Precio:</strong> ${product.price.toFixed(2)}<br>
+                                    <strong>Talla:</strong> ${product.size}
+                                </p>
+                                <small class="text-muted">Creado: ${new Date(product.createdAt).toLocaleDateString()}</small>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            loadLots() {
+                const lots = this.controller.dataManager.getLots();
+                const products = this.controller.dataManager.getProducts();
+                const serials = this.controller.dataManager.getSerialNumbers();
+                const lotsList = document.getElementById('lotsList');
+
+                if (lots.length === 0) {
+                    lotsList.innerHTML = '<div class="col-12"><p class="text-center text-muted">No hay lotes registrados</p></div>';
+                    return;
+                }
+
+                lotsList.innerHTML = lots.map(lot => {
+                    const product = products.find(p => p.id === lot.productId);
+                    const lotSerials = serials.filter(s => s.lotId === lot.id);
+                    const available = lotSerials.filter(s => s.status === 'available').length;
+                    const sold = lotSerials.filter(s => s.status === 'sold').length;
+                    const progressPercentage = lotSerials.length > 0 ? (sold / lotSerials.length) * 100 : 0;
+
+                    return `
+                        <div class="col-md-6 col-lg-4 mb-3">
+                            <div class="card lot-card h-100">
+                                <div class="card-body">
+                                    <h6 class="card-title">${lot.lotNumber}</h6>
+                                    <p class="card-text">
+                                        <strong>Producto:</strong> ${product ? product.fullName : 'N/A'}<br>
+                                        <strong>Cantidad:</strong> ${lot.quantity} pares<br>
+                                        <strong>Disponibles:</strong> ${available}<br>
+                                        <strong>Vendidos:</strong> ${sold}
+                                        ${lot.supplier ? `<br><strong>Proveedor:</strong> ${lot.supplier}` : ''}
+                                        ${lot.purchaseOrder ? `<br><strong>OC:</strong> ${lot.purchaseOrder}` : ''}
+                                    </p>
+                                    <div class="progress lot-progress mb-2">
+                                        <div class="progress-bar bg-success" style="width: ${progressPercentage}%"></div>
+                                    </div>
+                                    <small class="text-muted">Creado: ${new Date(lot.createdAt).toLocaleDateString()}</small>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            loadInventory() {
+                const serials = this.controller.dataManager.getSerialNumbers();
+                const products = this.controller.dataManager.getProducts();
+                const lots = this.controller.dataManager.getLots();
+                const inventoryTable = document.getElementById('inventoryTable');
+
+                // Filter by current location if not viewing all
+                const filteredSerials = serials.filter(serial => 
+                    serial.currentLocation === this.controller.currentLocation || 
+                    this.controller.currentLocation === 'all'
+                );
+
+                if (filteredSerials.length === 0) {
+                    inventoryTable.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No hay productos en esta ubicación</td></tr>';
+                    return;
+                }
+
+                inventoryTable.innerHTML = filteredSerials.map(serial => {
+                    const product = products.find(p => p.id === serial.productId);
+                    const lot = lots.find(l => l.id === serial.lotId);
+                    const statusColors = {
+                        'available': 'success',
+                        'sold': 'danger',
+                        'transferred': 'info'
+                    };
+
+                    const locationBadge = serial.currentLocation === 'transit' ? 
+                        '<span class="badge transit-badge">EN TRÁNSITO</span>' : 
+                        this.controller.getLocationName(serial.currentLocation);
+
+                    return `
+                        <tr>
+                            <td>${lot ? lot.lotNumber : '<em>Sin lote</em>'}</td>
+                            <td><code>${serial.serialNumber}</code></td>
+                            <td>${product ? product.fullName : 'Producto no encontrado'}</td>
+                            <td>${locationBadge}</td>
+                            <td>
+                                <span class="badge bg-${statusColors[serial.status]} status-badge">
+                                    ${serial.status.toUpperCase()}
+                                </span>
+                            </td>
+                            <td>${new Date(serial.createdAt).toLocaleDateString()}</td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-info" onclick="app.showSerialHistory('${serial.serialNumber}')">
+                                    <i class="fas fa-history"></i> Historial
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            loadDocuments() {
+                const documents = this.controller.dataManager.getTransferDocuments();
+                const documentsList = document.getElementById('documentsList');
+
+                if (documents.length === 0) {
+                    documentsList.innerHTML = '<p class="text-center text-muted">No hay documentos de transferencia</p>';
+                    return;
+                }
+
+                const sortedDocs = documents.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+                documentsList.innerHTML = sortedDocs.map(doc => {
+                    const statusColors = {
+                        'pending': 'warning',
+                        'in_transit': 'info',
+                        'received': 'success'
+                    };
+
+                    const totalItems = doc.items.reduce((sum, item) => sum + item.quantity, 0);
+
+                    return `
+                        <div class="card mb-3">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-file-alt"></i> ${doc.documentNumber}
+                                    <span class="badge bg-${statusColors[doc.status]} ms-2">${doc.status.toUpperCase()}</span>
+                                </h6>
+                                <button class="btn btn-sm btn-outline-primary" onclick="app.showDocument(${doc.id})">
+                                    <i class="fas fa-eye"></i> Ver
+                                </button>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p class="mb-1"><strong>Desde:</strong> ${this.controller.getLocationName(doc.fromLocation)}</p>
+                                        <p class="mb-1"><strong>Hacia:</strong> ${this.controller.getLocationName(doc.toLocation)}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p class="mb-1"><strong>Total Items:</strong> ${totalItems}</p>
+                                        <p class="mb-1"><strong>Fecha:</strong> ${new Date(doc.createdAt).toLocaleDateString()}</p>
+                                    </div>
+                                </div>
+                                <p class="mb-0"><strong>Referencia:</strong> ${doc.reference}</p>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            loadSales() {
+                const sales = this.controller.dataManager.getSales();
+                const serials = this.controller.dataManager.getSerialNumbers();
+                const products = this.controller.dataManager.getProducts();
+                const lots = this.controller.dataManager.getLots();
+                const salesTable = document.getElementById('salesTable');
+
+                if (sales.length === 0) {
+                    salesTable.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No hay ventas registradas</td></tr>';
+                    return;
+                }
+
+                const sortedSales = sales.sort((a, b) => new Date(b.saleDate) - new Date(a.saleDate));
+
+                salesTable.innerHTML = sortedSales.map(sale => {
+                    const serial = serials.find(s => s.id === sale.serialNumberId);
+                    const product = serial ? products.find(p => p.id === serial.productId) : null;
+                    const lot = serial ? lots.find(l => l.id === serial.lotId) : null;
+
+                    // Get location from stock moves
+                    const moves = this.controller.dataManager.getStockMoves()
+                        .filter(m => m.serialNumberId === sale.serialNumberId && m.moveType === 'sale');
+                    const saleLocation = moves.length > 0 ? moves[0].fromLocation : 'N/A';
+
+                    return `
+                        <tr>
+                            <td>${new Date(sale.saleDate).toLocaleDateString()}</td>
+                            <td><code>${sale.documentNumber}</code></td>
+                            <td>${lot ? lot.lotNumber : '<em>Sin lote</em>'}</td>
+                            <td><code>${serial ? serial.serialNumber : 'N/A'}</code></td>
+                            <td>${product ? product.fullName : 'Producto no encontrado'}</td>
+                            <td><strong>${sale.amount.toFixed(2)}</strong></td>
+                            <td>${this.controller.getLocationName(saleLocation)}</td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            loadKardex() {
+                const productId = document.getElementById('kardexProduct').value;
+                const location = document.getElementById('kardexLocation').value;
+                
+                let entries = this.controller.dataManager.getKardexEntries();
+                
+                // Apply filters
+                if (productId) {
+                    entries = entries.filter(e => e.productId === productId);
+                }
+                if (location) {
+                    entries = entries.filter(e => e.location === location);
+                }
+
+                // Sort by date
+                entries = entries.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+                const kardexTable = document.getElementById('kardexTable');
+                const products = this.controller.dataManager.getProducts();
+
+                if (entries.length === 0) {
+                    kardexTable.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No hay movimientos para los filtros seleccionados</td></tr>';
+                    return;
+                }
+
+                kardexTable.innerHTML = entries.map(entry => {
+                    const product = products.find(p => p.id === entry.productId);
+                    const moveTypeNames = {
+                        'in': 'Entrada',
+                        'out': 'Salida',
+                        'transfer_in': 'Transferencia Entrada',
+                        'transfer_out': 'Transferencia Salida'
+                    };
+
+                    const isIncoming = entry.moveType === 'in' || entry.moveType === 'transfer_in';
+                    const balanceClass = entry.balance > 0 ? 'balance-positive' : entry.balance < 0 ? 'balance-negative' : '';
+
+                    return `
+                        <tr>
+                            <td>${new Date(entry.date).toLocaleDateString()}</td>
+                            <td><small>${entry.documentId || 'Manual'}</small></td>
+                            <td>
+                                <small><strong>${product ? product.fullName : 'N/A'}</strong></small><br>
+                                <small class="text-muted">${moveTypeNames[entry.moveType]}</small><br>
+                                <small class="text-muted">${entry.reference}</small>
+                            </td>
+                            <td class="text-center">${isIncoming ? entry.quantity : ''}</td>
+                            <td class="text-center">${!isIncoming ? entry.quantity : ''}</td>
+                            <td class="text-center ${balanceClass}">${entry.balance}</td>
+                            <td><small>${this.controller.getLocationName(entry.location)}</small></td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            showHistoryModal(serialNumber, moves) {
+                const historyModalBody = document.getElementById('historyModalBody');
+                const modal = new bootstrap.Modal(document.getElementById('historyModal'));
+
+                if (moves.length === 0) {
+                    historyModalBody.innerHTML = '<p class="text-muted text-center">No hay movimientos registrados</p>';
+                } else {
+                    const moveTypeNames = {
+                        'in': 'Entrada de Inventario',
+                        'transfer': 'Transferencia',
+                        'sale': 'Venta'
+                    };
+
+                    const moveTypeIcons = {
+                        'in': 'fas fa-arrow-down text-success',
+                        'transfer': 'fas fa-exchange-alt text-info',
+                        'sale': 'fas fa-shopping-cart text-warning'
+                    };
+
+                    historyModalBody.innerHTML = `
+                        <h6>Historial de Movimientos - Número de Serie: <code>${serialNumber}</code></h6>
+                        <div class="timeline mt-3">
+                            ${moves.map(move => `
+                                <div class="history-item mb-3">
+                                    <div class="d-flex align-items-center">
+                                        <i class="${moveTypeIcons[move.moveType]} me-3"></i>
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-1">
+                                                ${moveTypeNames[move.moveType]}
+                                                ${!move.confirmed ? '<span class="badge bg-warning ms-2">PENDIENTE</span>' : ''}
+                                            </h6>
+                                            <p class="mb-1">
+                                                <strong>Desde:</strong> ${this.controller.getLocationName(move.fromLocation)} 
+                                                <i class="fas fa-arrow-right mx-2"></i>
+                                                <strong>Hacia:</strong> ${this.controller.getLocationName(move.toLocation)}
+                                            </p>
+                                            ${move.reference ? `<p class="mb-1"><small><strong>Referencia:</strong> ${move.reference}</small></p>` : ''}
+                                            <small class="text-muted">
+                                                <i class="fas fa-clock"></i> ${new Date(move.moveDate).toLocaleString()}
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                }
+
+                modal.show();
+            }
+
+            showDocumentModal(doc) {
+                const modal = new bootstrap.Modal(document.getElementById('documentModal'));
+                const documentContent = document.getElementById('documentContent');
+                
+                const products = this.controller.dataManager.getProducts();
+                const lots = this.controller.dataManager.getLots();
+                const serials = this.controller.dataManager.getSerialNumbers();
+
+                const documentItems = doc.items.map(item => {
+                    const lot = lots.find(l => l.id === item.lotId);
+                    const product = lot ? products.find(p => p.id === lot.productId) : null;
+                    const itemSerials = item.serialIds.map(id => serials.find(s => s.id === id)).filter(s => s);
+
+                    return `
+                        <tr>
+                            <td>${lot ? lot.lotNumber : 'Sin lote'}</td>
+                            <td>${product ? product.fullName : 'N/A'}</td>
+                            <td>${item.quantity}</td>
+                            <td>
+                                ${itemSerials.map(s => `<code class="me-1">${s.serialNumber}</code>`).join('<br>')}
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+
+                documentContent.innerHTML = `
+                    <div class="document-header">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h4>DOCUMENTO DE TRANSFERENCIA</h4>
+                                <h5>${doc.documentNumber}</h5>
+                            </div>
+                            <div class="col-md-6 text-end">
+                                <p><strong>Fecha:</strong> ${new Date(doc.createdAt).toLocaleDateString()}</p>
+                                <p><strong>Estado:</strong> <span class="badge bg-info">${doc.status.toUpperCase()}</span></p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h6><strong>ORIGEN:</strong></h6>
+                            <p>${this.controller.getLocationName(doc.fromLocation)}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6><strong>DESTINO:</strong></h6>
+                            <p>${this.controller.getLocationName(doc.toLocation)}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h6><strong>REFERENCIA:</strong></h6>
+                        <p>${doc.reference}</p>
+                    </div>
+                    
+                    <h6><strong>DETALLE DE PRODUCTOS:</strong></h6>
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Lote</th>
+                                <th>Producto</th>
+                                <th>Cantidad</th>
+                                <th>Números de Serie</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${documentItems}
+                        </tbody>
+                    </table>
+                    
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <p><strong>Elaborado por:</strong> ${doc.createdBy}</p>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <p><strong>Total Items:</strong> ${doc.items.reduce((sum, item) => sum + item.quantity, 0)}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-5 pt-4 border-top">
+                        <div class="row">
+                            <div class="col-md-4 text-center">
+                                <div style="border-top: 1px solid #000; padding-top: 5px;">
+                                    <strong>Entregado por</strong>
+                                </div>
+                            </div>
+                            <div class="col-md-4 text-center">
+                                <div style="border-top: 1px solid #000; padding-top: 5px;">
+                                    <strong>Transportado por</strong>
+                                </div>
+                            </div>
+                            <div class="col-md-4 text-center">
+                                <div style="border-top: 1px solid #000; padding-top: 5px;">
+                                    <strong>Recibido por</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                modal.show();
+            }
+
+            showAlert(message, type) {
+                const existingAlerts = document.querySelectorAll('.custom-alert');
+                existingAlerts.forEach(alert => alert.remove());
+
+                const alertDiv = document.createElement('div');
+                alertDiv.className = `alert alert-${type} alert-dismissible fade show custom-alert`;
+                alertDiv.style.position = 'fixed';
+                alertDiv.style.top = '20px';
+                alertDiv.style.right = '20px';
+                alertDiv.style.zIndex = '9999';
+                alertDiv.style.minWidth = '300px';
+                alertDiv.innerHTML = `
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+
+                document.body.appendChild(alertDiv);
+
+                setTimeout(() => {
+                    if (alertDiv.parentNode) {
+                        alertDiv.remove();
+                    }
+                }, 5000);
+            }
+        }
+
+        // ==================== APP INITIALIZATION ====================
+        let app;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            app = new InventoryController();
+            window.app = app;
+        });
+    </script>
+</body>
+</html>

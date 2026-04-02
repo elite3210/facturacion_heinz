@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Document</title>
+</head>
+<style>
+    :root {
+        --height-bar: 50px;
+        --width-menu: 15vw;
+    }
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    .container {
+        width: 90vw;
+        height: 90vh;
+        background-color: lightgray;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .bar-bottom {
+        width: 100%;
+        height: var(--height-bar);
+        background-color: rgb(39, 2, 126);
+        position: absolute;
+        bottom: 0px;
+        left: 0px;
+    }
+
+    .bar-top {
+        width: 100%;
+        height: var(--height-bar);
+        background-color: purple;
+        position: absolute;
+        top: 0px;
+        left: 0px;
+        z-index: 100;
+    }
+
+    .main-content.hidden {
+        width: 100%;
+        height: 60%;
+        background-color: rgb(54, 205, 255);
+        margin-left: calc(var(--height-bar) + 2px);
+    }
+
+    .main-content {
+        width: 100%;
+        height: 60%;
+        background-color: rgb(54, 205, 255);
+        margin-left: calc(var(--width-menu) + 2px);
+    }
+
+    .menu-left {
+        width: var(--width-menu);
+        height: calc(100% - 102px);
+        background-color: lightcoral;
+        position: absolute;
+        left: 0px;
+        top: var(--height-bar);
+        transition: left 0.5s ease-in-out;
+        /* Transición suave para la propiedad 'left' */
+    }
+
+    #showLeft{
+        position: absolute;
+        bottom: 0;
+        left: 10px;
+    }
+
+    /* Aplicamos hover siempre que el elemento tenga esta clase */
+    /* Y tambien cuando tenga la clase expanded */
+    .menu-left:hover {
+        width: var(--width-menu);
+        left: 0px;
+        overflow: visible;
+        background-color: rgb(214, 128, 240);
+        /*position: absolute;  No es necesario repetir position y top, ya están definidos */
+        /*top: var(--height-bar);*/
+        /*transition: left 0.5s ease-in-out;  No es necesario repetir la transición, ya está definida */
+    }
+
+    .menu-left.hidden {
+        width: 50px;
+        overflow: hidden;
+        /*left: -120px;*/
+        /* Oculta el menú a la izquierda (fuera del contenedor) */
+    }
+
+    .menu-right.hidden {
+        width: var(--height-bar);
+        left: calc(-1 * var(--width-menu) + 50px);
+        overflow: hidden;
+    }
+
+    .menu-right {
+        position: absolute;
+        top: calc(var(--height-bar) + 1px);
+        right: 0px;
+        width: var(--width-menu);
+        height: calc(100% - 102px);
+        background-color: lightgreen;
+        transition: right 0.5s ease-in-out;
+        /* Transición suave para la propiedad 'right' */
+    }
+</style>
+
+<body>
+    <div class="container">
+
+
+
+        Este es el contenedor relativo.
+        <div class="bar-bottom">
+            Este div es absoluto. Se posiciona dentro de su padre relativo.
+        </div>
+        <div class="bar-top">
+            Este div es normal y fluye después del contenedor absoluto.
+        </div>
+        <div class="main-content hidden" id="mainContent">
+            Este es un div normal.
+
+            <button id="left">O</button>
+            <button id="showRight">Ocultar Derecha</button>
+            <button id="right">O</button>
+        </div>
+        <div class="menu-left hidden">
+            Este div es relativo. Se ha movido 30px abajo y 50px a la derecha desde su posición normal.
+            <button id="showLeft">==></button>
+        </div>
+        <div class="menu-right">
+            Este es otro div normal.
+        </div>
+    </div>
+
+
+</body>
+<script>
+    let statusLeftButton = true;
+    let statusRightButton = true;
+
+    const menuLeft = document.querySelector('.menu-left');
+    const menuRight = document.querySelector('.menu-right');
+    const mainContent = document.querySelector('#mainContent');
+    const showLeftButton = document.querySelector('#showLeft');
+    const hideLeftButton = document.querySelector('#hideLeft');
+    const showRightButton = document.querySelector('#showRight');
+    const hideRightButton = document.querySelector('#hideRight');
+
+    showLeftButton.addEventListener('click', () => {
+        //menuLeft.classList.remove('hidden');
+        mainContent.classList.toggle('hidden');
+        showLeftButton.textContent = statusLeftButton ? '<<--' : '-->>';
+
+        statusLeftButton = !statusLeftButton;
+    });
+
+    showRightButton.addEventListener('click', () => {
+            menuRight.classList.remove('hidden');
+        showRightButton.textContent = statusRightButton ? 'Mostrar derecha' : 'Ocultar derecha';
+        
+        console.log('mainContent:',mainContent);
+        
+        statusRightButton = !statusRightButton;
+    });
+
+    menuLeft.addEventListener('mouseenter', () => {
+        if (menuLeft.classList.contains('hidden') && statusLeftButton) {
+            menuLeft.classList.toggle('hidden');
+            //menuLeft.classList.remove('expanded');
+        }
+        console.log('ingreso mouse');
+
+    })
+
+    menuLeft.addEventListener('mouseleave', () => {  // mouseleave correspondiente
+        if (!menuLeft.classList.contains('hidden')  && statusLeftButton) {
+            menuLeft.classList.toggle('hidden');
+            //menuLeft.classList.remove('expanded');
+        }
+        console.log('salió mouse');
+
+    });
+</script>
+
+</html>

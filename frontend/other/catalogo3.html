@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Catálogo - Hogar Elegante</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<style>
+    :root {
+        --primary-color: #ff6f61;
+        --secondary-color: #ffe9e4;
+        --text-color: #333;
+        --glass-bg: rgba(255, 255, 255, 0.1);
+        --glass-border: rgba(255, 255, 255, 0.3);
+    }
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+        font-family: 'Segoe UI', sans-serif;
+        color: var(--text-color);
+        background: linear-gradient(135deg, #e0eafc, #cfdef3);
+        height: 100vh;
+        overflow: hidden;
+        touch-action: pan-y;
+        user-select: none;
+    }
+
+    .catalog-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: space-between;
+        max-width: 400px;
+        margin: 0 auto;
+        height: 100vh;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .page {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        opacity: 0;
+        transform: translateX(100%);
+        transition: transform 0.5s ease, opacity 0.3s ease;
+    }
+
+    .page.active {
+        opacity: 1;
+        z-index: 1;
+        transform: translateX(0);
+    }
+
+
+    .glass-card {
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        padding: 10px;
+        width: 100vw;
+        height: 100vh;
+        max-width: 360px;
+        text-align: center;
+    }
+
+    .title {
+        font-size: 2rem;
+        font-weight: bold;
+        color: var(--primary-color);
+    }
+
+    .empresa {
+        font-size: 1.2rem;
+        margin: 10px 0;
+    }
+
+    .contacto p {
+        margin: 5px 0;
+        font-size: 0.95rem;
+    }
+
+    .navigation {
+        position: absolute;
+        bottom: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        background: rgba(255, 255, 255, 0.3);
+        padding: 5px 10px;
+        border-radius: 10px;
+        backdrop-filter: blur(8px);
+        font-size: 0.9rem;
+    }
+
+    .nav-button {
+        padding: 6px 12px;
+        border: none;
+        border-radius: 8px;
+        background-color: var(--primary-color);
+        color: white;
+        font-weight: bold;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .nav-button:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    .nav-button:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes slideInLeft {
+        from {
+            transform: translateX(-100%);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+
+    @keyframes slideInRight {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+
+    @keyframes bounceIn {
+        0% {
+            transform: scale(0.5);
+            opacity: 0;
+        }
+
+        60% {
+            transform: scale(1.2);
+            opacity: 1;
+        }
+
+        100% {
+            transform: scale(1);
+        }
+    }
+
+    @media (min-width: 768px) {
+        .catalog-container {
+            height: 100vh;
+            justify-content: center;
+        }
+    }
+</style>
+
+<body>
+    <div id="app" class="catalog-container">
+        <!-- Página 1: Portada -->
+        <section class="page portada active">
+            <div class="glass-card">
+                <h1 class="title">CATÁLOGO 🏠</h1>
+                <h2 class="empresa">HOGAR ELEGANTE</h2>
+                <div class="contacto">
+                    <p>📞 +51 987 654 321</p>
+                    <p>✉️ info@hogarelegante.pe / ventas@hogarelegante.pe</p>
+                    <p>📍 Av. Principal 123, Lima, Perú</p>
+                    <p>🌐 www.hogarelegante.pe</p>
+                    <p>💬 WhatsApp: +51 987 654 321</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contenedor para páginas de productos -->
+        <div id="product-pages"></div>
+
+        <!-- Página 7: Cierre -->
+        <section class="page cierre">
+            <div class="glass-card">
+                <h2>¡Gracias por visitar nuestro catálogo!</h2>
+                <p>Para más información o ventas, contáctanos:</p>
+                <div class="contacto">
+                    <p>📞 +51 987 654 321</p>
+                    <p>✉️ ventas@hogarelegante.pe</p>
+                    <p>🌐 www.hogarelegante.pe</p>
+                </div>
+            </div>
+        </section>
+
+        <div class="navigation">
+            <button id="prevBtn" class="nav-button" disabled>Anterior</button>
+            <span class="page-indicator">Página 1 de 7</span>
+            <button id="nextBtn" class="nav-button">Siguiente</button>
+        </div>
+    </div>
+
+    <script>
+        const catalogData = {
+            empresa: "Hogar Elegante",
+            productos: [
+                { icono: "🛋️", nombre: "Sofá Modular Premium", descripcion: "Sofá amplio, moderno y cómodo.", precio: "S/ 2,899" },
+                { icono: "🪑", nombre: "Silla de Comedor", descripcion: "Elegante silla de madera.", precio: "S/ 350" },
+                { icono: "🛏️", nombre: "Cama Queen Deluxe", descripcion: "Cama confortable de 2 plazas.", precio: "S/ 1,799" },
+                { icono: "🚪", nombre: "Closet de Pino", descripcion: "Closet espacioso y duradero.", precio: "S/ 1,250" },
+                { icono: "🛏", nombre: "Juego de Sábanas", descripcion: "Algodón 100% suave.", precio: "S/ 150" },
+                { icono: "🪟", nombre: "Cortinas Blackout", descripcion: "Bloqueo total de luz.", precio: "S/ 220" },
+                { icono: "🧶", nombre: "Alfombra Persa", descripcion: "Decorativa y acogedora.", precio: "S/ 950" },
+                { icono: "🛋", nombre: "Cojines Decorativos", descripcion: "Pack de 4 modernos cojines.", precio: "S/ 120" },
+                { icono: "🧊", nombre: "Refrigeradora", descripcion: "Doble puerta, eficiencia A++.", precio: "S/ 1,999" },
+                { icono: "🍳", nombre: "Cocina Empotrable", descripcion: "4 hornillas y horno.", precio: "S/ 1,450" },
+                { icono: "🧺", nombre: "Lavadora 12kg", descripcion: "Automática con centrifugado.", precio: "S/ 1,899" },
+                { icono: "☕", nombre: "Cafetera Eléctrica", descripcion: "Para 12 tazas, diseño elegante.", precio: "S/ 399" },
+                { icono: "🖼️", nombre: "Cuadros Modernos", descripcion: "Pack de 3 decorativos.", precio: "S/ 280" },
+                { icono: "💡", nombre: "Lámpara de Mesa", descripcion: "Luz cálida regulable.", precio: "S/ 180" },
+                { icono: "🪴", nombre: "Maceta Cerámica", descripcion: "Ideal para interiores.", precio: "S/ 90" },
+                { icono: "⏰", nombre: "Reloj de Pared", descripcion: "Estilo vintage.", precio: "S/ 140" },
+                { icono: "🗄️", nombre: "Estantería Modular", descripcion: "Expandible y moderna.", precio: "S/ 680" },
+                { icono: "🧺", nombre: "Cestas Organizadoras", descripcion: "Pack x3 ecológicas.", precio: "S/ 75" },
+                { icono: "🗃️", nombre: "Archivador Triple", descripcion: "Metálico, seguro.", precio: "S/ 230" },
+                { icono: "🧳", nombre: "Organizador Multiuso", descripcion: "Para ropa o accesorios.", precio: "S/ 110" }
+            ]
+        };
+
+        const productContainer = document.getElementById("product-pages");
+        const totalPages = 7;
+        let currentPage = 0;
+
+        function generateProductPages() {
+            for (let i = 0; i < 5; i++) {
+                const section = document.createElement("section");
+                section.classList.add("page");
+                const grid = document.createElement("div");
+                grid.classList.add("glass-card");
+                grid.style.display = "grid";
+                grid.style.gridTemplateColumns = "1fr 1fr";
+                grid.style.gap = "5px";
+
+                catalogData.productos.slice(i * 4, i * 4 + 4).forEach(prod => {
+                    const card = document.createElement("div");
+                    card.style.animation = "bounceIn 0.5s ease";
+                    //card.style.background = "var(--glass-bg)";
+                    card.style.background = "white";
+                    card.style.backdropFilter = "blur(5px)";
+                    card.style.border = "1px solid var(--glass-border)";
+                    card.style.borderRadius = "12px";
+                    card.style.padding = "10px";
+                    card.innerHTML = `
+            <div style="font-size: 2rem;">${prod.icono}</div>
+            <strong>${prod.nombre}</strong>
+            <p style="font-size: 0.8rem">${prod.descripcion}</p>
+            <p><strong>${prod.precio}</strong></p>
+          `;
+                    grid.appendChild(card);
+                });
+
+                section.appendChild(grid);
+                productContainer.appendChild(section);
+            }
+        }
+
+        function showPage(index, direction = 1) {
+            const pages = document.querySelectorAll(".page");
+            const current = pages[currentPage];
+            const next = pages[index];
+
+            // Preparar la página siguiente
+            next.classList.add("active");
+            next.style.transform = `translateX(${direction === 1 ? "100%" : "-100%"})`;
+            next.style.opacity = 1;
+
+            // Forzar reflow para aplicar transición
+            void next.offsetWidth;
+
+            // Iniciar transición
+            current.style.transition = next.style.transition = "transform 0.5s ease-in-out";
+            current.style.transform = `translateX(${direction === 1 ? "-100%" : "100%"})`;
+            next.style.transform = "translateX(0)";
+
+            // Resetear después de animación
+            setTimeout(() => {
+                pages.forEach(p => {
+                    p.classList.remove("active");
+                    p.style.transition = "";
+                    p.style.transform = "translateX(100%)";
+                    p.style.opacity = 0;
+                });
+                next.classList.add("active");
+                next.style.transform = "translateX(0)";
+                next.style.opacity = 1;
+            }, 500);
+
+            // Actualizar UI
+            document.querySelector(".page-indicator").textContent = `Página ${index + 1} de ${totalPages}`;
+            document.getElementById("prevBtn").disabled = index === 0;
+            document.getElementById("nextBtn").disabled = index === totalPages - 1;
+
+            currentPage = index;
+        }
+
+
+        function playPageSound() {
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = "triangle";
+            osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            osc.connect(gain).connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.2);
+        }
+
+        function changePage(dir) {
+            const next = currentPage + dir;
+            if (next >= 0 && next < totalPages) {
+                showPage(next, dir);
+                playPageSound();
+            }
+        }
+
+
+        document.getElementById("prevBtn").onclick = () => changePage(-1);
+        document.getElementById("nextBtn").onclick = () => changePage(1);
+        document.addEventListener("keydown", e => {
+            if (e.key === "ArrowRight" || e.key === " ") changePage(1);
+            if (e.key === "ArrowLeft") changePage(-1);
+        });
+
+        let touchStartX = 0;
+        document.addEventListener("touchstart", e => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        document.addEventListener("touchend", e => {
+            const touchEndX = e.changedTouches[0].screenX;
+            if (Math.abs(touchEndX - touchStartX) > 50) {
+                if (touchEndX < touchStartX) changePage(1);
+                else changePage(-1);
+            }
+        });
+
+        generateProductPages();
+        showPage(currentPage);
+    </script>
+</body>
+
+</html>

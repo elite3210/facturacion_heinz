@@ -1,0 +1,1141 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CONCAR Binary File Analyzer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            padding: 40px;
+        }
+
+        .upload-section {
+            background: #f8f9fa;
+            border: 3px dashed #3498db;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 30px;
+            transition: all 0.3s ease;
+        }
+
+        .upload-section:hover {
+            background: #e3f2fd;
+            border-color: #2196f3;
+        }
+
+        .upload-section.dragover {
+            background: #e8f5e8;
+            border-color: #4caf50;
+            transform: scale(1.02);
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .upload-btn {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1.1em;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+        }
+
+        .upload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+        }
+
+        .progress-section {
+            margin: 30px 0;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 25px;
+            background: #ecf0f1;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3498db, #2ecc71);
+            width: 0%;
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .file-list {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .file-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.3s ease;
+        }
+
+        .file-item:hover {
+            background: #f8f9fa;
+        }
+
+        .file-info {
+            flex: 1;
+        }
+
+        .file-name {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .file-details {
+            font-size: 0.9em;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+
+        .file-status {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+
+        .status-pending {
+            background: #f39c12;
+            color: white;
+        }
+
+        .status-processing {
+            background: #3498db;
+            color: white;
+        }
+
+        .status-completed {
+            background: #2ecc71;
+            color: white;
+        }
+
+        .status-error {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            color: white;
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .results-section {
+            margin-top: 40px;
+        }
+
+        .results-header {
+            background: #34495e;
+            color: white;
+            padding: 20px;
+            border-radius: 10px 10px 0 0;
+        }
+
+        .results-content {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 20px;
+            border-radius: 0 0 10px 10px;
+            max-height: 500px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .footer {
+            background: #2c3e50;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            margin-top: 40px;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 20px;
+            }
+            
+            .controls {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 CONCAR Binary File Analyzer</h1>
+            <p>Análisis Completo de 632 Archivos Binarios CONCAR + Extracción de Texto para Schema PostgreSQL</p>
+        </div>
+
+        <div class="main-content">
+            <!-- Upload Section -->
+            <div class="upload-section" id="uploadSection">
+                <h2>📁 Subir Archivos CONCAR</h2>
+                <p>Arrastra archivos .DBF, .DBT, .NTX, .CGP aquí o haz clic para seleccionar</p>
+                <input type="file" id="fileInput" class="file-input" multiple accept=".dbf,.dbt,.ntx,.cgp">
+                <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
+                    📂 Seleccionar Archivos
+                </button>
+                <button class="upload-btn" onclick="selectFolder()">
+                    📁 Seleccionar Carpeta Completa
+                </button>
+            </div>
+
+            <!-- Progress Section -->
+            <div class="progress-section" id="progressSection" style="display: none;">
+                <h3>📊 Progreso del Análisis</h3>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill">0%</div>
+                </div>
+                <p id="progressText">Preparando análisis...</p>
+            </div>
+
+            <!-- Statistics -->
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalFiles">0</div>
+                    <div class="stat-label">Archivos Cargados</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="processedFiles">0</div>
+                    <div class="stat-label">Archivos Procesados</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="tablesFound">0</div>
+                    <div class="stat-label">Tablas Detectadas</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="fieldsFound">0</div>
+                    <div class="stat-label">Campos Encontrados</div>
+                </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="controls">
+                <button class="btn btn-primary" onclick="startAnalysis()" id="analyzeBtn" disabled>
+                    🚀 Iniciar Análisis Completo
+                </button>
+                <button class="btn btn-success" onclick="downloadResults()" id="downloadBtn" disabled>
+                    💾 Descargar Análisis JSON
+                </button>
+                <button class="btn btn-warning" onclick="downloadSQL()" id="downloadSQLBtn" disabled>
+                    📄 Descargar Schema SQL
+                </button>
+                <button class="btn btn-success" onclick="downloadExtractedText()" id="downloadTextBtn" disabled>
+                    📝 Descargar Texto Extraído
+                </button>
+                <button class="btn btn-danger" onclick="clearAll()">
+                    🗑️ Limpiar Todo
+                </button>
+            </div></div>
+
+            <!-- File List -->
+            <div class="file-list" id="fileList" style="display: none;">
+                <h3>📋 Lista de Archivos</h3>
+                <div id="fileItems"></div>
+            </div>
+
+            <!-- Results Section -->
+            <div class="results-section" id="resultsSection" style="display: none;">
+                <div class="results-header">
+                    <h3>📈 Resultados del Análisis</h3>
+                </div>
+                <div class="results-content" id="resultsContent">
+                    Los resultados aparecerán aquí...
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>🏗️ CONCAR Schema Extractor v2.0 | Análisis de Ingeniería Inversa con Extracción de Texto para PostgreSQL</p>
+        </div>
+    </div>
+
+    <script>
+        // Estado global de la aplicación
+        let fileQueue = [];
+        let analysisResults = [];
+        let extractedTextContent = []; // Nuevo: almacenar todo el texto extraído
+        let currentProgress = 0;
+        let totalTables = 0;
+        let totalFields = 0;
+
+        // Referencias a elementos DOM
+        const uploadSection = document.getElementById('uploadSection');
+        const fileInput = document.getElementById('fileInput');
+        const progressSection = document.getElementById('progressSection');
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+        const fileList = document.getElementById('fileList');
+        const fileItems = document.getElementById('fileItems');
+        const resultsSection = document.getElementById('resultsSection');
+        const resultsContent = document.getElementById('resultsContent');
+
+        // Event Listeners
+        fileInput.addEventListener('change', handleFileSelect);
+        
+        // Drag and Drop
+        uploadSection.addEventListener('dragover', handleDragOver);
+        uploadSection.addEventListener('drop', handleDrop);
+        uploadSection.addEventListener('dragleave', handleDragLeave);
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            uploadSection.classList.add('dragover');
+        }
+
+        function handleDragLeave(e) {
+            e.preventDefault();
+            uploadSection.classList.remove('dragover');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            uploadSection.classList.remove('dragover');
+            const files = Array.from(e.dataTransfer.files);
+            addFilesToQueue(files);
+        }
+
+        function handleFileSelect(e) {
+            const files = Array.from(e.target.files);
+            addFilesToQueue(files);
+        }
+
+        function selectFolder() {
+            // Crear input con webkitdirectory para seleccionar carpeta
+            const folderInput = document.createElement('input');
+            folderInput.type = 'file';
+            folderInput.webkitdirectory = true;
+            folderInput.multiple = true;
+            
+            folderInput.addEventListener('change', (e) => {
+                const files = Array.from(e.target.files);
+                addFilesToQueue(files);
+            });
+            
+            folderInput.click();
+        }
+
+        function addFilesToQueue(files) {
+            const validExtensions = ['.dbf', '.dbt', '.ntx', '.cgp'];
+            const validFiles = files.filter(file => {
+                const extension = file.name.toLowerCase().slice(-4);
+                return validExtensions.includes(extension);
+            });
+
+            if (validFiles.length === 0) {
+                alert('⚠️ No se encontraron archivos CONCAR válidos (.DBF, .DBT, .NTX, .CGP)');
+                return;
+            }
+
+            // Agregar archivos a la cola
+            validFiles.forEach(file => {
+                if (!fileQueue.find(f => f.name === file.name)) {
+                    fileQueue.push({
+                        file: file,
+                        name: file.name,
+                        size: file.size,
+                        type: file.name.toLowerCase().slice(-4),
+                        status: 'pending',
+                        analysis: null
+                    });
+                }
+            });
+
+            updateUI();
+            displayFileList();
+        }
+
+        function updateUI() {
+            document.getElementById('totalFiles').textContent = fileQueue.length;
+            document.getElementById('analyzeBtn').disabled = fileQueue.length === 0;
+            
+            if (fileQueue.length > 0) {
+                fileList.style.display = 'block';
+            }
+        }
+
+        function displayFileList() {
+            fileItems.innerHTML = '';
+            
+            fileQueue.forEach((item, index) => {
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+                
+                fileItem.innerHTML = `
+                    <div class="file-info">
+                        <div class="file-name">${item.name}</div>
+                        <div class="file-details">
+                            ${formatFileSize(item.size)} | ${item.type.toUpperCase()} | 
+                            ${new Date(item.file.lastModified).toLocaleDateString()}
+                        </div>
+                    </div>
+                    <div class="file-status status-${item.status}">
+                        ${getStatusText(item.status)}
+                    </div>
+                `;
+                
+                fileItems.appendChild(fileItem);
+            });
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function getStatusText(status) {
+            const statusMap = {
+                'pending': 'Pendiente',
+                'processing': 'Procesando',
+                'completed': 'Completado',
+                'error': 'Error'
+            };
+            return statusMap[status] || status;
+        }
+
+        async function startAnalysis() {
+            if (fileQueue.length === 0) return;
+
+            // Mostrar progreso
+            progressSection.style.display = 'block';
+            resultsSection.style.display = 'block';
+            document.getElementById('analyzeBtn').disabled = true;
+
+            currentProgress = 0;
+            analysisResults = [];
+            extractedTextContent = []; // Limpiar contenido de texto extraído
+            totalTables = 0;
+            totalFields = 0;
+
+            // Procesar cada archivo
+            for (let i = 0; i < fileQueue.length; i++) {
+                const item = fileQueue[i];
+                item.status = 'processing';
+                displayFileList();
+
+                try {
+                    const analysis = await analyzeFile(item.file);
+                    item.analysis = analysis;
+                    item.status = 'completed';
+                    analysisResults.push(analysis);
+                    
+                    // Actualizar estadísticas
+                    if (analysis.tables) {
+                        totalTables += analysis.tables.length;
+                    }
+                    if (analysis.fields) {
+                        totalFields += analysis.fields.length;
+                    }
+
+                } catch (error) {
+                    item.status = 'error';
+                    item.analysis = { error: error.message };
+                }
+
+                // Actualizar progreso
+                currentProgress = ((i + 1) / fileQueue.length) * 100;
+                updateProgress();
+                displayFileList();
+            }
+
+            // Análisis completado
+            generateFinalReport();
+            document.getElementById('downloadBtn').disabled = false;
+            document.getElementById('downloadSQLBtn').disabled = false;
+            document.getElementById('downloadTextBtn').disabled = false; // Habilitar descarga de texto
+        }
+
+        async function analyzeFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    try {
+                        const arrayBuffer = e.target.result;
+                        const uint8Array = new Uint8Array(arrayBuffer);
+                        const analysis = performFileAnalysis(file.name, uint8Array);
+                        resolve(analysis);
+                    } catch (error) {
+                        reject(error);
+                    }
+                };
+                
+                reader.onerror = () => reject(new Error('Error reading file'));
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        function performFileAnalysis(fileName, data) {
+            const extension = fileName.toLowerCase().slice(-4);
+            const analysis = {
+                fileName: fileName,
+                fileType: extension,
+                fileSize: data.length,
+                analysisDate: new Date().toISOString(),
+                structure: {},
+                fields: [],
+                tables: [],
+                relationships: [],
+                configurations: [],
+                patterns: []
+            };
+
+            try {
+                // Convertir a string para análisis de patrones
+                const textContent = new TextDecoder('latin1').decode(data);
+                
+                // Almacenar el texto extraído para descarga posterior
+                const extractedText = {
+                    fileName: fileName,
+                    fileType: extension,
+                    fileSize: data.length,
+                    timestamp: new Date().toISOString(),
+                    rawTextContent: textContent,
+                    readableContent: makeContentReadable(textContent, fileName),
+                    hexDump: generateHexDump(data.slice(0, 512)) // Primeros 512 bytes en hex
+                };
+                extractedTextContent.push(extractedText);
+                
+                switch (extension) {
+                    case '.dbf':
+                        analyzeDBF(analysis, data, textContent);
+                        break;
+                    case '.dbt':
+                        analyzeDBT(analysis, data, textContent);
+                        break;
+                    case '.ntx':
+                        analyzeNTX(analysis, data, textContent);
+                        break;
+                    case '.cgp':
+                        analyzeCGP(analysis, data, textContent);
+                        break;
+                }
+
+                // Análisis general de patrones
+                findGeneralPatterns(analysis, textContent);
+
+            } catch (error) {
+                analysis.error = error.message;
+            }
+
+            return analysis;
+        }
+
+        function analyzeDBF(analysis, data, textContent) {
+            analysis.structure.type = 'dBase Table';
+            
+            // Extraer header DBF (primeros 32 bytes)
+            if (data.length >= 32) {
+                const header = {
+                    signature: data[0],
+                    lastUpdate: {
+                        year: data[1] + 1900,
+                        month: data[2],
+                        day: data[3]
+                    },
+                    recordCount: data[4] | (data[5] << 8) | (data[6] << 16) | (data[7] << 24),
+                    headerLength: data[8] | (data[9] << 8),
+                    recordLength: data[10] | (data[11] << 8)
+                };
+                
+                analysis.structure.header = header;
+                
+                // Extraer campos
+                const fieldCount = Math.floor((header.headerLength - 32) / 32);
+                analysis.fields = [];
+                
+                for (let i = 0; i < fieldCount; i++) {
+                    const fieldOffset = 32 + (i * 32);
+                    if (fieldOffset + 32 <= data.length) {
+                        const fieldName = new TextDecoder('latin1').decode(data.slice(fieldOffset, fieldOffset + 11)).replace(/\0/g, '');
+                        const fieldType = String.fromCharCode(data[fieldOffset + 11]);
+                        const fieldLength = data[fieldOffset + 16];
+                        const fieldDecimals = data[fieldOffset + 17];
+                        
+                        analysis.fields.push({
+                            name: fieldName,
+                            type: fieldType,
+                            length: fieldLength,
+                            decimals: fieldDecimals
+                        });
+                    }
+                }
+                
+                analysis.tables.push({
+                    name: analysis.fileName.replace('.DBF', ''),
+                    recordCount: header.recordCount,
+                    fields: analysis.fields
+                });
+            }
+
+            // Buscar códigos y configuraciones en los datos
+            findCodesAndConfigurations(analysis, textContent);
+        }
+
+        function analyzeDBT(analysis, data, textContent) {
+            analysis.structure.type = 'dBase Memo File';
+            
+            // Los archivos .DBT contienen campos memo
+            // Buscar patrones de configuración
+            findSystemPatterns(analysis, textContent);
+            findCodesAndConfigurations(analysis, textContent);
+        }
+
+        function analyzeNTX(analysis, data, textContent) {
+            analysis.structure.type = 'dBase Index File';
+            
+            // Buscar expresiones de índice
+            const indexExpressions = textContent.match(/[A-Z_]+\+[A-Z_]+/g) || [];
+            analysis.structure.indexExpressions = [...new Set(indexExpressions)];
+            
+            // Buscar códigos referenciados
+            findCodesAndConfigurations(analysis, textContent);
+        }
+
+        function analyzeCGP(analysis, data, textContent) {
+            analysis.structure.type = 'CONCAR Configuration File';
+            
+            // Los archivos .CGP contienen referencias a índices
+            const references = textContent.match(/[A-Z0-9]+I[0-9]+/g) || [];
+            analysis.configurations = [...new Set(references)];
+        }
+
+        function findGeneralPatterns(analysis, textContent) {
+            // Códigos numéricos
+            const numericCodes = textContent.match(/\d{4,6}/g) || [];
+            analysis.patterns.push({
+                type: 'numericCodes',
+                count: numericCodes.length,
+                unique: [...new Set(numericCodes)].slice(0, 20)
+            });
+
+            // Fechas
+            const dates = textContent.match(/20\d{6}/g) || [];
+            analysis.patterns.push({
+                type: 'dates',
+                count: dates.length,
+                unique: [...new Set(dates)].slice(0, 10)
+            });
+
+            // Códigos especiales (00R, 00S, etc.)
+            const specialCodes = textContent.match(/00[A-Z]\d+/g) || [];
+            analysis.patterns.push({
+                type: 'specialCodes',
+                count: specialCodes.length,
+                unique: [...new Set(specialCodes)]
+            });
+        }
+
+        function findCodesAndConfigurations(analysis, textContent) {
+            // Buscar patrones específicos de CONCAR
+            const concarPatterns = [
+                { name: 'companyCode', pattern: /C[A-Z]{2}\d{2}/g },
+                { name: 'subdiaryCode', pattern: /\d{2}[A-Z]{2}/g },
+                { name: 'accountCode', pattern: /\d{6,8}/g },
+                { name: 'documentType', pattern: /[A-Z]{2}\d{2}/g }
+            ];
+
+            concarPatterns.forEach(pattern => {
+                const matches = textContent.match(pattern.pattern) || [];
+                if (matches.length > 0) {
+                    analysis.patterns.push({
+                        type: pattern.name,
+                        count: matches.length,
+                        unique: [...new Set(matches)].slice(0, 15)
+                    });
+                }
+            });
+        }
+
+        function findSystemPatterns(analysis, textContent) {
+            // Patrones específicos del sistema
+            const systemPatterns = [
+                'GETFUNCTABLE',
+                'TEMPPATH',
+                'ESPECIM',
+                'TCOD',
+                'TCLAVE'
+            ];
+
+            systemPatterns.forEach(pattern => {
+                const regex = new RegExp(pattern, 'gi');
+                const matches = textContent.match(regex) || [];
+                if (matches.length > 0) {
+                    analysis.patterns.push({
+                        type: pattern,
+                        count: matches.length
+                    });
+                }
+            });
+        }
+
+        function updateProgress() {
+            progressFill.style.width = currentProgress + '%';
+            progressFill.textContent = Math.round(currentProgress) + '%';
+            progressText.textContent = `Procesando archivo ${Math.ceil(currentProgress * fileQueue.length / 100)} de ${fileQueue.length}...`;
+            
+            // Actualizar estadísticas en tiempo real
+            document.getElementById('processedFiles').textContent = analysisResults.length;
+            document.getElementById('tablesFound').textContent = totalTables;
+            document.getElementById('fieldsFound').textContent = totalFields;
+        }
+
+        function generateFinalReport() {
+            const report = {
+                analysisDate: new Date().toISOString(),
+                totalFiles: fileQueue.length,
+                processedFiles: analysisResults.length,
+                totalTables: totalTables,
+                totalFields: totalFields,
+                fileTypes: getFileTypesSummary(),
+                allTables: getAllTables(),
+                allFields: getAllFields(),
+                systemPatterns: getSystemPatterns(),
+                sqlSchema: generateSQLSchema(),
+                files: analysisResults
+            };
+
+            resultsContent.innerHTML = formatReportHTML(report);
+            progressText.textContent = `✅ Análisis completado: ${analysisResults.length} archivos procesados`;
+        }
+
+        function getFileTypesSummary() {
+            const types = {};
+            fileQueue.forEach(item => {
+                types[item.type] = (types[item.type] || 0) + 1;
+            });
+            return types;
+        }
+
+        function getAllTables() {
+            const tables = [];
+            analysisResults.forEach(result => {
+                if (result.tables) {
+                    tables.push(...result.tables);
+                }
+            });
+            return tables;
+        }
+
+        function getAllFields() {
+            const fields = [];
+            analysisResults.forEach(result => {
+                if (result.fields) {
+                    fields.push(...result.fields);
+                }
+            });
+            return fields;
+        }
+
+        function getSystemPatterns() {
+            const patterns = {};
+            analysisResults.forEach(result => {
+                if (result.patterns) {
+                    result.patterns.forEach(pattern => {
+                        if (!patterns[pattern.type]) {
+                            patterns[pattern.type] = { count: 0, examples: [] };
+                        }
+                        patterns[pattern.type].count += pattern.count || 0;
+                        if (pattern.unique) {
+                            patterns[pattern.type].examples.push(...pattern.unique);
+                        }
+                    });
+                }
+            });
+            
+            // Limpiar duplicados en ejemplos
+            Object.keys(patterns).forEach(key => {
+                patterns[key].examples = [...new Set(patterns[key].examples)].slice(0, 10);
+            });
+            
+            return patterns;
+        }
+
+        function generateSQLSchema() {
+            const tables = getAllTables();
+            let sql = '-- Schema PostgreSQL generado automáticamente de CONCAR\n\n';
+            
+            tables.forEach(table => {
+                sql += `CREATE TABLE ${table.name.toLowerCase()} (\n`;
+                sql += '    id SERIAL PRIMARY KEY,\n';
+                
+                table.fields.forEach(field => {
+                    const pgType = convertDBFTypeToPG(field.type, field.length, field.decimals);
+                    sql += `    ${field.name.toLowerCase()} ${pgType},\n`;
+                });
+                
+                sql += '    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP\n';
+                sql += ');\n\n';
+            });
+            
+            return sql;
+        }
+
+        function convertDBFTypeToPG(dbfType, length, decimals) {
+            switch (dbfType) {
+                case 'C': return `VARCHAR(${length})`;
+                case 'N': return decimals > 0 ? `DECIMAL(${length}, ${decimals})` : `INTEGER`;
+                case 'D': return 'DATE';
+                case 'L': return 'BOOLEAN';
+                case 'M': return 'TEXT';
+                default: return 'VARCHAR(255)';
+            }
+        }
+
+        function formatReportHTML(report) {
+            return `
+                <h4>📊 RESUMEN EJECUTIVO</h4>
+                <p><strong>Fecha de análisis:</strong> ${new Date(report.analysisDate).toLocaleString()}</p>
+                <p><strong>Archivos procesados:</strong> ${report.processedFiles}/${report.totalFiles}</p>
+                <p><strong>Tablas detectadas:</strong> ${report.totalTables}</p>
+                <p><strong>Campos encontrados:</strong> ${report.totalFields}</p>
+                
+                <h4>📋 TIPOS DE ARCHIVOS</h4>
+                <pre>${JSON.stringify(report.fileTypes, null, 2)}</pre>
+                
+                <h4>🔍 PATRONES DEL SISTEMA</h4>
+                <pre>${JSON.stringify(report.systemPatterns, null, 2)}</pre>
+                
+                <h4>🏗️ MUESTRA DEL SCHEMA SQL</h4>
+                <pre>${report.sqlSchema.slice(0, 1000)}${report.sqlSchema.length > 1000 ? '...' : ''}</pre>
+                
+                <p><em>💾 Descarga el análisis completo en JSON para obtener todos los detalles.</em></p>
+            `;
+        }
+
+        function downloadResults() {
+            const report = {
+                analysisDate: new Date().toISOString(),
+                totalFiles: fileQueue.length,
+                processedFiles: analysisResults.length,
+                totalTables: totalTables,
+                totalFields: totalFields,
+                fileTypes: getFileTypesSummary(),
+                allTables: getAllTables(),
+                allFields: getAllFields(),
+                systemPatterns: getSystemPatterns(),
+                sqlSchema: generateSQLSchema(),
+                files: analysisResults
+            };
+
+            const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `concar_analysis_${new Date().toISOString().slice(0, 10)}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function makeContentReadable(textContent, fileName) {
+            let readable = `=== CONTENIDO LEGIBLE DE ${fileName} ===\n\n`;
+            
+            // Reemplazar caracteres no imprimibles con representaciones legibles
+            let cleaned = textContent
+                .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\xFF]/g, (char) => {
+                    const code = char.charCodeAt(0);
+                    if (code === 0) return '[NULL]';
+                    if (code < 32) return `[CTRL+${String.fromCharCode(64 + code)}]`;
+                    return `[${code.toString(16).toUpperCase().padStart(2, '0')}]`;
+                });
+            
+            // Buscar y resaltar patrones importantes
+            readable += "=== CAMPOS DBF DETECTADOS ===\n";
+            const fieldPattern = /[A-Z][A-Z0-9_]{2,10}/g;
+            const fields = textContent.match(fieldPattern) || [];
+            readable += [...new Set(fields)].slice(0, 20).join(', ') + '\n\n';
+            
+            readable += "=== CÓDIGOS NUMÉRICOS ===\n";
+            const numericCodes = textContent.match(/\d{4,8}/g) || [];
+            readable += [...new Set(numericCodes)].slice(0, 30).join(', ') + '\n\n';
+            
+            readable += "=== FECHAS DETECTADAS ===\n";
+            const dates = textContent.match(/20\d{6}/g) || [];
+            readable += [...new Set(dates)].join(', ') + '\n\n';
+            
+            readable += "=== CÓDIGOS ESPECIALES ===\n";
+            const specialCodes = textContent.match(/00[A-Z]\d+/g) || [];
+            readable += [...new Set(specialCodes)].join(', ') + '\n\n';
+            
+            readable += "=== CONTENIDO LIMPIO (primeros 2000 caracteres) ===\n";
+            readable += cleaned.substring(0, 2000);
+            if (cleaned.length > 2000) {
+                readable += '\n[... contenido truncado ...]';
+            }
+            
+            return readable;
+        }
+
+        function generateHexDump(data) {
+            let hexDump = '';
+            for (let i = 0; i < Math.min(data.length, 512); i += 16) {
+                // Offset
+                const offset = i.toString(16).padStart(8, '0').toUpperCase();
+                hexDump += offset + '  ';
+                
+                // Hex bytes
+                let hexLine = '';
+                let asciiLine = '';
+                for (let j = 0; j < 16; j++) {
+                    if (i + j < data.length) {
+                        const byte = data[i + j];
+                        hexLine += byte.toString(16).padStart(2, '0').toUpperCase() + ' ';
+                        asciiLine += (byte >= 32 && byte <= 126) ? String.fromCharCode(byte) : '.';
+                    } else {
+                        hexLine += '   ';
+                        asciiLine += ' ';
+                    }
+                }
+                
+                hexDump += hexLine + ' |' + asciiLine + '|\n';
+            }
+            return hexDump;
+        }
+
+        function downloadExtractedText() {
+            if (extractedTextContent.length === 0) {
+                alert('⚠️ No hay texto extraído para descargar. Ejecuta el análisis primero.');
+                return;
+            }
+
+            let fullTextContent = '';
+            
+            // Agregar header del reporte
+            fullTextContent += '===============================================\n';
+            fullTextContent += '    TEXTO EXTRAÍDO DE ARCHIVOS BINARIOS CONCAR\n';
+            fullTextContent += '===============================================\n';
+            fullTextContent += `Fecha de extracción: ${new Date().toLocaleString()}\n`;
+            fullTextContent += `Archivos procesados: ${extractedTextContent.length}\n`;
+            fullTextContent += `Tamaño total: ${extractedTextContent.reduce((sum, item) => sum + item.fileSize, 0)} bytes\n`;
+            fullTextContent += '===============================================\n\n';
+
+            // Agregar resumen de archivos
+            fullTextContent += '=== RESUMEN DE ARCHIVOS ===\n';
+            extractedTextContent.forEach((item, index) => {
+                fullTextContent += `${index + 1}. ${item.fileName} (${item.fileType}) - ${item.fileSize} bytes\n`;
+            });
+            fullTextContent += '\n';
+
+            // Agregar contenido de cada archivo
+            extractedTextContent.forEach((item, index) => {
+                fullTextContent += `\n${'='.repeat(80)}\n`;
+                fullTextContent += `ARCHIVO ${index + 1}: ${item.fileName}\n`;
+                fullTextContent += `TIPO: ${item.fileType.toUpperCase()}\n`;
+                fullTextContent += `TAMAÑO: ${item.fileSize} bytes\n`;
+                fullTextContent += `TIMESTAMP: ${item.timestamp}\n`;
+                fullTextContent += `${'='.repeat(80)}\n\n`;
+                
+                // Contenido legible
+                fullTextContent += item.readableContent + '\n\n';
+                
+                // Hex dump para referencia técnica
+                fullTextContent += '=== HEX DUMP (primeros 512 bytes) ===\n';
+                fullTextContent += item.hexDump + '\n\n';
+                
+                // Separador entre archivos
+                fullTextContent += `${'*'.repeat(80)}\n`;
+            });
+
+            // Agregar footer
+            fullTextContent += '\n===============================================\n';
+            fullTextContent += '           FIN DEL REPORTE DE EXTRACCIÓN\n';
+            fullTextContent += '===============================================\n';
+            fullTextContent += `Total de caracteres extraídos: ${fullTextContent.length}\n`;
+            fullTextContent += 'Este archivo contiene todo el texto analizable extraído de los archivos binarios CONCAR.\n';
+            fullTextContent += 'Puedes usar este contenido para análisis manual o pasarlo a Claude AI para análisis completo.\n';
+
+            // Crear y descargar el archivo
+            const blob = new Blob([fullTextContent], { type: 'text/plain; charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `concar_texto_extraido_${new Date().toISOString().slice(0, 10)}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            // Mostrar estadísticas en consola
+            console.log(`📝 Texto extraído descargado: ${extractedTextContent.length} archivos, ${fullTextContent.length} caracteres totales`);
+        }
+
+        function downloadSQL() {
+            const sql = generateSQLSchema();
+            const blob = new Blob([sql], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `concar_schema_${new Date().toISOString().slice(0, 10)}.sql`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function clearAll() {
+            if (confirm('¿Estás seguro de que quieres limpiar todos los archivos y resultados?')) {
+                fileQueue = [];
+                analysisResults = [];
+                extractedTextContent = []; // Limpiar texto extraído
+                currentProgress = 0;
+                totalTables = 0;
+                totalFields = 0;
+                
+                // Reset UI
+                document.getElementById('totalFiles').textContent = '0';
+                document.getElementById('processedFiles').textContent = '0';
+                document.getElementById('tablesFound').textContent = '0';
+                document.getElementById('fieldsFound').textContent = '0';
+                
+                progressSection.style.display = 'none';
+                fileList.style.display = 'none';
+                resultsSection.style.display = 'none';
+                
+                document.getElementById('analyzeBtn').disabled = true;
+                document.getElementById('downloadBtn').disabled = true;
+                document.getElementById('downloadSQLBtn').disabled = true;
+                document.getElementById('downloadTextBtn').disabled = true; // Deshabilitar descarga de texto
+                
+                fileInput.value = '';
+            }
+        }
+    </script>
+</body>
+</html>

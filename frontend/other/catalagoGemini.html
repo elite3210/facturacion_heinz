@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Catálogo de Productos para el Hogar</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --header-height: 50px;
+            --color-page:linear-gradient(45deg, #fbbf24, #f59e0b);
+        }
+        
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f9fafb;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            width: 100vw;
+            overscroll-behavior: none;
+            position: relative;
+            touch-action: pan-x pan-y;
+        }
+        
+        .product-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #374151;
+            text-align: center;
+            position: fixed;
+            top: var(--header-height);
+            left: 0;
+            right: 0;
+            z-index: 500;
+            background: transparent;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 0.75rem 1rem;
+            margin: 0;
+
+        }
+        
+        .btn-product-info {
+            background-color: #fbbf24;
+            color: #1f2937;
+            font-weight: 600;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            transition: background-color 0.3s ease;
+            text-align: center;
+            display: block;
+            width: 100%;
+        }
+        
+        .btn-product-info:hover {
+            background-color: #f59e0b;
+        }
+        
+        .footer {
+            display: none;
+            background-color: #1f2937;
+            color: #f9fafb;
+            padding: 1rem 0;
+            text-align: center;
+        }
+
+        .sections-container-wrapper {
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        
+        .sections-container {
+            display: flex;
+            height: 100vh;
+            transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            will-change: transform;
+        }
+        
+        .sections-container > section {
+            width: 100vw;
+            height: 100vh;
+            flex-shrink: 0;
+            overflow: hidden;
+            padding: var(--header-height) 1rem 1rem 1rem;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        
+        #hero-page {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            background-color: #fbbf24; 
+            color: #1f2937;
+            padding-top: 0;
+        }
+        
+        #hero-page .content-wrapper {
+            padding-top: var(--header-height); 
+        }
+
+        .product-page-content {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            flex-grow: 1;
+            justify-content: center;
+            height: calc(100vh - var(--header-height) - 5rem);
+            overflow: hidden;
+            padding-top: 3rem;
+
+        }
+        
+        .product-page-content .product-card {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: calc((100vh - var(--header-height) - 7rem) / 2);
+            max-height: calc((100vh - var(--header-height) - 7rem) / 2);
+        }
+        
+        .product-card img {
+            height: 120px;
+            object-fit: contain;
+            flex-shrink: 0;
+        }
+        
+        .product-card .product-info {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .header-main {
+            
+            height: var(--header-height);
+            background-color: #ffffff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            display: none;
+        }
+        
+        .header-title {
+            font-size: 1.25rem;
+        }
+        
+        .navigation-indicator {
+            position: fixed;
+            top: 50%;
+            right: 10px;
+            transform: translateY(-50%);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .nav-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.4);
+            transition: all 0.3s ease;
+        }
+        
+        .nav-dot.active {
+            background-color: #fbbf24;
+            transform: scale(1.2);
+        }
+        
+        .swipe-hint {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.8rem;
+            text-align: center;
+            z-index: 100;
+            animation: fadeInOut 3s ease-in-out infinite;
+        }
+        
+        #final-page {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 0;
+            overflow-y: auto;
+        }
+        
+        #final-page .content-wrapper {
+            max-width: 90%;
+            animation: slideInUp 0.8s ease-out;
+            padding: 1rem;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .final-icon {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+            animation: bounce 2s infinite;
+        }
+        
+        .final-benefits {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+            margin: 1.5rem 0;
+        }
+        
+        .benefit-item {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 0.75rem;
+            border-radius: 0.75rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .benefit-icon {
+            font-size: 1.2rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        .final-cta {
+            background: var(--color-page);
+            color: #1f2937;
+            font-weight: 700;
+            padding: 0.75rem 1.5rem;
+            border-radius: 2rem;
+            border: none;
+            font-size: 1rem;
+            box-shadow: 0 8px 20px rgba(251, 191, 36, 0.3);
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+            cursor: pointer;
+        }
+        
+        .final-cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 25px rgba(251, 191, 36, 0.4);
+        }
+        
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-10px);
+            }
+            60% {
+                transform: translateY(-5px);
+            }
+        }
+        
+        @keyframes fadeInOut {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.8; }
+        }
+
+        .product-page{
+            background-color: var(--color-page);
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="header-main">
+        <h1 class="header-title font-bold text-gray-800">Catálogo Hogar</h1>
+    </header>
+
+    <div class="navigation-indicator" id="nav-indicator"></div>
+    
+    <!-- Título flotante para categorías -->
+    <h2 class="page-title" style="display: none;"></h2>
+    
+    <div class="swipe-hint" id="swipe-hint">
+        Desliza ← → ↑ ↓ para navegar
+    </div>
+
+    <div class="sections-container-wrapper">
+        <div id="sections-scroller" class="sections-container">
+            <section id="hero-page">
+                <div class="content-wrapper container mx-auto px-4">
+                    <h2 class="text-3xl sm:text-4xl font-bold mb-3">Descubre lo Mejor para tu Hogar</h2>
+                    <p class="text-base sm:text-lg mb-6">Calidad y estilo en cada rincón.</p>
+                    <button id="view-products-btn" class="bg-gray-800 hover:bg-gray-700 text-white font-semibold py-2 px-5 sm:py-3 sm:px-6 rounded-lg shadow-md hover:shadow-lg transition duration-300">
+                        Ver Productos
+                    </button>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        // Definición de los productos
+        const allProducts = [
+            { category: "Cocina", name: "Juego de Ollas Antiadherentes", description: "Set de 5 piezas, ideal para cocinar. Resistente y fácil de limpiar.", price: "S/ 250.00", image: "https://placehold.co/600x400/f59e0b/333333?text=Juego+de+Ollas", alt: "Imagen de Juego de Ollas", color: "amber" },
+            { category: "Cocina", name: "Licuadora de Alta Potencia", description: "Motor 800W, vaso vidrio 1.5L. Para batidos y salsas.", price: "S/ 180.00", image: "https://placehold.co/600x400/f59e0b/333333?text=Licuadora", alt: "Imagen de Licuadora", color: "amber" },
+            { category: "Cocina", name: "Cafetera Programable", description: "12 tazas, filtro permanente, pausa para servir.", price: "S/ 120.00", image: "https://placehold.co/600x400/f59e0b/333333?text=Cafetera", alt: "Imagen de Cafetera", color: "amber" },
+            { category: "Cocina", name: "Vajilla de Porcelana (16pzs)", description: "Diseño elegante, apta para lavavajillas y microondas.", price: "S/ 320.00", image: "https://placehold.co/600x400/f59e0b/333333?text=Vajilla", alt: "Imagen de Vajilla", color: "amber" },
+            { category: "Sala", name: "Sofá Seccional Moderno", description: "Lino, 3 cuerpos, gris claro. Confort y estilo.", price: "S/ 1200.00", image: "https://placehold.co/600x400/84cc16/333333?text=Sofá+Moderno", alt: "Imagen de Sofá Moderno", color: "lime" },
+            { category: "Sala", name: "Mesa de Centro Elevable", description: "Madera industrial, almacenaje. Funcional y chic.", price: "S/ 350.00", image: "https://placehold.co/600x400/84cc16/333333?text=Mesa+de+Centro", alt: "Imagen de Mesa de Centro", color: "lime" },
+            { category: "Sala", name: "Lámpara de Pie Trípode", description: "Diseño nórdico, pantalla tela, base madera. Luz cálida.", price: "S/ 280.00", image: "https://placehold.co/600x400/84cc16/333333?text=Lámpara+de+Pie", alt: "Imagen de Lámpara de Pie", color: "lime" },
+            { category: "Dormitorio", name: "Cama Queen con Cabecera", description: "Madera maciza, cabecera tapizada. Clásico y duradero.", price: "S/ 950.00", image: "https://placehold.co/600x400/38bdf8/333333?text=Cama+Queen", alt: "Imagen de Cama Queen", color: "sky" },
+            { category: "Dormitorio", name: "Juego Ropa de Cama (Algodón)", description: "Sábanas, funda edredón y almohada. Suavidad.", price: "S/ 190.00", image: "https://placehold.co/600x400/38bdf8/333333?text=Ropa+de+Cama", alt: "Imagen de Ropa de Cama", color: "sky" },
+            { category: "Decoración", name: "Espejo de Pared Redondo", description: "Marco metálico dorado, 60cm. Aporta luz.", price: "S/ 150.00", image: "https://placehold.co/600x400/a78bfa/333333?text=Espejo+Decorativo", alt: "Imagen de Espejo Decorativo", color: "violet" },
+            { category: "Decoración", name: "Set de 3 Cuadros Abstractos", description: "Lienzos impresos, varios tamaños. Arte moderno.", price: "S/ 220.00", image: "https://placehold.co/600x400/a78bfa/333333?text=Set+de+Cuadros", alt: "Imagen de Set de Cuadros", color: "violet" },
+        ];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const scroller = document.getElementById('sections-scroller');
+            const viewProductsBtn = document.getElementById('view-products-btn');
+            const header = document.querySelector('.header-main');
+            const navIndicator = document.getElementById('nav-indicator');
+            const swipeHint = document.getElementById('swipe-hint');
+            
+            const headerHeight = header ? header.offsetHeight : 50;
+            document.documentElement.style.setProperty('--header-height', `${headerHeight}px`);
+
+            let pageTurnSound;
+            let isToneStarted = false;
+
+            // Inicializar Tone.js
+            try {
+                pageTurnSound = new Tone.NoiseSynth({
+                    noise: { type: 'white' },
+                    envelope: { attack: 0.005, decay: 0.08, sustain: 0, release: 0.1 },
+                    volume: -25
+                }).toDestination();
+            } catch (e) {
+                console.error("Error initializing Tone.js:", e);
+            }
+
+            // Generar páginas de productos
+            const categories = {};
+            allProducts.forEach(product => {
+                if (!categories[product.category]) {
+                    categories[product.category] = [];
+                }
+                categories[product.category].push(product);
+            });
+
+            let productPageIndex = 1;
+
+            for (const categoryName in categories) {
+                const productsInCategory = categories[categoryName];
+                for (let i = 0; i < productsInCategory.length; i += 2) {
+                    const productPage = document.createElement('section');
+                    productPage.classList.add('product-page');
+                    productPage.dataset.pageIndex = productPageIndex++;
+                    
+                    let productsHtml = `<h2 class="page-title">${categoryName}</h2><div class="product-page-content">`;
+                    
+                    // Producto 1
+                    const p1 = productsInCategory[i];
+                    productsHtml += `
+                        <div class="product-card bg-white rounded-lg shadow-md overflow-hidden p-3">
+                            <img src="${p1.image}" alt="${p1.alt}" class="w-full rounded mb-2" onerror="this.src='https://placehold.co/600x400/cccccc/333333?text=Imagen+No+Disponible'">
+                            <div class="product-info">
+                                <div class="mb-2">
+                                    <h3 class="text-base font-semibold text-gray-800 mb-1 leading-tight">${p1.name}</h3>
+                                    <p class="text-gray-600 text-xs mb-2 line-clamp-2">${p1.description}</p>
+                                    <p class="text-lg font-bold text-amber-600 mb-2">${p1.price}</p>
+                                </div>
+                                <button class="btn-product-info border border-transparent text-xs py-2">Más Información</button>
+                            </div>
+                        </div>`;
+
+                    // Producto 2 (si existe)
+                    if (productsInCategory[i+1]) {
+                        const p2 = productsInCategory[i+1];
+                        productsHtml += `
+                            <div class="product-card bg-white rounded-lg shadow-md overflow-hidden p-3">
+                                <img src="${p2.image}" alt="${p2.alt}" class="w-full rounded mb-2" onerror="this.src='https://placehold.co/600x400/cccccc/333333?text=Imagen+No+Disponible'">
+                                <div class="product-info">
+                                    <div class="mb-2">
+                                        <h3 class="text-base font-semibold text-gray-800 mb-1 leading-tight">${p2.name}</h3>
+                                        <p class="text-gray-600 text-xs mb-2 line-clamp-2">${p2.description}</p>
+                                        <p class="text-lg font-bold text-lime-600 mb-2">${p2.price}</p>
+                                    </div>
+                                    <button class="btn-product-info border border-transparent text-xs py-2">Más Información</button>
+                                </div>
+                            </div>`;
+                    }
+                    productsHtml += `</div>`;
+                    productPage.innerHTML = productsHtml;
+                    scroller.appendChild(productPage);
+                }
+            }
+            
+            // Añadir página final motivacional
+            const finalPage = document.createElement('section');
+            finalPage.id = 'final-page';
+            finalPage.innerHTML = `
+                <div class="content-wrapper">
+                    <div class="final-icon">🏠</div>
+                    <h2 class="text-2xl font-bold mb-2">¡Tu Hogar Perfecto te Espera!</h2>
+                    <p class="text-base mb-4 opacity-90">Transforma cada rincón con nuestra selección premium</p>
+                    
+                    <div class="final-benefits">
+                        <div class="benefit-item">
+                            <div class="benefit-icon">✨</div>
+                            <h3 class="font-semibold mb-1 text-sm">Calidad Premium</h3>
+                            <p class="text-xs opacity-80">Productos con altos estándares</p>
+                        </div>
+                        <div class="benefit-item">
+                            <div class="benefit-icon">🚚</div>
+                            <h3 class="font-semibold mb-1 text-sm">Envío Gratis</h3>
+                            <p class="text-xs opacity-80">Sin costo en compras +S/ 200</p>
+                        </div>
+                        <div class="benefit-item">
+                            <div class="benefit-icon">🛡️</div>
+                            <h3 class="font-semibold mb-1 text-sm">Garantía Total</h3>
+                            <p class="text-xs opacity-80">12 meses en todos los productos</p>
+                        </div>
+                        <div class="benefit-item">
+                            <div class="benefit-icon">💳</div>
+                            <h3 class="font-semibold mb-1 text-sm">Pago Flexible</h3>
+                            <p class="text-xs opacity-80">Hasta 12 cuotas sin intereses</p>
+                        </div>
+                    </div>
+                    
+                    <button class="final-cta">
+                        🛒 Comprar Ahora
+                    </button>
+                    
+                    <p class="text-xs mt-3 opacity-70">
+                        Únete a más de 10,000 familias satisfechas
+                    </p>
+                </div>
+            `;
+            scroller.appendChild(finalPage);
+            
+            // Añadir footer a la penúltima página (última página de productos)
+            const allGeneratedSections = scroller.querySelectorAll('section:not(#final-page)');
+            if (allGeneratedSections.length > 1) {
+                const lastProductPage = allGeneratedSections[allGeneratedSections.length - 1];
+                const footerElement = document.createElement('footer');
+                footerElement.classList.add('footer', 'mt-auto');
+                footerElement.innerHTML = `
+                    <div class="container mx-auto px-4">
+                        <p class="mb-1 text-sm">&copy; ${new Date().getFullYear()} Tu Tienda de Hogar.</p>
+                        <p class="text-xs">Contáctanos: (01) 555-1234</p>
+                    </div>
+                `;
+                lastProductPage.appendChild(footerElement);
+            }
+
+            const sections = Array.from(scroller.children);
+            const numSections = sections.length;
+            scroller.style.width = `${numSections * 100}vw`;
+
+            // Crear indicadores de navegación
+            function createNavIndicators() {
+                navIndicator.innerHTML = '';
+                for (let i = 0; i < numSections; i++) {
+                    const dot = document.createElement('div');
+                    dot.classList.add('nav-dot');
+                    if (i === 0) dot.classList.add('active');
+                    navIndicator.appendChild(dot);
+                }
+            }
+
+            function updateNavIndicators(index) {
+                const dots = navIndicator.querySelectorAll('.nav-dot');
+                dots.forEach((dot, i) => {
+                    dot.classList.toggle('active', i === index);
+                });
+                
+                // Actualizar título flotante basado en la página actual
+                updateFloatingTitle(index);
+            }
+            
+            function updateFloatingTitle(index) {
+                const currentSection = sections[index];
+                const floatingTitle = document.querySelector('.page-title');
+                
+                if (currentSection && currentSection.id === 'hero-page') {
+                    if (floatingTitle) floatingTitle.style.display = 'none';
+                } else if (currentSection && currentSection.id === 'final-page') {
+                    if (floatingTitle) floatingTitle.style.display = 'none';
+                } else if (currentSection && currentSection.classList.contains('product-page')) {
+                    const titleElement = currentSection.querySelector('h2');
+                    if (titleElement && floatingTitle) {
+                        floatingTitle.textContent = titleElement.textContent;
+                        floatingTitle.style.display = 'block';
+                    }
+                }
+            }
+
+            let currentIndex = 0;
+            let startX = 0;
+            let startY = 0;
+            let currentX = 0;
+            let currentY = 0;
+            let isDragging = false;
+            let dragOffset = 0;
+            let previousSwipeIndex = 0;
+
+            async function playPageTurnSound() {
+                if (!pageTurnSound) return;
+                if (!isToneStarted) {
+                    try {
+                        await Tone.start();
+                        isToneStarted = true;
+                    } catch (e) {
+                        console.error("Error starting AudioContext:", e);
+                        return;
+                    }
+                }
+                if (Tone.context.state === 'running') {
+                    pageTurnSound.triggerAttackRelease("8n");
+                }
+            }
+
+            function goToSection(index, smooth = true) {
+                if (index < 0 || index >= numSections) return;
+                
+                const oldIndex = currentIndex;
+                currentIndex = index;
+                
+                const translateX = -currentIndex * 100;
+                
+                if (smooth) {
+                    scroller.style.transition = 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                } else {
+                    scroller.style.transition = 'none';
+                }
+                scroller.style.transform = `translateX(${translateX}vw)`;
+
+                updateNavIndicators(currentIndex);
+
+                if (smooth && oldIndex !== currentIndex && pageTurnSound) {
+                    playPageTurnSound();
+                }
+
+                // Ocultar hint después de la primera navegación
+                if (currentIndex > 0 && swipeHint) {
+                    swipeHint.style.display = 'none';
+                }
+
+                // Desactivar pantalla completa al llegar a la última página
+                if (currentIndex === numSections - 1) {
+                    setTimeout(() => {
+                        try {
+                            if (document.exitFullscreen) {
+                                document.exitFullscreen();
+                            } else if (document.webkitExitFullscreen) {
+                                document.webkitExitFullscreen();
+                            } else if (document.msExitFullscreen) {
+                                document.msExitFullscreen();
+                            }
+                        } catch (error) {
+                            console.log('No se pudo desactivar pantalla completa:', error);
+                        }
+                    }, 500);
+                }
+            }
+            
+            if (viewProductsBtn) {
+                viewProductsBtn.addEventListener('click', async () => {
+                    // Activar pantalla completa
+                    try {
+                        if (document.documentElement.requestFullscreen) {
+                            await document.documentElement.requestFullscreen();
+                        } else if (document.documentElement.webkitRequestFullscreen) {
+                            await document.documentElement.webkitRequestFullscreen();
+                        } else if (document.documentElement.msRequestFullscreen) {
+                            await document.documentElement.msRequestFullscreen();
+                        }
+                    } catch (error) {
+                        console.log('No se pudo activar pantalla completa:', error);
+                    }
+                    
+                    goToSection(1);
+                });
+            }
+
+            // Touch events con soporte para navegación vertical y horizontal
+            scroller.addEventListener('touchstart', async (e) => {
+                if (!isToneStarted && Tone && Tone.start && Tone.context.state !== 'running') {
+                    try {
+                        await Tone.start();
+                        isToneStarted = true;
+                    } catch (err) {
+                        console.error("Error starting AudioContext on touchstart:", err);
+                    }
+                }
+
+                isDragging = true;
+                startX = e.touches[0].clientX;
+                startY = e.touches[0].clientY;
+                currentX = startX;
+                currentY = startY;
+                previousSwipeIndex = currentIndex;
+                
+                const currentTransform = window.getComputedStyle(scroller).getPropertyValue('transform');
+                dragOffset = (currentTransform && currentTransform !== 'none') ? new DOMMatrixReadOnly(currentTransform).m41 : 0;
+                scroller.style.transition = 'none';
+            }, { passive: true });
+
+            scroller.addEventListener('touchmove', (e) => {
+                if (!isDragging) return;
+                
+                currentX = e.touches[0].clientX;
+                currentY = e.touches[0].clientY;
+                
+                const moveOffsetX = currentX - startX;
+                const moveOffsetY = currentY - startY;
+                
+                // Solo procesar movimiento horizontal si es mayor que el vertical
+                if (Math.abs(moveOffsetX) > Math.abs(moveOffsetY)) {
+                    let newTranslateX = (dragOffset / window.innerWidth * 100) + (moveOffsetX / window.innerWidth * 100);
+                    
+                    const minTranslateX = -(numSections - 1) * 100;
+                    const maxTranslateX = 0;
+                    
+                    if (newTranslateX > maxTranslateX) newTranslateX = maxTranslateX + (newTranslateX - maxTranslateX) * 0.2;
+                    else if (newTranslateX < minTranslateX) newTranslateX = minTranslateX + (newTranslateX - minTranslateX) * 0.2;
+                    
+                    scroller.style.transform = `translateX(${newTranslateX}vw)`;
+                }
+            }, { passive: true });
+
+            scroller.addEventListener('touchend', () => {
+                if (!isDragging) return;
+                isDragging = false;
+                
+                const dragDistanceX = currentX - startX;
+                const dragDistanceY = currentY - startY;
+                const thresholdX = window.innerWidth / 5;
+                const thresholdY = window.innerHeight / 5;
+
+                let nextIndex = previousSwipeIndex;
+
+                // Determinar dirección del swipe
+                if (Math.abs(dragDistanceX) > Math.abs(dragDistanceY)) {
+                    // Swipe horizontal
+                    if (dragDistanceX < -thresholdX && currentIndex < numSections - 1) {
+                        nextIndex = currentIndex + 1; // Swipe izquierda - página siguiente
+                    } else if (dragDistanceX > thresholdX && currentIndex > 0) {
+                        nextIndex = currentIndex - 1; // Swipe derecha - página anterior
+                    }
+                } else {
+                    // Swipe vertical
+                    if (dragDistanceY < -thresholdY && currentIndex < numSections - 1) {
+                        nextIndex = currentIndex + 1; // Swipe arriba - página siguiente
+                    } else if (dragDistanceY > thresholdY && currentIndex > 0) {
+                        nextIndex = currentIndex - 1; // Swipe abajo - página anterior
+                    }
+                }
+                
+                nextIndex = Math.max(0, Math.min(nextIndex, numSections - 1));
+                goToSection(nextIndex, true);
+            });
+            
+            scroller.addEventListener('touchcancel', () => {
+                if (!isDragging) return;
+                isDragging = false;
+                goToSection(currentIndex, true);
+            });
+
+            // Inicialización
+            createNavIndicators();
+            goToSection(0, false);
+            
+            // Ocultar hint después de 5 segundos
+            setTimeout(() => {
+                if (swipeHint && currentIndex === 0) {
+                    swipeHint.style.opacity = '0.3';
+                }
+            }, 5000);
+        });
+    </script>
+
+</body>
+</html>

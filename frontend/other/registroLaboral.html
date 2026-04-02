@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Registro Laboral</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qr-scanner/1.4.2/qr-scanner.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .nav-tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .nav-tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            color: #6c757d;
+            transition: all 0.3s ease;
+        }
+
+        .nav-tab.active {
+            background: white;
+            color: #495057;
+            border-bottom: 3px solid #007bff;
+        }
+
+        .nav-tab:hover {
+            background: #e9ecef;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 30px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .employee-selector {
+            margin-bottom: 30px;
+        }
+
+        .employee-selector select {
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            background: white;
+        }
+
+        .qr-scanner-container {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        #qr-video {
+            width: 100%;
+            max-width: 400px;
+            height: 300px;
+            border: 3px solid #007bff;
+            border-radius: 15px;
+            background: #f8f9fa;
+        }
+
+        .scan-result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .scan-result.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .scan-result.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            margin: 5px;
+        }
+
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0056b3;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #1e7e34;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #495057;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .form-group input:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+
+        .employee-list {
+            display: grid;
+            gap: 15px;
+        }
+
+        .employee-item {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 4px solid #007bff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .employee-info h3 {
+            margin-bottom: 5px;
+            color: #2c3e50;
+        }
+
+        .employee-info p {
+            color: #6c757d;
+            margin: 2px 0;
+        }
+
+        .records-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .records-table th {
+            background: #343a40;
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 500;
+        }
+
+        .records-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .records-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-entrada {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-salida {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .payroll-summary {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+
+        .payroll-summary h3 {
+            font-size: 1.5em;
+            margin-bottom: 15px;
+        }
+
+        .payroll-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .payroll-item {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .payroll-item h4 {
+            font-size: 0.9em;
+            margin-bottom: 8px;
+            opacity: 0.9;
+        }
+
+        .payroll-item .value {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 0;
+                border-radius: 0;
+            }
+
+            .nav-tabs {
+                flex-direction: column;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .payroll-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏢 Sistema de Registro Laboral</h1>
+            <p>Control de asistencia con código QR</p>
+        </div>
+
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="showTab('registro')">📱 Registro QR</button>
+            <button class="nav-tab" onclick="showTab('empleados')">👥 Empleados</button>
+            <button class="nav-tab" onclick="showTab('registros')">📋 Registros</button>
+            <button class="nav-tab" onclick="showTab('planilla')">💰 Planilla</button>
+        </div>
+
+        <!-- Tab Registro QR -->
+        <div id="registro" class="tab-content active">
+            <h2>📱 Registro de Asistencia</h2>
+
+            <div class="employee-selector">
+                <label for="employeeSelect">Seleccionar Empleado:</label>
+                <select id="employeeSelect">
+                    <option value="">-- Seleccione su nombre --</option>
+                </select>
+            </div>
+
+            <div class="qr-scanner-container">
+                <video id="qr-video"></video>
+                <div id="scan-result"></div>
+                <button id="start-scan" class="btn btn-primary" onclick="startScanner()">🎥 Iniciar Escáner</button>
+                <button id="stop-scan" class="btn btn-danger" onclick="stopScanner()" style="display:none;">⏹️ Detener
+                    Escáner</button>
+            </div>
+        </div>
+
+        <!-- Tab Empleados -->
+        <div id="empleados" class="tab-content">
+            <h2>👥 Gestión de Empleados</h2>
+
+            <button class="btn btn-success" onclick="showAddEmployeeModal()">➕ Agregar Empleado</button>
+
+            <div id="employee-list" class="employee-list"></div>
+        </div>
+
+        <!-- Tab Registros -->
+        <div id="registros" class="tab-content">
+            <h2>📋 Registro de Asistencia</h2>
+
+            <div class="form-group">
+                <label for="filterEmployee">Filtrar por empleado:</label>
+                <select id="filterEmployee">
+                    <option value="">Todos los empleados</option>
+                </select>
+            </div>
+
+            <table class="records-table" id="records-table">
+                <thead>
+                    <tr>
+                        <th>Empleado</th>
+                        <th>Fecha</th>
+                        <th>Hora</th>
+                        <th>Tipo</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="records-tbody">
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Tab Planilla -->
+        <div id="planilla" class="tab-content">
+            <h2>💰 Cálculo de Planilla</h2>
+
+            <div class="form-group">
+                <label for="payrollEmployee">Seleccionar Empleado:</label>
+                <select id="payrollEmployee">
+                    <option value="">-- Seleccione empleado --</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="payrollPeriod">Período:</label>
+                <select id="payrollPeriod">
+                    <option value="weekly">Semanal</option>
+                    <option value="monthly">Mensual</option>
+                </select>
+            </div>
+
+            <button class="btn btn-primary" onclick="calculatePayroll()">📊 Calcular Planilla</button>
+
+            <div id="payroll-result"></div>
+        </div>
+    </div>
+
+    <!-- Modal Agregar Empleado -->
+    <div id="employeeModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeEmployeeModal()">&times;</span>
+            <h2>➕ Agregar Nuevo Empleado</h2>
+            <form id="employeeForm">
+                <div class="form-group">
+                    <label for="employeeName">Nombre:</label>
+                    <input type="text" id="employeeName" required>
+                </div>
+                <div class="form-group">
+                    <label for="employeePosition">Cargo:</label>
+                    <input type="text" id="employeePosition" required>
+                </div>
+                <div class="form-group">
+                    <label for="employeeRate">Tarifa por Hora (S/):</label>
+                    <input type="number" id="employeeRate" step="0.01" required>
+                </div>
+                <button type="submit" class="btn btn-success">💾 Guardar Empleado</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Variables globales
+        let qrScanner = null;
+        let currentEmployee = null;
+        const QR_CODE_EXPECTED = "20605216715|registroLaboral";
+
+        // Inicializar aplicación
+        document.addEventListener('DOMContentLoaded', function () {
+            initializeApp();
+        });
+
+        function initializeApp() {
+            loadEmployees();
+            loadRecords();
+            updateEmployeeSelectors();
+        }
+
+        // Gestión de empleados
+        function loadEmployees() {
+            const employees = JSON.parse(localStorage.getItem('employees')) || [];
+            const employeeList = document.getElementById('employee-list');
+            const employeeSelect = document.getElementById('employeeSelect');
+
+            // Limpiar contenedores
+            employeeList.innerHTML = '';
+            employeeSelect.innerHTML = '<option value="">-- Seleccione su nombre --</option>';
+
+            employees.forEach(employee => {
+                // Lista de empleados
+                const employeeItem = document.createElement('div');
+                employeeItem.className = 'employee-item';
+                employeeItem.innerHTML = `
+                    <div class="employee-info">
+                        <h3>${employee.name}</h3>
+                        <p><strong>Cargo:</strong> ${employee.position}</p>
+                        <p><strong>Tarifa:</strong> S/ ${employee.rate}/hora</p>
+                    </div>
+                    <button class="btn btn-danger" onclick="deleteEmployee('${employee.id}')">🗑️ Eliminar</button>
+                `;
+                employeeList.appendChild(employeeItem);
+
+                // Selector de empleados
+                const option = document.createElement('option');
+                option.value = employee.id;
+                option.textContent = employee.name;
+                employeeSelect.appendChild(option);
+            });
+        }
+
+        function showAddEmployeeModal() {
+            document.getElementById('employeeModal').style.display = 'block';
+        }
+
+        function closeEmployeeModal() {
+            document.getElementById('employeeModal').style.display = 'none';
+            document.getElementById('employeeForm').reset();
+        }
+
+        document.getElementById('employeeForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const employee = {
+                id: Date.now().toString(),
+                name: document.getElementById('employeeName').value,
+                position: document.getElementById('employeePosition').value,
+                rate: parseFloat(document.getElementById('employeeRate').value)
+            };
+
+            const employees = JSON.parse(localStorage.getItem('employees')) || [];
+            employees.push(employee);
+            localStorage.setItem('employees', JSON.stringify(employees));
+
+            loadEmployees();
+            updateEmployeeSelectors();
+            closeEmployeeModal();
+
+            showMessage('✅ Empleado agregado exitosamente', 'success');
+        });
+
+        function deleteEmployee(employeeId) {
+            if (confirm('¿Está seguro de que desea eliminar este empleado?')) {
+                const employees = JSON.parse(localStorage.getItem('employees')) || [];
+                const filteredEmployees = employees.filter(emp => emp.id !== employeeId);
+                localStorage.setItem('employees', JSON.stringify(filteredEmployees));
+
+                loadEmployees();
+                updateEmployeeSelectors();
+                showMessage('✅ Empleado eliminado exitosamente', 'success');
+            }
+        }
+
+        // Gestión del escáner QR
+        async function startScanner() {
+            const employeeId = document.getElementById('employeeSelect').value;
+            if (!employeeId) {
+                showScanResult('❌ Por favor seleccione un empleado primero', 'error');
+                return;
+            }
+
+            const employees = JSON.parse(localStorage.getItem('employees')) || [];
+            currentEmployee = employees.find(emp => emp.id === employeeId);
+
+            if (!currentEmployee) {
+                showScanResult('❌ Empleado no encontrado', 'error');
+                return;
+            }
+
+            try {
+                const videoElement = document.getElementById('qr-video');
+                qrScanner = new QrScanner(videoElement, result => {
+                    handleQRScan(result.data);
+                });
+
+                await qrScanner.start();
+                document.getElementById('start-scan').style.display = 'none';
+                document.getElementById('stop-scan').style.display = 'inline-block';
+                showScanResult('📷 Escáner activo. Muestre el código QR a la cámara...', 'success');
+            } catch (error) {
+                showScanResult('❌ Error al iniciar la cámara: ' + error.message, 'error');
+            }
+        }
+
+        function stopScanner() {
+            if (qrScanner) {
+                qrScanner.stop();
+                qrScanner = null;
+            }
+            document.getElementById('start-scan').style.display = 'inline-block';
+            document.getElementById('stop-scan').style.display = 'none';
+            showScanResult('⏹️ Escáner detenido', 'success');
+        }
+
+        function handleQRScan(qrData) {
+            if (qrData === QR_CODE_EXPECTED) {
+                registerAttendance();
+                stopScanner();
+            } else {
+                showScanResult('❌ Código QR inválido. Esperado: ' + QR_CODE_EXPECTED, 'error');
+            }
+        }
+
+        function registerAttendance() {
+            const now = new Date();
+            const today = now.toISOString().split('T')[0];
+
+            const records = JSON.parse(localStorage.getItem('attendance_records')) || [];
+
+            // Buscar último registro del empleado hoy
+            const todayRecords = records.filter(record =>
+                record.employeeId === currentEmployee.id &&
+                record.date === today
+            ).sort((a, b) => new Date(b.datetime) - new Date(a.datetime));
+
+            let type = 'entrada';
+            if (todayRecords.length > 0) {
+                const lastRecord = todayRecords[0];
+                type = lastRecord.type === 'entrada' ? 'salida' : 'entrada';
+            }
+
+            const record = {
+                id: Date.now().toString(),
+                employeeId: currentEmployee.id,
+                employeeName: currentEmployee.name,
+                date: today,
+                time: now.toTimeString().slice(0, 8),
+                datetime: now.toISOString(),
+                type: type
+            };
+
+            records.push(record);
+            localStorage.setItem('attendance_records', JSON.stringify(records));
+
+            const typeText = type === 'entrada' ? '🟢 ENTRADA' : '🔴 SALIDA';
+            showScanResult(`✅ Registro exitoso: ${typeText} para ${currentEmployee.name} a las ${record.time}`, 'success');
+
+            loadRecords();
+        }
+
+        function showScanResult(message, type) {
+            const resultDiv = document.getElementById('scan-result');
+            resultDiv.textContent = message;
+            resultDiv.className = `scan-result ${type}`;
+        }
+
+        // Gestión de registros
+        function loadRecords() {
+            const records = JSON.parse(localStorage.getItem('attendance_records')) || [];
+            const tbody = document.getElementById('records-tbody');
+            const filterEmployee = document.getElementById('filterEmployee').value;
+
+            let filteredRecords = records;
+            if (filterEmployee) {
+                filteredRecords = records.filter(record => record.employeeId === filterEmployee);
+            }
+
+            // Ordenar por fecha y hora más reciente primero
+            filteredRecords.sort((a, b) => new Date(b.datetime) - new Date(a.datetime));
+
+            tbody.innerHTML = '';
+
+            filteredRecords.forEach(record => {
+                const row = document.createElement('tr');
+                const statusClass = record.type === 'entrada' ? 'status-entrada' : 'status-salida';
+                const statusIcon = record.type === 'entrada' ? '🟢' : '🔴';
+
+                row.innerHTML = `
+                    <td>${record.employeeName}</td>
+                    <td>${record.date}</td>
+                    <td>${record.time}</td>
+                    <td><span class="status-badge ${statusClass}">${statusIcon} ${record.type.toUpperCase()}</span></td>
+                    <td><button class="btn btn-danger" onclick="deleteRecord('${record.id}')">🗑️</button></td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function deleteRecord(recordId) {
+            if (confirm('¿Está seguro de que desea eliminar este registro?')) {
+                const records = JSON.parse(localStorage.getItem('attendance_records')) || [];
+                const filteredRecords = records.filter(record => record.id !== recordId);
+                localStorage.setItem('attendance_records', JSON.stringify(filteredRecords));
+                loadRecords();
+                showMessage('✅ Registro eliminado exitosamente', 'success');
+            }
+        }
+
+        // Cálculo de planilla
+        function calculatePayroll() {
+            const employeeId = document.getElementById('payrollEmployee').value;
+            const period = document.getElementById('payrollPeriod').value;
+
+            if (!employeeId) {
+                showMessage('❌ Por favor seleccione un empleado', 'error');
+                return;
+            }
+
+            const employees = JSON.parse(localStorage.getItem('employees')) || [];
+            const employee = employees.find(emp => emp.id === employeeId);
+
+            if (!employee) {
+                showMessage('❌ Empleado no encontrado', 'error');
+                return;
+            }
+
+            const records = JSON.parse(localStorage.getItem('attendance_records')) || [];
+            const employeeRecords = records.filter(record => record.employeeId === employeeId);
+
+            // Filtrar por período
+            const now = new Date();
+            let startDate;
+
+            if (period === 'weekly') {
+                startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            } else {
+                startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+            }
+
+            const periodRecords = employeeRecords.filter(record =>
+                new Date(record.datetime) >= startDate
+            );
+
+            // Calcular horas trabajadas
+            const workDays = {};
+
+            periodRecords.forEach(record => {
+                const date = record.date;
+                if (!workDays[date]) {
+                    workDays[date] = { entrada: null, salida: null };
+                }
+                workDays[date][record.type] = record.datetime;
+            });
+
+            let totalHours = 0;
+            let totalDays = 0;
+
+            Object.keys(workDays).forEach(date => {
+                const day = workDays[date];
+                if (day.entrada && day.salida) {
+                    const entrada = new Date(day.entrada);
+                    const salida = new Date(day.salida);
+                    const hoursWorked = (salida - entrada) / (1000 * 60 * 60);
+                    totalHours += hoursWorked;
+                    totalDays++;
+                }
+            });
+
+            const grossSalary = totalHours * employee.rate;
+            const bonus = grossSalary * 0.05; // 5% de bonificación
+            const deductions = grossSalary * 0.13; // 13% de descuentos (ONP/SPP)
+            const netSalary = grossSalary + bonus - deductions;
+
+            displayPayrollResult({
+                employee: employee,
+                period: period,
+                totalDays: totalDays,
+                totalHours: totalHours.toFixed(2),
+                grossSalary: grossSalary.toFixed(2),
+                bonus: bonus.toFixed(2),
+                deductions: deductions.toFixed(2),
+                netSalary: netSalary.toFixed(2)
+            });
+        }
+
+        function displayPayrollResult(payroll) {
+            const resultDiv = document.getElementById('payroll-result');
+            const periodText = payroll.period === 'weekly' ? 'Semanal' : 'Mensual';
+
+            resultDiv.innerHTML = `
+                <div class="payroll-summary">
+                    <h3>💼 Planilla ${periodText} - ${payroll.employee.name}</h3>
+                    <p><strong>Cargo:</strong> ${payroll.employee.position}</p>
+                    <p><strong>Tarifa:</strong> S/ ${payroll.employee.rate}/hora</p>
+                    
+                    <div class="payroll-grid">
+                        <div class="payroll-item">
+                            <h4>📅 Días Trabajados</h4>
+                            <div class="value">${payroll.totalDays}</div>
+                        </div>
+                        <div class="payroll-item">
+                            <h4>⏰ Horas Trabajadas</h4>
+                            <div class="value">${payroll.totalHours}</div>
+                        </div>
+                        <div class="payroll-item">
+                            <h4>💵 Sueldo Bruto</h4>
+                            <div class="value">S/ ${payroll.grossSalary}</div>
+                        </div>
+                        <div class="payroll-item">
+                            <h4>🎁 Bonificaciones</h4>
+                            <div class="value">S/ ${payroll.bonus}</div>
+                        </div>
+                        <div class="payroll-item">
+                            <h4>📉 Descuentos</h4>
+                            <div class="value">S/ ${payroll.deductions}</div>
+                        </div>
+                        <div class="payroll-item">
+                            <h4>💰 Sueldo Neto</h4>
+                            <div class="value">S/ ${payroll.netSalary}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Utilidades
+        function showTab(tabName) {
+            // Ocultar todas las pestañas
+            const tabs = document.querySelectorAll('.tab-content');
+            tabs.forEach(tab => tab.classList.remove('active'));
+
+            // Desactivar todos los botones
+            const buttons = document.querySelectorAll('.nav-tab');
+            buttons.forEach(button => button.classList.remove('active'));
+
+            // Mostrar pestaña seleccionada
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+
+            // Cargar datos específicos de la pestaña
+            if (tabName === 'registros') {
+                loadRecords();
+            }
+        }
+
+        function updateEmployeeSelectors() {
+            const employees = JSON.parse(localStorage.getItem('employees')) || [];
+            const selectors = ['filterEmployee', 'payrollEmployee'];
+
+            selectors.forEach(selectorId => {
+                const selector = document.getElementById(selectorId);
+                const currentValue = selector.value;
+                selector.innerHTML = selectorId === 'filterEmployee' ?
+                    '<option value="">Todos los empleados</option>' :
+                    '<option value="">-- Seleccione empleado --</option>';
+
+                employees.forEach(employee => {
+                    const option = document.createElement('option');
+                    option.value = employee.id;
+                    option.textContent = employee.name;
+                    selector.appendChild(option);
+                });
+
+                selector.value = currentValue;
+            });
+        }
+
+        function showMessage(message, type) {
+            // Crear mensaje temporal
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `scan-result ${type}`;
+            messageDiv.textContent = message;
+            messageDiv.style.position = 'fixed';
+            messageDiv.style.top = '20px';
+            messageDiv.style.right = '20px';
+            messageDiv.style.zIndex = '9999';
+            messageDiv.style.minWidth = '300px';
+
+            document.body.appendChild(messageDiv);
+
+            setTimeout(() => {
+                document.body.removeChild(messageDiv);
+            }, 3000);
+        }
+
+        // Event listeners
+        document.getElementById('filterEmployee').addEventListener('change', loadRecords);
+
+        // Cerrar modal al hacer clic fuera de él
+        window.onclick = function (event) {
+            const modal = document.getElementById('employeeModal');
+            if (event.target == modal) {
+                closeEmployeeModal();
+            }
+        }
+
+        // Datos de ejemplo para pruebas
+        function loadSampleData() {
+            // Empleados de ejemplo
+            const sampleEmployees = [
+                {
+                    id: "emp1",
+                    name: "Juan Pérez",
+                    position: "Desarrollador",
+                    rate: 25.00
+                },
+                {
+                    id: "emp2",
+                    name: "María García",
+                    position: "Diseñadora",
+                    rate: 22.50
+                },
+                {
+                    id: "emp3",
+                    name: "Carlos López",
+                    position: "Analista",
+                    rate: 20.00
+                }
+            ];
+
+            // Solo cargar si no hay empleados
+            const existingEmployees = JSON.parse(localStorage.getItem('employees')) || [];
+            if (existingEmployees.length === 0) {
+                localStorage.setItem('employees', JSON.stringify(sampleEmployees));
+
+                // Registros de ejemplo
+                const now = new Date();
+                const today = now.toISOString().split('T')[0];
+                const yesterday = new Date(now.setDate(now.getDate() - 1)).toISOString().split('T')[0];
+
+                const sampleRecords = [
+                    {
+                        id: "rec1",
+                        employeeId: "emp1",
+                        employeeName: "Juan Pérez",
+                        date: today,
+                        time: "08:00:00",
+                        datetime: today + "T08:00:00",
+                        type: "entrada"
+                    },
+                    {
+                        id: "rec2",
+                        employeeId: "emp1",
+                        employeeName: "Juan Pérez",
+                        date: today,
+                        time: "17:00:00",
+                        datetime: today + "T17:00:00",
+                        type: "salida"
+                    },
+                    {
+                        id: "rec3",
+                        employeeId: "emp2",
+                        employeeName: "María García",
+                        date: yesterday,
+                        time: "08:30:00",
+                        datetime: yesterday + "T08:30:00",
+                        type: "entrada"
+                    },
+                    {
+                        id: "rec4",
+                        employeeId: "emp2",
+                        employeeName: "María García",
+                        date: yesterday,
+                        time: "17:30:00",
+                        datetime: yesterday + "T17:30:00",
+                        type: "salida"
+                    }
+                ];
+
+                localStorage.setItem('attendance_records', JSON.stringify(sampleRecords));
+                showMessage('📊 Datos de ejemplo cargados exitosamente', 'success');
+            }
+        }
+
+        // Función para generar código QR de prueba
+        function generateTestQR() {
+            const qrData = QR_CODE_EXPECTED;
+            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrData)}`;
+
+            const qrModal = document.createElement('div');
+            qrModal.className = 'modal';
+            qrModal.style.display = 'block';
+            qrModal.innerHTML = `
+                <div class="modal-content" style="text-align: center;">
+                    <span class="close" onclick="this.closest('.modal').remove()">&times;</span>
+                    <h2>🔍 Código QR de Prueba</h2>
+                    <p>Usa este código QR para probar el sistema:</p>
+                    <img src="${qrUrl}" alt="QR Code" style="margin: 20px 0;">
+                    <p><strong>Contenido:</strong> ${qrData}</p>
+                    <p><small>Tip: Puedes usar este QR desde otro dispositivo para probar el escáner</small></p>
+                </div>
+            `;
+
+            document.body.appendChild(qrModal);
+        }
+
+        // Función para exportar datos
+        function exportData() {
+            const employees = JSON.parse(localStorage.getItem('employees')) || [];
+            const records = JSON.parse(localStorage.getItem('attendance_records')) || [];
+
+            const data = {
+                employees: employees,
+                records: records,
+                exportDate: new Date().toISOString()
+            };
+
+            const dataStr = JSON.stringify(data, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(dataBlob);
+            link.download = `registro_laboral_${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+
+            showMessage('📥 Datos exportados exitosamente', 'success');
+        }
+
+        // Función para limpiar todos los datos
+        function clearAllData() {
+            if (confirm('⚠️ ¿Está seguro de que desea eliminar TODOS los datos? Esta acción no se puede deshacer.')) {
+                localStorage.removeItem('employees');
+                localStorage.removeItem('attendance_records');
+
+                initializeApp();
+                showMessage('🗑️ Todos los datos han sido eliminados', 'success');
+            }
+        }
+
+        // Agregar botones de utilidades
+        document.addEventListener('DOMContentLoaded', function () {
+            // Agregar botones de utilidades al header
+            const header = document.querySelector('.header');
+            const utilityButtons = document.createElement('div');
+            utilityButtons.style.marginTop = '20px';
+            utilityButtons.innerHTML = `
+                <button class="btn btn-primary" onclick="loadSampleData()" style="margin: 5px;">
+                    📊 Cargar Datos de Prueba
+                </button>
+                <button class="btn btn-primary" onclick="generateTestQR()" style="margin: 5px;">
+                    🔍 Generar QR de Prueba
+                </button>
+                <button class="btn btn-success" onclick="exportData()" style="margin: 5px;">
+                    📥 Exportar Datos
+                </button>
+                <button class="btn btn-danger" onclick="clearAllData()" style="margin: 5px;">
+                    🗑️ Limpiar Datos
+                </button>
+            `;
+            header.appendChild(utilityButtons);
+        });
+
+        // Función para mostrar estadísticas en tiempo real
+        function updateDashboardStats() {
+            const employees = JSON.parse(localStorage.getItem('employees')) || [];
+            const records = JSON.parse(localStorage.getItem('attendance_records')) || [];
+            const today = new Date().toISOString().split('T')[0];
+
+            const todayRecords = records.filter(record => record.date === today);
+            const activeEmployees = new Set(todayRecords.map(record => record.employeeId)).size;
+
+            // Empleados actualmente en el trabajo (última entrada sin salida)
+            const currentlyWorking = [];
+            employees.forEach(employee => {
+                const employeeRecords = todayRecords
+                    .filter(record => record.employeeId === employee.id)
+                    .sort((a, b) => new Date(b.datetime) - new Date(a.datetime));
+
+                if (employeeRecords.length > 0 && employeeRecords[0].type === 'entrada') {
+                    currentlyWorking.push(employee.name);
+                }
+            });
+
+            // Actualizar el header con estadísticas
+            const statsDiv = document.getElementById('dashboard-stats') || document.createElement('div');
+            statsDiv.id = 'dashboard-stats';
+            statsDiv.innerHTML = `
+                <div style="display: flex; justify-content: space-around; margin-top: 15px; flex-wrap: wrap;">
+                    <div style="text-align: center; margin: 5px;">
+                        <div style="font-size: 2em;">👥</div>
+                        <div><strong>${employees.length}</strong></div>
+                        <div style="font-size: 0.9em;">Empleados</div>
+                    </div>
+                    <div style="text-align: center; margin: 5px;">
+                        <div style="font-size: 2em;">📅</div>
+                        <div><strong>${activeEmployees}</strong></div>
+                        <div style="font-size: 0.9em;">Activos Hoy</div>
+                    </div>
+                    <div style="text-align: center; margin: 5px;">
+                        <div style="font-size: 2em;">🟢</div>
+                        <div><strong>${currentlyWorking.length}</strong></div>
+                        <div style="font-size: 0.9em;">Trabajando</div>
+                    </div>
+                    <div style="text-align: center; margin: 5px;">
+                        <div style="font-size: 2em;">📝</div>
+                        <div><strong>${todayRecords.length}</strong></div>
+                        <div style="font-size: 0.9em">Registros Hoy</div>
+                    </div>
+                </div>
+            `;
+
+            if (!document.getElementById('dashboard-stats')) {
+                document.querySelector('.header').appendChild(statsDiv);
+            }
+
+            // Mostrar empleados trabajando actualmente
+            if (currentlyWorking.length > 0) {
+                const workingDiv = document.getElementById('currently-working') || document.createElement('div');
+                workingDiv.id = 'currently-working';
+                workingDiv.style.marginTop = '10px';
+                workingDiv.style.fontSize = '0.9em';
+                workingDiv.innerHTML = `
+                    <div style="background: rgba(255,255,255,0.2); padding: 10px; border-radius: 8px;">
+                        <strong>🟢 Actualmente trabajando:</strong> ${currentlyWorking.join(', ')}
+                    </div>
+                `;
+
+                if (!document.getElementById('currently-working')) {
+                    document.querySelector('.header').appendChild(workingDiv);
+                }
+            } else {
+                const workingDiv = document.getElementById('currently-working');
+                if (workingDiv) {
+                    workingDiv.remove();
+                }
+            }
+        }
+
+        // Actualizar estadísticas cada 30 segundos
+        setInterval(updateDashboardStats, 30000);
+
+        // Mejorar la función de inicialización
+        function initializeApp() {
+            loadEmployees();
+            loadRecords();
+            updateEmployeeSelectors();
+            updateDashboardStats();
+        }
+
+        // Validación adicional para el escáner QR
+        function validateQREnvironment() {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                showScanResult('❌ Tu navegador no soporta acceso a la cámara. Usa Chrome, Firefox o Safari.', 'error');
+                return false;
+            }
+
+            if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+                showScanResult('⚠️ Para usar la cámara, la aplicación debe ejecutarse en HTTPS o localhost.', 'error');
+                return false;
+            }
+
+            return true;
+        }
+
+        // Mejorar la función startScanner
+        const originalStartScanner = startScanner;
+        startScanner = async function () {
+            if (!validateQREnvironment()) {
+                return;
+            }
+            return originalStartScanner();
+        };
+    </script>
+</body>
+
+</html>

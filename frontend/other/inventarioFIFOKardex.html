@@ -1,0 +1,1109 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Inventarios FIFO</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .bg-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .card-custom {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .btn-custom {
+            border-radius: 25px;
+            padding: 10px 25px;
+        }
+        .table-custom {
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .badge-custom {
+            font-size: 0.9em;
+            padding: 8px 12px;
+        }
+        .summary-card {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+        .summary-card-2 {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            color: white;
+        }
+        .summary-card-3 {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            color: white;
+        }
+        .entrada-row {
+            background-color: #d4edda !important;
+        }
+        .salida-row {
+            background-color: #f8d7da !important;
+        }
+        .navbar-custom {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%) !important;
+        }
+        
+        .kardex-summary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .kardex-table td {
+            vertical-align: middle;
+            font-size: 0.9em;
+        }
+        
+        .kardex-table .entrada-row {
+            background-color: rgba(212, 237, 218, 0.3) !important;
+        }
+        
+        .kardex-table .salida-row {
+            background-color: rgba(248, 215, 218, 0.3) !important;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="#">
+                <i class="fas fa-boxes me-2"></i>
+                Sistema FIFO
+            </a>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text text-white">
+                    <i class="fas fa-calendar me-1"></i>
+                    <span id="currentDate"></span>
+                </span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-4">
+        <!-- Cards de Resumen -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card card-custom summary-card">
+                    <div class="card-body text-center">
+                        <i class="fas fa-cubes fa-2x mb-2"></i>
+                        <h4 class="mb-1" id="totalQuantity">0</h4>
+                        <p class="mb-0">Cantidad Total</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card card-custom summary-card-2">
+                    <div class="card-body text-center">
+                        <i class="fas fa-dollar-sign fa-2x mb-2"></i>
+                        <h4 class="mb-1" id="totalValue">$0.00</h4>
+                        <p class="mb-0">Valor Total</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card card-custom summary-card-3">
+                    <div class="card-body text-center">
+                        <i class="fas fa-chart-line fa-2x mb-2"></i>
+                        <h4 class="mb-1" id="avgCost">$0.00</h4>
+                        <p class="mb-0">Costo Promedio</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Panel de Control -->
+            <div class="col-lg-4">
+                <div class="card card-custom mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-plus me-2"></i>
+                            Registrar Movimiento
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="movementForm">
+                            <div class="mb-3">
+                                <label class="form-label">Tipo de Movimiento</label>
+                                <select class="form-select" id="movementType" required>
+                                    <option value="">Seleccionar...</option>
+                                    <option value="entrada">📥 Entrada</option>
+                                    <option value="salida">📤 Salida</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Producto</label>
+                                <input type="text" class="form-control" id="productName" placeholder="Nombre del producto" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Cantidad</label>
+                                <input type="number" class="form-control" id="quantity" min="1" step="1" required>
+                            </div>
+                            
+                            <div class="mb-3" id="priceGroup">
+                                <label class="form-label">Precio Unitario</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" class="form-control" id="price" min="0" step="0.01">
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Fecha</label>
+                                <input type="datetime-local" class="form-control" id="movementDate" required>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary btn-custom w-100">
+                                <i class="fas fa-save me-2"></i>
+                                Registrar Movimiento
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Inventario Actual -->
+                <div class="card card-custom">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-warehouse me-2"></i>
+                            Inventario Actual (Capas FIFO)
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="currentInventory">
+                            <div class="text-center text-muted py-3">
+                                <i class="fas fa-box-open fa-2x mb-2"></i>
+                                <p>No hay inventario disponible</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Historial de Movimientos -->
+            <div class="col-lg-8">
+                <div class="card card-custom">
+                    <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-history me-2"></i>
+                            Historial de Movimientos
+                        </h5>
+                        <button class="btn btn-light btn-sm" onclick="clearHistory()">
+                            <i class="fas fa-trash me-1"></i>
+                            Limpiar
+                        </button>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Tipo</th>
+                                        <th>Producto</th>
+                                        <th>Cantidad</th>
+                                        <th>Precio Unit.</th>
+                                        <th>Total</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="movementHistory">
+                                    <tr>
+                                        <td colspan="7" class="text-center text-muted py-4">
+                                            <i class="fas fa-clipboard-list fa-2x mb-2 d-block"></i>
+                                            No hay movimientos registrados
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reporte de Costos -->
+                <div class="card card-custom mt-4">
+                    <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-chart-bar me-2"></i>
+                            Reporte de Costos de Salidas (FIFO)
+                        </h5>
+                        <button class="btn btn-dark btn-sm" onclick="inventory.showKardexSelector()">
+                            <i class="fas fa-file-alt me-1"></i>
+                            Ver Kardex
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div id="costReport">
+                            <div class="text-center text-muted py-3">
+                                <i class="fas fa-chart-pie fa-2x mb-2"></i>
+                                <p>No hay salidas para reportar</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmación -->
+    <div class="modal fade" id="confirmModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirmar Acción</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="confirmMessage">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" id="confirmButton">Confirmar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Selector de Producto para Kardex -->
+    <div class="modal fade" id="kardexSelectorModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-file-alt me-2"></i>
+                        Seleccionar Producto para Kardex
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Producto:</label>
+                        <select class="form-select" id="kardexProductSelect">
+                            <option value="">Seleccione un producto...</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="inventory.generateKardex()">
+                        <i class="fas fa-chart-line me-1"></i>
+                        Generar Kardex
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Kardex -->
+    <div class="modal fade" id="kardexModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-file-invoice me-2"></i>
+                        Kardex FIFO - <span id="kardexProductName"></span>
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h6 class="text-muted">Stock Actual</h6>
+                                    <h4 class="text-primary mb-0" id="kardexCurrentStock">0</h4>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h6 class="text-muted">Valor Total</h6>
+                                    <h4 class="text-success mb-0" id="kardexCurrentValue">$0.00</h4>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h6 class="text-muted">Costo Promedio</h6>
+                                    <h4 class="text-warning mb-0" id="kardexAvgCost">$0.00</h4>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover kardex-table">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Concepto</th>
+                                    <th>Entrada</th>
+                                    <th>Salida</th>
+                                    <th>Saldo Qty</th>
+                                    <th>Costo Unit.</th>
+                                    <th>Valor Total</th>
+                                    <th>Detalle FIFO</th>
+                                </tr>
+                            </thead>
+                            <tbody id="kardexTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-success" onclick="inventory.exportKardex()">
+                        <i class="fas fa-download me-1"></i>
+                        Exportar
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+        class FIFOInventorySystem {
+            constructor() {
+                this.movements = [];
+                this.inventory = [];
+                this.exitCosts = [];
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+                this.updateCurrentDate();
+                this.setDefaultDateTime();
+                this.loadFromStorage();
+            }
+
+            setupEventListeners() {
+                document.getElementById('movementForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.handleMovement();
+                });
+
+                document.getElementById('movementType').addEventListener('change', (e) => {
+                    this.togglePriceField(e.target.value);
+                });
+            }
+
+            updateCurrentDate() {
+                const now = new Date();
+                document.getElementById('currentDate').textContent = 
+                    now.toLocaleDateString('es-ES', { 
+                        weekday: 'long', 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric' 
+                    });
+            }
+
+            setDefaultDateTime() {
+                const now = new Date();
+                const offsetDate = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+                document.getElementById('movementDate').value = offsetDate.toISOString().slice(0, 16);
+            }
+
+            togglePriceField(type) {
+                const priceGroup = document.getElementById('priceGroup');
+                const priceInput = document.getElementById('price');
+                
+                if (type === 'entrada') {
+                    priceGroup.style.display = 'block';
+                    priceInput.required = true;
+                } else if (type === 'salida') {
+                    priceGroup.style.display = 'none';
+                    priceInput.required = false;
+                    priceInput.value = '';
+                } else {
+                    priceGroup.style.display = 'block';
+                    priceInput.required = false;
+                }
+            }
+
+            handleMovement() {
+                const type = document.getElementById('movementType').value;
+                const product = document.getElementById('productName').value.trim();
+                const quantity = parseInt(document.getElementById('quantity').value);
+                const price = parseFloat(document.getElementById('price').value) || 0;
+                const date = new Date(document.getElementById('movementDate').value);
+
+                if (!this.validateMovement(type, product, quantity, price)) {
+                    return;
+                }
+
+                const movement = {
+                    id: Date.now(),
+                    type,
+                    product,
+                    quantity,
+                    price: type === 'entrada' ? price : null,
+                    date,
+                    total: type === 'entrada' ? quantity * price : null
+                };
+
+                if (type === 'entrada') {
+                    this.processEntry(movement);
+                } else {
+                    this.processExit(movement);
+                }
+
+                this.movements.push(movement);
+                this.updateDisplay();
+                this.resetForm();
+                this.saveToStorage();
+                this.showSuccessMessage(type, product, quantity);
+            }
+
+            validateMovement(type, product, quantity, price) {
+                if (!product) {
+                    this.showAlert('Por favor ingrese el nombre del producto', 'warning');
+                    return false;
+                }
+
+                if (quantity <= 0) {
+                    this.showAlert('La cantidad debe ser mayor a 0', 'warning');
+                    return false;
+                }
+
+                if (type === 'entrada' && price <= 0) {
+                    this.showAlert('El precio debe ser mayor a 0 para las entradas', 'warning');
+                    return false;
+                }
+
+                if (type === 'salida') {
+                    const availableQty = this.getAvailableQuantity(product);
+                    if (quantity > availableQty) {
+                        this.showAlert(`No hay suficiente inventario. Disponible: ${availableQty}`, 'danger');
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+
+            processEntry(movement) {
+                const existingLayer = this.inventory.find(layer => 
+                    layer.product === movement.product && 
+                    layer.price === movement.price &&
+                    Math.abs(layer.date.getTime() - movement.date.getTime()) < 86400000 // mismo día
+                );
+
+                if (existingLayer) {
+                    existingLayer.quantity += movement.quantity;
+                    existingLayer.total += movement.total;
+                } else {
+                    this.inventory.push({
+                        id: movement.id,
+                        product: movement.product,
+                        quantity: movement.quantity,
+                        originalQuantity: movement.quantity,
+                        price: movement.price,
+                        total: movement.total,
+                        date: movement.date
+                    });
+                }
+
+                // Ordenar por fecha (FIFO)
+                this.inventory.sort((a, b) => a.date - b.date);
+            }
+
+            processExit(movement) {
+                let remainingQty = movement.quantity;
+                let totalCost = 0;
+                const usedLayers = [];
+
+                // Buscar capas del producto ordenadas por fecha (FIFO)
+                const productLayers = this.inventory
+                    .filter(layer => layer.product === movement.product && layer.quantity > 0)
+                    .sort((a, b) => a.date - b.date);
+
+                for (let layer of productLayers) {
+                    if (remainingQty <= 0) break;
+
+                    const qtyToUse = Math.min(remainingQty, layer.quantity);
+                    const costFromLayer = qtyToUse * layer.price;
+
+                    usedLayers.push({
+                        layerId: layer.id,
+                        quantity: qtyToUse,
+                        price: layer.price,
+                        cost: costFromLayer,
+                        date: layer.date
+                    });
+
+                    layer.quantity -= qtyToUse;
+                    totalCost += costFromLayer;
+                    remainingQty -= qtyToUse;
+                }
+
+                // Registrar el costo de la salida
+                this.exitCosts.push({
+                    movementId: movement.id,
+                    product: movement.product,
+                    quantity: movement.quantity,
+                    totalCost,
+                    averageCost: totalCost / movement.quantity,
+                    usedLayers,
+                    date: movement.date
+                });
+
+                movement.calculatedCost = totalCost;
+                movement.averageCost = totalCost / movement.quantity;
+
+                // Limpiar capas vacías
+                this.inventory = this.inventory.filter(layer => layer.quantity > 0);
+            }
+
+            getAvailableQuantity(product) {
+                return this.inventory
+                    .filter(layer => layer.product === product)
+                    .reduce((total, layer) => total + layer.quantity, 0);
+            }
+
+            updateDisplay() {
+                this.updateSummaryCards();
+                this.updateInventoryDisplay();
+                this.updateMovementHistory();
+                this.updateCostReport();
+            }
+
+            updateSummaryCards() {
+                const totalQty = this.inventory.reduce((sum, layer) => sum + layer.quantity, 0);
+                const totalValue = this.inventory.reduce((sum, layer) => sum + (layer.quantity * layer.price), 0);
+                const avgCost = totalQty > 0 ? totalValue / totalQty : 0;
+
+                document.getElementById('totalQuantity').textContent = totalQty.toLocaleString();
+                document.getElementById('totalValue').textContent = `$${totalValue.toFixed(2)}`;
+                document.getElementById('avgCost').textContent = `$${avgCost.toFixed(2)}`;
+            }
+
+            updateInventoryDisplay() {
+                const container = document.getElementById('currentInventory');
+                
+                if (this.inventory.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center text-muted py-3">
+                            <i class="fas fa-box-open fa-2x mb-2"></i>
+                            <p>No hay inventario disponible</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Agrupar por producto
+                const productGroups = {};
+                this.inventory.forEach(layer => {
+                    if (!productGroups[layer.product]) {
+                        productGroups[layer.product] = [];
+                    }
+                    productGroups[layer.product].push(layer);
+                });
+
+                let html = '';
+                Object.keys(productGroups).forEach(product => {
+                    const layers = productGroups[product].sort((a, b) => a.date - b.date);
+                    const totalQty = layers.reduce((sum, layer) => sum + layer.quantity, 0);
+                    
+                    html += `
+                        <div class="mb-3">
+                            <h6 class="fw-bold text-primary">${product} (${totalQty} unidades)</h6>
+                            <div class="ms-3">
+                    `;
+                    
+                    layers.forEach((layer, index) => {
+                        html += `
+                            <div class="d-flex justify-content-between align-items-center py-1 ${index % 2 === 0 ? 'bg-light' : ''} px-2 rounded mb-1">
+                                <small>
+                                    <i class="fas fa-calendar me-1"></i>
+                                    ${layer.date.toLocaleDateString()}
+                                </small>
+                                <span class="badge bg-secondary">${layer.quantity} × $${layer.price.toFixed(2)}</span>
+                            </div>
+                        `;
+                    });
+                    
+                    html += '</div></div>';
+                });
+
+                container.innerHTML = html;
+            }
+
+            updateMovementHistory() {
+                const tbody = document.getElementById('movementHistory');
+                
+                if (this.movements.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-4">
+                                <i class="fas fa-clipboard-list fa-2x mb-2 d-block"></i>
+                                No hay movimientos registrados
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                const sortedMovements = [...this.movements].sort((a, b) => b.date - a.date);
+                
+                tbody.innerHTML = sortedMovements.map(movement => `
+                    <tr class="${movement.type === 'entrada' ? 'entrada-row' : 'salida-row'}">
+                        <td>
+                            <small>${movement.date.toLocaleDateString()}<br>
+                            ${movement.date.toLocaleTimeString()}</small>
+                        </td>
+                        <td>
+                            <span class="badge ${movement.type === 'entrada' ? 'bg-success' : 'bg-danger'} badge-custom">
+                                ${movement.type === 'entrada' ? '📥 Entrada' : '📤 Salida'}
+                            </span>
+                        </td>
+                        <td class="fw-semibold">${movement.product}</td>
+                        <td class="text-center">${movement.quantity}</td>
+                        <td class="text-center">
+                            ${movement.type === 'entrada' 
+                                ? `$${movement.price.toFixed(2)}` 
+                                : movement.averageCost 
+                                    ? `$${movement.averageCost.toFixed(2)}` 
+                                    : '-'
+                            }
+                        </td>
+                        <td class="text-center fw-bold">
+                            ${movement.type === 'entrada' 
+                                ? `$${movement.total.toFixed(2)}` 
+                                : movement.calculatedCost 
+                                    ? `$${movement.calculatedCost.toFixed(2)}` 
+                                    : '-'
+                            }
+                        </td>
+                        <td class="text-center">
+                            <button class="btn btn-outline-danger btn-sm" onclick="inventory.deleteMovement(${movement.id})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+
+            updateCostReport() {
+                const container = document.getElementById('costReport');
+                
+                if (this.exitCosts.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center text-muted py-3">
+                            <i class="fas fa-chart-pie fa-2x mb-2"></i>
+                            <p>No hay salidas para reportar</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const sortedExits = [...this.exitCosts].sort((a, b) => b.date - a.date);
+                
+                let html = '<div class="table-responsive"><table class="table table-sm">';
+                html += `
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Producto</th>
+                            <th>Cantidad</th>
+                            <th>Costo Total</th>
+                            <th>Costo Promedio</th>
+                            <th>Detalle FIFO</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                `;
+                
+                sortedExits.forEach(exit => {
+                    html += `
+                        <tr>
+                            <td>${exit.date.toLocaleDateString()}</td>
+                            <td>${exit.product}</td>
+                            <td class="text-center">${exit.quantity}</td>
+                            <td class="text-center fw-bold">$${exit.totalCost.toFixed(2)}</td>
+                            <td class="text-center">$${exit.averageCost.toFixed(2)}</td>
+                            <td>
+                                <button class="btn btn-outline-info btn-sm" onclick="inventory.showFIFODetail(${exit.movementId})">
+                                    <i class="fas fa-eye"></i> Ver
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                
+                html += '</tbody></table></div>';
+                container.innerHTML = html;
+            }
+
+            showFIFODetail(movementId) {
+                const exitCost = this.exitCosts.find(exit => exit.movementId === movementId);
+                if (!exitCost) return;
+
+                let detail = `<strong>Detalle FIFO para ${exitCost.product}</strong><br><br>`;
+                detail += `<div class="table-responsive"><table class="table table-sm">`;
+                detail += `<thead><tr><th>Fecha Capa</th><th>Cantidad</th><th>Precio</th><th>Costo</th></tr></thead><tbody>`;
+                
+                exitCost.usedLayers.forEach(layer => {
+                    detail += `
+                        <tr>
+                            <td>${layer.date.toLocaleDateString()}</td>
+                            <td>${layer.quantity}</td>
+                            <td>${layer.price.toFixed(2)}</td>
+                            <td>${layer.cost.toFixed(2)}</td>
+                        </tr>
+                    `;
+                });
+                
+                detail += `</tbody></table></div>`;
+                detail += `<strong>Total: ${exitCost.totalCost.toFixed(2)}</strong>`;
+
+                document.getElementById('confirmMessage').innerHTML = detail;
+                document.getElementById('confirmButton').style.display = 'none';
+                new bootstrap.Modal(document.getElementById('confirmModal')).show();
+            }
+
+            showKardexSelector() {
+                // Obtener lista única de productos
+                const products = [...new Set(this.movements.map(m => m.product))];
+                
+                if (products.length === 0) {
+                    this.showAlert('No hay productos registrados para mostrar kardex', 'warning');
+                    return;
+                }
+
+                const select = document.getElementById('kardexProductSelect');
+                select.innerHTML = '<option value="">Seleccione un producto...</option>';
+                
+                products.forEach(product => {
+                    select.innerHTML += `<option value="${product}">${product}</option>`;
+                });
+
+                new bootstrap.Modal(document.getElementById('kardexSelectorModal')).show();
+            }
+
+            generateKardex() {
+                const selectedProduct = document.getElementById('kardexProductSelect').value;
+                
+                if (!selectedProduct) {
+                    this.showAlert('Por favor seleccione un producto', 'warning');
+                    return;
+                }
+
+                const kardexData = this.calculateKardexForProduct(selectedProduct);
+                this.displayKardex(selectedProduct, kardexData);
+                
+                bootstrap.Modal.getInstance(document.getElementById('kardexSelectorModal')).hide();
+                new bootstrap.Modal(document.getElementById('kardexModal')).show();
+            }
+
+            calculateKardexForProduct(product) {
+                // Obtener todos los movimientos del producto ordenados por fecha
+                const productMovements = this.movements
+                    .filter(m => m.product === product)
+                    .sort((a, b) => a.date - b.date);
+
+                const kardexRows = [];
+                let currentLayers = []; // Capas FIFO actuales
+                let runningQty = 0;
+                let runningValue = 0;
+
+                productMovements.forEach(movement => {
+                    let entryQty = 0;
+                    let exitQty = 0;
+                    let unitCost = 0;
+                    let fifoDetail = '';
+
+                    if (movement.type === 'entrada') {
+                        entryQty = movement.quantity;
+                        unitCost = movement.price;
+                        
+                        // Agregar nueva capa
+                        currentLayers.push({
+                            quantity: movement.quantity,
+                            price: movement.price,
+                            date: movement.date
+                        });
+                        
+                        runningQty += movement.quantity;
+                        runningValue += movement.quantity * movement.price;
+                        
+                        fifoDetail = `Nueva capa: ${movement.quantity} × ${movement.price.toFixed(2)}`;
+                        
+                    } else { // salida
+                        exitQty = movement.quantity;
+                        let remainingToExit = movement.quantity;
+                        let totalExitCost = 0;
+                        const usedLayers = [];
+
+                        // Consumir desde las capas más antiguas (FIFO)
+                        for (let i = 0; i < currentLayers.length && remainingToExit > 0; i++) {
+                            const layer = currentLayers[i];
+                            const qtyToUse = Math.min(remainingToExit, layer.quantity);
+                            
+                            if (qtyToUse > 0) {
+                                usedLayers.push({
+                                    qty: qtyToUse,
+                                    price: layer.price,
+                                    cost: qtyToUse * layer.price
+                                });
+                                
+                                totalExitCost += qtyToUse * layer.price;
+                                layer.quantity -= qtyToUse;
+                                remainingToExit -= qtyToUse;
+                            }
+                        }
+
+                        // Limpiar capas vacías
+                        currentLayers = currentLayers.filter(layer => layer.quantity > 0);
+                        
+                        unitCost = totalExitCost / movement.quantity;
+                        runningQty -= movement.quantity;
+                        runningValue -= totalExitCost;
+
+                        // Crear detalle FIFO para la salida
+                        fifoDetail = usedLayers.map(layer => 
+                            `${layer.qty} × ${layer.price.toFixed(2)} = ${layer.cost.toFixed(2)}`
+                        ).join('<br>');
+                    }
+
+                    const avgCost = runningQty > 0 ? runningValue / runningQty : 0;
+
+                    kardexRows.push({
+                        date: movement.date,
+                        concept: movement.type === 'entrada' ? 'Entrada de inventario' : 'Salida de inventario',
+                        entryQty,
+                        exitQty,
+                        balanceQty: runningQty,
+                        unitCost,
+                        totalValue: runningValue,
+                        avgCost,
+                        fifoDetail,
+                        type: movement.type
+                    });
+                });
+
+                return kardexRows;
+            }
+
+            displayKardex(product, kardexData) {
+                document.getElementById('kardexProductName').textContent = product;
+                
+                // Actualizar resumen
+                const currentStock = kardexData.length > 0 ? kardexData[kardexData.length - 1].balanceQty : 0;
+                const currentValue = kardexData.length > 0 ? kardexData[kardexData.length - 1].totalValue : 0;
+                const avgCost = currentStock > 0 ? currentValue / currentStock : 0;
+
+                document.getElementById('kardexCurrentStock').textContent = currentStock.toLocaleString();
+                document.getElementById('kardexCurrentValue').textContent = `${currentValue.toFixed(2)}`;
+                document.getElementById('kardexAvgCost').textContent = `${avgCost.toFixed(2)}`;
+
+                // Generar tabla
+                const tbody = document.getElementById('kardexTableBody');
+                
+                if (kardexData.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="8" class="text-center text-muted py-4">
+                                No hay movimientos para este producto
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                tbody.innerHTML = kardexData.map(row => `
+                    <tr class="${row.type === 'entrada' ? 'entrada-row' : 'salida-row'}">
+                        <td>
+                            <small>
+                                ${row.date.toLocaleDateString()}<br>
+                                ${row.date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                            </small>
+                        </td>
+                        <td>${row.concept}</td>
+                        <td class="text-center ${row.entryQty > 0 ? 'fw-bold text-success' : ''}">
+                            ${row.entryQty > 0 ? row.entryQty.toLocaleString() : '-'}
+                        </td>
+                        <td class="text-center ${row.exitQty > 0 ? 'fw-bold text-danger' : ''}">
+                            ${row.exitQty > 0 ? row.exitQty.toLocaleString() : '-'}
+                        </td>
+                        <td class="text-center fw-bold">${row.balanceQty.toLocaleString()}</td>
+                        <td class="text-center">${row.unitCost.toFixed(2)}</td>
+                        <td class="text-center fw-bold">${row.totalValue.toFixed(2)}</td>
+                        <td>
+                            <small>${row.fifoDetail}</small>
+                        </td>
+                    </tr>
+                `).join('');
+
+                // Guardar datos para exportación
+                this.currentKardexData = { product, data: kardexData };
+            }
+
+            exportKardex() {
+                if (!this.currentKardexData) {
+                    this.showAlert('No hay datos de kardex para exportar', 'warning');
+                    return;
+                }
+
+                const { product, data } = this.currentKardexData;
+                
+                // Crear CSV
+                let csv = 'Fecha,Concepto,Entrada,Salida,Saldo Cantidad,Costo Unitario,Valor Total,Detalle FIFO\n';
+                
+                data.forEach(row => {
+                    const fifoDetailClean = row.fifoDetail.replace(/<br>/g, ' | ').replace(/,/g, ';');
+                    csv += `${row.date.toLocaleString()},${row.concept},${row.entryQty || 0},${row.exitQty || 0},${row.balanceQty},${row.unitCost.toFixed(2)},${row.totalValue.toFixed(2)},"${fifoDetailClean}"\n`;
+                });
+
+                // Descargar archivo
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                const url = URL.createObjectURL(blob);
+                link.setAttribute('href', url);
+                link.setAttribute('download', `kardex_${product}_${new Date().toISOString().split('T')[0]}.csv`);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+                this.showAlert(`Kardex de ${product} exportado correctamente`, 'success');
+            }
+
+            deleteMovement(id) {
+                document.getElementById('confirmMessage').textContent = 
+                    '¿Está seguro de que desea eliminar este movimiento? Esta acción no se puede deshacer.';
+                document.getElementById('confirmButton').style.display = 'block';
+                document.getElementById('confirmButton').onclick = () => {
+                    this.confirmDeleteMovement(id);
+                };
+                new bootstrap.Modal(document.getElementById('confirmModal')).show();
+            }
+
+            confirmDeleteMovement(id) {
+                // Esta es una simplificación. En un sistema real, recalcular todo el inventario
+                // sería más complejo y requeriría manejo de transacciones
+                this.movements = this.movements.filter(m => m.id !== id);
+                this.exitCosts = this.exitCosts.filter(e => e.movementId !== id);
+                
+                // Recalcular inventario desde cero
+                this.recalculateInventory();
+                this.updateDisplay();
+                this.saveToStorage();
+                
+                bootstrap.Modal.getInstance(document.getElementById('confirmModal')).hide();
+                this.showAlert('Movimiento eliminado correctamente', 'success');
+            }
+
+            recalculateInventory() {
+                this.inventory = [];
+                this.exitCosts = [];
+                
+                // Procesar movimientos en orden cronológico
+                const sortedMovements = [...this.movements].sort((a, b) => a.date - b.date);
+                
+                sortedMovements.forEach(movement => {
+                    if (movement.type === 'entrada') {
+                        this.inventory.push({
+                            id: movement.id,
+                            product: movement.product,
+                            quantity: movement.quantity,
+                            originalQuantity: movement.quantity,
+                            price: movement.price,
+                            total: movement.total,
+                            date: movement.date
+                        });
+                    } else {
+                        this.processExit(movement);
+                    }
+                });
+            }
+
+            resetForm() {
+                document.getElementById('movementForm').reset();
+                this.setDefaultDateTime();
+                this.togglePriceField('');
+            }
+
+            showSuccessMessage(type, product, quantity) {
+                const typeText = type === 'entrada' ? 'entrada' : 'salida';
+                this.showAlert(`${typeText.charAt(0).toUpperCase() + typeText.slice(1)} de ${quantity} unidades de ${product} registrada correctamente`, 'success');
+            }
+
+            showAlert(message, type) {
+                // Crear y mostrar alert temporal
+                const alertDiv = document.createElement('div');
+                alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+                alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+                alertDiv.innerHTML = `
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                
+                document.body.appendChild(alertDiv);
+                
+                setTimeout(() => {
+                    alertDiv.remove();
+                }, 5000);
+            }
+
+            saveToStorage() {
+                const data = {
+                    movements: this.movements.map(m => ({...m, date: m.date.toISOString()})),
+                    inventory: this.inventory.map(i => ({...i, date: i.date.toISOString()})),
+                    exitCosts: this.exitCosts.map(e => ({
+                        ...e, 
+                        date: e.date.toISOString(),
+                        usedLayers: e.usedLayers.map(l => ({...l, date: l.date.toISOString()}))
+                    }))
+                };
+                localStorage.setItem('fifoInventory', JSON.stringify(data));
+            }
+
+            loadFromStorage() {
+                const data = localStorage.getItem('fifoInventory');
+                if (data) {
+                    const parsed = JSON.parse(data);
+                    this.movements = parsed.movements.map(m => ({...m, date: new Date(m.date)}));
+                    this.inventory = parsed.inventory.map(i => ({...i, date: new Date(i.date)}));
+                    this.exitCosts = parsed.exitCosts.map(e => ({
+                        ...e,
+                        date: new Date(e.date),
+                        usedLayers: e.usedLayers.map(l => ({...l, date: new Date(l.date)}))
+                    }));
+                    this.updateDisplay();
+                }
+            }
+        }
+
+        function clearHistory() {
+            document.getElementById('confirmMessage').textContent = 
+                '¿Está seguro de que desea limpiar todo el historial? Esta acción eliminará todos los movimientos y el inventario actual.';
+            document.getElementById('confirmButton').style.display = 'block';
+            document.getElementById('confirmButton').onclick = () => {
+                inventory.movements = [];
+                inventory.inventory = [];
+                inventory.exitCosts = [];
+                inventory.updateDisplay();
+                inventory.saveToStorage();
+                bootstrap.Modal.getInstance(document.getElementById('confirmModal')).hide();
+                inventory.showAlert('Historial limpiado correctamente', 'info');
+            };
+            new bootstrap.Modal(document.getElementById('confirmModal')).show();
+        }
+
+        // Inicializar aplicación
+        const inventory = new FIFOInventorySystem();
+    </script>
+</body>
+</html>

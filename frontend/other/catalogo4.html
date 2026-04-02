@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Catálogo de Productos para el Hogar</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f9fafb;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+            overscroll-behavior-y: contain;
+        }
+        .product-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid #e5e7eb;
+        }
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 1rem;
+            text-align: center;
+            padding-top: 1rem;
+        }
+        .btn-product-info {
+            background-color: #fbbf24;
+            color: #1f2937;
+            font-weight: 600;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            transition: background-color 0.3s ease;
+            text-align: center;
+            display: block;
+            width: 100%;
+        }
+        .btn-product-info:hover {
+            background-color: #f59e0b;
+        }
+
+        .sections-container-wrapper {
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .sections-container {
+            display: flex;
+            flex-direction: column;
+            width: 100vw;
+            transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            will-change: transform;
+        }
+        .sections-container > section {
+            width: 100vw;
+            height: 100vh;
+            flex-shrink: 0;
+            overflow-y: auto;
+            padding: 0.5rem 1rem 1rem 1rem;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        
+        #hero-page, #thank-you-page {
+            background-color: #fbbf24; 
+            color: #1f2937;
+            padding: 1rem;
+        }
+         #thank-you-page {
+            background-color: #1f2937;
+            color: #f9fafb;
+        }
+        #thank-you-page h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+        #thank-you-page p {
+            font-size: 1.125rem;
+            margin-bottom: 1.5rem;
+            max-width: 600px;
+        }
+        #thank-you-page .contact-info {
+            font-size: 1rem;
+            margin-top: 1.5rem; /* Ajustado el margen */
+        }
+         #thank-you-page .contact-info a, #thank-you-page .whatsapp-link {
+            color: #fbbf24;
+            text-decoration: underline;
+            font-weight: 600;
+            display: inline-block; /* Para que el padding funcione bien */
+            padding: 0.5rem 1rem;
+            border: 2px solid #fbbf24;
+            border-radius: 0.375rem; /* rounded-md */
+            margin-top: 0.5rem;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        #thank-you-page .whatsapp-link:hover {
+            background-color: #fbbf24;
+            color: #1f2937;
+            text-decoration: none;
+        }
+
+
+        .product-page-content {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            flex-grow: 1;
+            justify-content: center; 
+            width: 100%;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .product-page-section { /* Ajuste para páginas de producto */
+             justify-content: flex-start;
+             align-items: stretch;
+             text-align: left;
+        }
+        
+        .sections-container > section::-webkit-scrollbar { display: none; }
+        .sections-container > section { -ms-overflow-style: none; scrollbar-width: none; }
+
+        #page-indicators {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 8px;
+            z-index: 100;
+            padding: 5px;
+            background-color: rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+        .page-indicator-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: #cbd5e1;
+            border: none;
+            padding: 0;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+        }
+        .page-indicator-dot:hover {
+            background-color: #94a3b8;
+        }
+        .page-indicator-dot.active {
+            background-color: #fbbf24;
+            transform: scale(1.3);
+        }
+
+    </style>
+</head>
+<body class="antialiased">
+
+    <div class="sections-container-wrapper">
+        <div id="sections-scroller" class="sections-container">
+            <section id="hero-page">
+                <div class="content-wrapper container mx-auto px-4">
+                    <h2 class="text-3xl sm:text-4xl font-bold mb-3">Descubre lo Mejor para tu Hogar</h2>
+                    <p class="text-base sm:text-lg mb-6">Calidad y estilo en cada rincón.</p>
+                    <button id="view-products-btn" class="bg-gray-800 hover:bg-gray-700 text-white font-semibold py-2 px-5 sm:py-3 sm:px-6 rounded-lg shadow-md hover:shadow-lg transition duration-300">
+                        Ver Productos
+                    </button>
+                </div>
+            </section>
+            </div>
+    </div>
+
+    <div id="page-indicators"></div>
+
+    <script>
+        const allProducts = [
+            { category: "Cocina", name: "Juego de Ollas Antiadherentes", description: "Set de 5 piezas, ideal para cocinar. Resistente y fácil de limpiar.", price: "S/ 250.00", image: "https://placehold.co/600x400/f59e0b/333333?text=Juego+de+Ollas", alt: "Imagen de Juego de Ollas", color: "amber" },
+            { category: "Cocina", name: "Licuadora de Alta Potencia", description: "Motor 800W, vaso vidrio 1.5L. Para batidos y salsas.", price: "S/ 180.00", image: "https://placehold.co/600x400/f59e0b/333333?text=Licuadora", alt: "Imagen de Licuadora", color: "amber" },
+            { category: "Cocina", name: "Cafetera Programable", description: "12 tazas, filtro permanente, pausa para servir.", price: "S/ 120.00", image: "https://placehold.co/600x400/f59e0b/333333?text=Cafetera", alt: "Imagen de Cafetera", color: "amber" },
+            { category: "Cocina", name: "Vajilla de Porcelana (16pzs)", description: "Diseño elegante, apta para lavavajillas y microondas.", price: "S/ 320.00", image: "https://placehold.co/600x400/f59e0b/333333?text=Vajilla", alt: "Imagen de Vajilla", color: "amber" },
+            { category: "Sala", name: "Sofá Seccional Moderno", description: "Lino, 3 cuerpos, gris claro. Confort y estilo.", price: "S/ 1200.00", image: "https://placehold.co/600x400/84cc16/333333?text=Sofá+Moderno", alt: "Imagen de Sofá Moderno", color: "lime" },
+            { category: "Sala", name: "Mesa de Centro Elevable", description: "Madera industrial, almacenaje. Funcional y chic.", price: "S/ 350.00", image: "https://placehold.co/600x400/84cc16/333333?text=Mesa+de+Centro", alt: "Imagen de Mesa de Centro", color: "lime" },
+            { category: "Sala", name: "Lámpara de Pie Trípode", description: "Diseño nórdico, pantalla tela, base madera. Luz cálida.", price: "S/ 280.00", image: "https://placehold.co/600x400/84cc16/333333?text=Lámpara+de+Pie", alt: "Imagen de Lámpara de Pie", color: "lime" },
+            { category: "Dormitorio", name: "Cama Queen con Cabecera", description: "Madera maciza, cabecera tapizada. Clásico y duradero.", price: "S/ 950.00", image: "https://placehold.co/600x400/38bdf8/333333?text=Cama+Queen", alt: "Imagen de Cama Queen", color: "sky" },
+            { category: "Dormitorio", name: "Juego Ropa de Cama (Algodón)", description: "Sábanas, funda edredón y almohada. Suavidad.", price: "S/ 190.00", image: "https://placehold.co/600x400/38bdf8/333333?text=Ropa+de+Cama", alt: "Imagen de Ropa de Cama", color: "sky" },
+            { category: "Decoración", name: "Espejo de Pared Redondo", description: "Marco metálico dorado, 60cm. Aporta luz.", price: "S/ 150.00", image: "https://placehold.co/600x400/a78bfa/333333?text=Espejo+Decorativo", alt: "Imagen de Espejo Decorativo", color: "violet" },
+            { category: "Decoración", name: "Set de 3 Cuadros Abstractos", description: "Lienzos impresos, varios tamaños. Arte moderno.", price: "S/ 220.00", image: "https://placehold.co/600x400/a78bfa/333333?text=Set+de+Cuadros", alt: "Imagen de Set de Cuadros", color: "violet" },
+        ];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const scroller = document.getElementById('sections-scroller');
+            const viewProductsBtn = document.getElementById('view-products-btn');
+            const indicatorsContainer = document.getElementById('page-indicators');
+            
+            let pageTurnSound;
+            let isToneStarted = false;
+
+            try {
+                 pageTurnSound = new Tone.NoiseSynth({
+                    noise: { type: 'white' },
+                    envelope: { attack: 0.005, decay: 0.08, sustain: 0, release: 0.1 },
+                    volume: -25
+                }).toDestination();
+            } catch (e) { console.error("Error initializing Tone.js:", e); }
+           
+            const categories = {};
+            allProducts.forEach(product => {
+                if (!categories[product.category]) categories[product.category] = [];
+                categories[product.category].push(product);
+            });
+
+            let productPageIndex = 1; 
+            for (const categoryName in categories) {
+                const productsInCategory = categories[categoryName];
+                for (let i = 0; i < productsInCategory.length; i += 2) {
+                    const productPageSection = document.createElement('section');
+                    productPageSection.classList.add('product-page-section');
+                    productPageSection.dataset.pageIndex = productPageIndex++;
+                    
+                    let productsHtml = `<h2 class="page-title">${categoryName}</h2><div class="product-page-content">`;
+                    const p1 = productsInCategory[i];
+                    productsHtml += `
+                        <div class="product-card bg-white rounded-lg shadow-md overflow-hidden p-3">
+                            <img src="${p1.image}" alt="${p1.alt}" class="w-full h-36 sm:h-44 object-contain mb-2 rounded" onerror="this.src='https://placehold.co/600x400/cccccc/333333?text=Imagen+No+Disponible'">
+                            <h3 class="text-md font-semibold text-gray-800 mb-1">${p1.name}</h3>
+                            <p class="text-gray-600 text-xs mb-2 h-10 overflow-hidden">${p1.description}</p>
+                            <p class="text-lg font-bold text-${p1.color}-600 mb-2">${p1.price}</p>
+                            <button class="btn-product-info border border-transparent text-xs">Más Información</button>
+                        </div>`;
+
+                    if (productsInCategory[i+1]) {
+                        const p2 = productsInCategory[i+1];
+                        productsHtml += `
+                            <div class="product-card bg-white rounded-lg shadow-md overflow-hidden p-3">
+                                <img src="${p2.image}" alt="${p2.alt}" class="w-full h-36 sm:h-44 object-contain mb-2 rounded" onerror="this.src='https://placehold.co/600x400/cccccc/333333?text=Imagen+No+Disponible'">
+                                <h3 class="text-md font-semibold text-gray-800 mb-1">${p2.name}</h3>
+                                <p class="text-gray-600 text-xs mb-2 h-10 overflow-hidden">${p2.description}</p>
+                                <p class="text-lg font-bold text-${p2.color}-600 mb-2">${p2.price}</p>
+                                <button class="btn-product-info border border-transparent text-xs">Más Información</button>
+                            </div>`;
+                    }
+                    productsHtml += `</div>`;
+                    productPageSection.innerHTML = productsHtml;
+                    scroller.appendChild(productPageSection);
+                }
+            }
+            
+            const thankYouPage = document.createElement('section');
+            thankYouPage.id = 'thank-you-page';
+            // Reemplaza "TUNUMERODEWHATSAPP" con tu número de WhatsApp real, incluyendo el código de país (ej. 51999888777 para Perú)
+            const whatsappNumber = "51962833765"; // Ejemplo: número de Perú
+            const whatsappMessage = encodeURIComponent("Hola, estoy interesado/a en los productos del catálogo.");
+            const whatsappLink = `https://wa.me/${whatsappNumber}?text=${whatsappMessage}`;
+
+            thankYouPage.innerHTML = `
+                <div class="content-wrapper container mx-auto px-4">
+                    <h2>¡Gracias por visitar nuestro catálogo!</h2>
+                    <p>Esperamos que hayas encontrado los productos perfectos para tu hogar. Estamos listos para ayudarte a hacer tu pedido.</p>
+                    <p class="contact-info">
+                        Contáctanos al: <strong>(01) 555-1234</strong>
+                        <br/>o envíanos un mensaje directo:
+                        <a href="${whatsappLink}" target="_blank" class="whatsapp-link">
+                            Chatear por WhatsApp
+                        </a>
+                    </p>
+                </div>
+            `;
+            scroller.appendChild(thankYouPage);
+
+            const sections = Array.from(scroller.children);
+            const numSections = sections.length;
+            scroller.style.height = `${numSections * 100}vh`;
+
+            function setupPageIndicators() {
+                indicatorsContainer.innerHTML = '';
+                for (let i = 0; i < numSections; i++) {
+                    const dot = document.createElement('button');
+                    dot.classList.add('page-indicator-dot');
+                    dot.dataset.index = i;
+                    dot.setAttribute('aria-label', `Ir a página ${i + 1}`);
+                    dot.addEventListener('click', () => {
+                        goToSection(i);
+                    });
+                    indicatorsContainer.appendChild(dot);
+                }
+            }
+
+            function updatePageIndicators(activeIndex) {
+                const dots = indicatorsContainer.querySelectorAll('.page-indicator-dot');
+                dots.forEach((dot, idx) => {
+                    if (idx === activeIndex) {
+                        dot.classList.add('active');
+                    } else {
+                        dot.classList.remove('active');
+                    }
+                });
+            }
+
+            let currentIndex = 0; 
+            let startY = 0;
+            let currentY = 0;
+            let isDragging = false;
+            let dragOffset = 0;
+            let previousSwipeIndex = 0;
+
+            function enterFullscreen() {
+                const elem = document.documentElement;
+                if (elem.requestFullscreen) elem.requestFullscreen().catch(err => console.error(`Error al intentar pantalla completa: ${err.message} (${err.name})`));
+                else if (elem.mozRequestFullScreen) elem.mozRequestFullScreen();
+                else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
+                else if (elem.msRequestFullscreen) elem.msRequestFullscreen();
+            }
+
+            function exitFullscreen() {
+                if (document.exitFullscreen) document.exitFullscreen().catch(err => console.error(`Error al salir de pantalla completa: ${err.message} (${err.name})`));
+                else if (document.mozCancelFullScreen) document.mozCancelFullScreen();
+                else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+                else if (document.msExitFullscreen) document.msExitFullscreen();
+            }
+
+            function isFullscreen() {
+                return !!(document.fullscreenElement || document.mozFullScreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
+            }
+
+            async function playPageTurnSound() {
+                if (!pageTurnSound) return;
+                if (!isToneStarted) {
+                    try { await Tone.start(); isToneStarted = true; } 
+                    catch (e) { console.error("Error starting AudioContext:", e); return; }
+                }
+                if (Tone.context.state === 'running') pageTurnSound.triggerAttackRelease("8n");
+                else console.warn("AudioContext not running. Cannot play sound.");
+            }
+
+            function goToSection(index, smooth = true) {
+                if (index < 0 || index >= numSections) return;
+                
+                const oldIndex = currentIndex;
+                currentIndex = index;
+                
+                const translateY = -currentIndex * 100;
+                
+                if (smooth) scroller.style.transition = 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                else scroller.style.transition = 'none';
+                
+                scroller.style.transform = `translateY(${translateY}vh)`;
+
+                if (smooth && oldIndex !== currentIndex && pageTurnSound) playPageTurnSound();
+
+                updatePageIndicators(currentIndex);
+
+                if (currentIndex === numSections - 1 && isFullscreen()) {
+                    exitFullscreen();
+                }
+            }
+            
+            if (viewProductsBtn) {
+                viewProductsBtn.addEventListener('click', () => {
+                    enterFullscreen();
+                    goToSection(1); 
+                });
+            }
+
+            scroller.addEventListener('touchstart', async (e) => {
+                if (!isToneStarted && Tone && Tone.start && Tone.context.state !== 'running') {
+                    try { await Tone.start(); isToneStarted = true; } 
+                    catch (err) { console.error("Error starting AudioContext on touchstart:", err); }
+                }
+                isDragging = true;
+                startY = e.touches[0].clientY;
+                currentY = startY;
+                previousSwipeIndex = currentIndex;
+                const currentTransform = window.getComputedStyle(scroller).getPropertyValue('transform');
+                dragOffset = (currentTransform && currentTransform !== 'none') ? new DOMMatrixReadOnly(currentTransform).m42 : 0;
+                scroller.style.transition = 'none';
+            }, { passive: true });
+
+            scroller.addEventListener('touchmove', (e) => {
+                if (!isDragging) return;
+                currentY = e.touches[0].clientY;
+                const moveOffset = currentY - startY;
+                let newTranslateY = (dragOffset / window.innerHeight * 100) + (moveOffset / window.innerHeight * 100);
+                
+                const minTranslateY = -(numSections - 1) * 100;
+                const maxTranslateY = 0;
+                
+                if (newTranslateY > maxTranslateY) newTranslateY = maxTranslateY + (newTranslateY - maxTranslateY) * 0.2;
+                else if (newTranslateY < minTranslateY) newTranslateY = minTranslateY + (newTranslateY - minTranslateY) * 0.2;
+                
+                scroller.style.transform = `translateY(${newTranslateY}vh)`;
+            }, { passive: true });
+
+            scroller.addEventListener('touchend', () => {
+                if (!isDragging) return;
+                isDragging = false;
+                
+                const dragDistance = currentY - startY;
+                const threshold = window.innerHeight / 5;
+
+                const currentTransformVal = parseFloat(scroller.style.transform.replace('translateY(', '').replace('vh)', ''));
+                let nextIndex = Math.round(-currentTransformVal / 100);
+
+                if (dragDistance < -threshold && currentIndex < numSections - 1) {
+                    nextIndex = previousSwipeIndex + 1;
+                } else if (dragDistance > threshold && currentIndex > 0) {
+                    nextIndex = previousSwipeIndex - 1;
+                }
+                
+                nextIndex = Math.max(0, Math.min(nextIndex, numSections - 1));
+                goToSection(nextIndex, true);
+            });
+            
+            scroller.addEventListener('touchcancel', () => {
+                if (!isDragging) return;
+                isDragging = false;
+                goToSection(currentIndex, true);
+            });
+            
+            setupPageIndicators();
+            goToSection(0, false);
+        });
+    </script>
+
+</body>
+</html>

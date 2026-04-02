@@ -1,0 +1,1925 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Inventario - Calzados Mirla SAC</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+            --info-color: #17a2b8;
+            --light-color: #ecf0f1;
+            --dark-color: #2c3e50;
+            --sidebar-width: 250px;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: var(--sidebar-width);
+            background: linear-gradient(180deg, var(--primary-color) 0%, var(--dark-color) 100%);
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        .sidebar .brand {
+            padding: 1rem;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar .brand h4 {
+            color: white;
+            margin: 0;
+            font-weight: 600;
+        }
+
+        .sidebar .nav-link {
+            color: rgba(255,255,255,0.8);
+            padding: 0.75rem 1rem;
+            transition: all 0.3s;
+            border-radius: 0;
+        }
+
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            color: white;
+            background: rgba(255,255,255,0.1);
+            transform: translateX(5px);
+        }
+
+        .main-content {
+            margin-left: var(--sidebar-width);
+            padding: 2rem;
+            min-height: 100vh;
+        }
+
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .stats-card {
+            background: linear-gradient(135deg, var(--secondary-color) 0%, #5dade2 100%);
+            color: white;
+        }
+
+        .stats-card.success {
+            background: linear-gradient(135deg, var(--success-color) 0%, #58d68d 100%);
+        }
+
+        .stats-card.warning {
+            background: linear-gradient(135deg, var(--warning-color) 0%, #f7dc6f 100%);
+        }
+
+        .stats-card.info {
+            background: linear-gradient(135deg, var(--info-color) 0%, #5dade2 100%);
+        }
+
+        .btn {
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .table {
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .table thead th {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            font-weight: 600;
+        }
+
+        .table tbody tr:hover {
+            background: rgba(52, 152, 219, 0.1);
+        }
+
+        .badge {
+            font-size: 0.75rem;
+            padding: 0.375rem 0.75rem;
+        }
+
+        .modal-content {
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            background: var(--primary-color);
+            color: white;
+            border-radius: 15px 15px 0 0;
+        }
+
+        .form-control, .form-select {
+            border-radius: 8px;
+            border: 2px solid #e9ecef;
+            transition: border-color 0.3s;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+        }
+
+        .alert {
+            border-radius: 10px;
+            border: none;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .user-info {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: rgba(255,255,255,0.9);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .activity-log {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s;
+            }
+            
+            .sidebar.show {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Modal -->
+    <div class="modal fade" id="loginModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-sign-in-alt me-2"></i>Iniciar Sesión - Calzados Mirla SAC
+                    </h5>
+                </div>
+                <div class="modal-body">
+                    <form id="loginForm">
+                        <div class="mb-3">
+                            <label class="form-label">Usuario</label>
+                            <input type="text" class="form-control" id="username" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Contraseña</label>
+                            <input type="password" class="form-control" id="password" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-sign-in-alt me-2"></i>Ingresar
+                        </button>
+                    </form>
+                    <div class="mt-3">
+                        <small class="text-muted">
+                            <strong>Usuarios de prueba:</strong><br>
+                            admin / admin123 (Administrador)<br>
+                            maria.gonzalez / lima123 (Encargado Lima)<br>
+                            operador / operador123 (Operador)<br>
+                            consulta / consulta123 (Solo Consulta)
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <nav class="sidebar">
+        <div class="brand">
+            <h4><i class="fas fa-shoe-prints me-2"></i>Calzados Mirla</h4>
+        </div>
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link active" href="#" data-section="dashboard">
+                    <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" data-section="movements">
+                    <i class="fas fa-exchange-alt me-2"></i>Movimientos
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" data-section="transfers">
+                    <i class="fas fa-truck me-2"></i>Transferencias
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" data-section="reports">
+                    <i class="fas fa-chart-bar me-2"></i>Reportes
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" data-section="warehouses">
+                    <i class="fas fa-warehouse me-2"></i>Almacenes
+                </a>
+            </li>
+            <li class="nav-item admin-only">
+                <a class="nav-link" href="#" data-section="users">
+                    <i class="fas fa-users me-2"></i>Usuarios
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" data-section="audit">
+                    <i class="fas fa-history me-2"></i>Auditoría
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" onclick="logout()">
+                    <i class="fas fa-sign-out-alt me-2"></i>Salir
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- User Info -->
+    <div class="user-info">
+        <span id="currentUser"></span>
+        <button class="btn btn-sm btn-outline-danger ms-2" onclick="logout()">
+            <i class="fas fa-sign-out-alt"></i>
+        </button>
+    </div>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Dashboard Section -->
+        <div id="dashboard" class="section">
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h2><i class="fas fa-tachometer-alt me-2"></i>Dashboard</h2>
+                </div>
+            </div>
+            
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card stats-card">
+                        <div class="card-body text-center">
+                            <i class="fas fa-boxes fa-2x mb-2"></i>
+                            <h3 id="totalStock">0</h3>
+                            <p class="mb-0">Stock Total (Pares)</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stats-card success">
+                        <div class="card-body text-center">
+                            <i class="fas fa-dollar-sign fa-2x mb-2"></i>
+                            <h3 id="totalValue">S/ 0.00</h3>
+                            <p class="mb-0">Valor Total</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stats-card warning">
+                        <div class="card-body text-center">
+                            <i class="fas fa-exchange-alt fa-2x mb-2"></i>
+                            <h3 id="totalMovements">0</h3>
+                            <p class="mb-0">Movimientos Hoy</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stats-card info">
+                        <div class="card-body text-center">
+                            <i class="fas fa-calculator fa-2x mb-2"></i>
+                            <h3 id="avgPrice">S/ 0.00</h3>
+                            <p class="mb-0">Precio Promedio</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5><i class="fas fa-warehouse me-2"></i>Stock por Almacén</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="warehouseStats"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5><i class="fas fa-clock me-2"></i>Actividad Reciente</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="recentActivity" class="activity-log"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Movements Section -->
+        <div id="movements" class="section hidden">
+            <div class="row mb-4">
+                <div class="col-8">
+                    <h2><i class="fas fa-exchange-alt me-2"></i>Movimientos</h2>
+                </div>
+                <div class="col-4 text-end">
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#movementModal">
+                        <i class="fas fa-plus me-2"></i>Nuevo Movimiento
+                    </button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Tipo</th>
+                                    <th>Origen</th>
+                                    <th>Destino</th>
+                                    <th>Cantidad</th>
+                                    <th>Valor</th>
+                                    <th>Usuario</th>
+                                </tr>
+                            </thead>
+                            <tbody id="movementsTable">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Transfers Section -->
+        <div id="transfers" class="section hidden">
+            <div class="row mb-4">
+                <div class="col-8">
+                    <h2><i class="fas fa-truck me-2"></i>Transferencias</h2>
+                </div>
+                <div class="col-4 text-end">
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#transferModal">
+                        <i class="fas fa-plus me-2"></i>Nueva Transferencia
+                    </button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Origen</th>
+                                    <th>Destino</th>
+                                    <th>Cantidad</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transfersTable">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reports Section -->
+        <div id="reports" class="section hidden">
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h2><i class="fas fa-chart-bar me-2"></i>Reportes</h2>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>Resumen por Almacén</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="warehouseReport"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>Verificación Contable</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="accountingVerification"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Warehouses Section -->
+        <div id="warehouses" class="section hidden">
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h2><i class="fas fa-warehouse me-2"></i>Almacenes</h2>
+                </div>
+            </div>
+
+            <div class="row">
+                <div id="warehouseCards"></div>
+            </div>
+        </div>
+
+        <!-- Users Section (Admin only) -->
+        <div id="users" class="section hidden admin-only">
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h2><i class="fas fa-users me-2"></i>Usuarios</h2>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Usuario</th>
+                                    <th>Nombre</th>
+                                    <th>Rol</th>
+                                    <th>Almacenes</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTable">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Audit Section -->
+        <div id="audit" class="section hidden">
+            <div class="row mb-4">
+                <div class="col-8">
+                    <h2><i class="fas fa-history me-2"></i>Auditoría</h2>
+                </div>
+                <div class="col-4 text-end">
+                    <button class="btn btn-success" onclick="exportData()">
+                        <i class="fas fa-download me-2"></i>Exportar Datos
+                    </button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <select class="form-select" id="auditUserFilter">
+                                <option value="">Todos los usuarios</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <select class="form-select" id="auditActionFilter">
+                                <option value="">Todas las acciones</option>
+                                <option value="login">Login</option>
+                                <option value="logout">Logout</option>
+                                <option value="movement">Movimiento</option>
+                                <option value="transfer">Transferencia</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <input type="date" class="form-control" id="auditDateFilter">
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Usuario</th>
+                                    <th>Acción</th>
+                                    <th>Detalles</th>
+                                </tr>
+                            </thead>
+                            <tbody id="auditTable">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Movement Modal -->
+    <div class="modal fade" id="movementModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Nuevo Movimiento</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="movementForm">
+                        <div class="mb-3">
+                            <label class="form-label">Tipo de Movimiento</label>
+                            <select class="form-select" id="movementType" required>
+                                <option value="">Seleccionar...</option>
+                                <option value="production">Producción</option>
+                                <option value="sale">Venta</option>
+                                <option value="return">Devolución</option>
+                                <option value="loss">Pérdida</option>
+                                <option value="damage">Daño</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Almacén</label>
+                            <select class="form-select" id="movementWarehouse" required>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Cantidad (Pares)</label>
+                            <input type="number" class="form-control" id="movementQuantity" min="1" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Precio por Par (S/)</label>
+                            <input type="number" class="form-control" id="movementPrice" min="0" step="0.01" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Valor Total (S/)</label>
+                            <input type="number" class="form-control" id="movementTotal" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Observaciones</label>
+                            <textarea class="form-control" id="movementNotes" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="createMovement()">Crear Movimiento</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transfer Modal -->
+    <div class="modal fade" id="transferModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Nueva Transferencia</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="transferForm">
+                        <div class="mb-3">
+                            <label class="form-label">Almacén Origen</label>
+                            <select class="form-select" id="transferFrom" required>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Almacén Destino</label>
+                            <select class="form-select" id="transferTo" required>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Cantidad (Pares)</label>
+                            <input type="number" class="form-control" id="transferQuantity" min="1" required>
+                            <div class="form-text">Stock disponible: <span id="availableStock">0</span> pares</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Observaciones</label>
+                            <textarea class="form-control" id="transferNotes" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="createTransfer()">Crear Transferencia</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Global variables
+        let currentUser = null;
+        let systemData = {
+            users: [
+                {
+                    id: 1,
+                    username: 'admin',
+                    password: 'admin123',
+                    name: 'Administrador Sistema',
+                    role: 'admin',
+                    warehouses: ['all'],
+                    active: true
+                },
+                {
+                    id: 2,
+                    username: 'maria.gonzalez',
+                    password: 'lima123',
+                    name: 'María González',
+                    role: 'manager',
+                    warehouses: ['tienda-lima'],
+                    active: true
+                },
+                {
+                    id: 3,
+                    username: 'operador',
+                    password: 'operador123',
+                    name: 'Operador Sistema',
+                    role: 'operator',
+                    warehouses: ['central', 'tienda-lima'],
+                    active: true
+                },
+                {
+                    id: 4,
+                    username: 'consulta',
+                    password: 'consulta123',
+                    name: 'Usuario Consulta',
+                    role: 'viewer',
+                    warehouses: ['all'],
+                    active: true
+                }
+            ],
+            warehouses: [
+                {
+                    id: 'central',
+                    name: 'Almacén Central',
+                    type: 'physical',
+                    manager: 'Juan Pérez',
+                    stock: 150,
+                    value: 7500,
+                    location: 'Planta de Producción'
+                },
+                {
+                    id: 'tienda-lima',
+                    name: 'Tienda Lima',
+                    type: 'physical',
+                    manager: 'María González',
+                    stock: 75,
+                    value: 3750,
+                    location: 'Lima Centro'
+                },
+                {
+                    id: 'tienda-huancayo',
+                    name: 'Tienda Huancayo',
+                    type: 'physical',
+                    manager: 'Carlos Mendoza',
+                    stock: 50,
+                    value: 2500,
+                    location: 'Huancayo'
+                },
+                {
+                    id: 'tienda-huaraz',
+                    name: 'Tienda Huaraz',
+                    type: 'physical',
+                    manager: 'Ana Rodríguez',
+                    stock: 30,
+                    value: 1500,
+                    location: 'Huaraz'
+                },
+                {
+                    id: 'en-transito',
+                    name: 'En Tránsito',
+                    type: 'transit',
+                    manager: 'Sistema',
+                    stock: 0,
+                    value: 0,
+                    location: 'Virtual'
+                },
+                {
+                    id: 'productos-perdidos',
+                    name: 'Productos Perdidos',
+                    type: 'virtual',
+                    manager: 'Sistema',
+                    stock: 5,
+                    value: 250,
+                    location: 'Virtual'
+                },
+                {
+                    id: 'ventas-realizadas',
+                    name: 'Ventas Realizadas',
+                    type: 'virtual',
+                    manager: 'Sistema',
+                    stock: 200,
+                    value: 10000,
+                    location: 'Virtual'
+                },
+                {
+                    id: 'productos-dañados',
+                    name: 'Productos Dañados',
+                    type: 'virtual',
+                    manager: 'Sistema',
+                    stock: 10,
+                    value: 500,
+                    location: 'Virtual'
+                }
+            ],
+            movements: [],
+            transfers: [],
+            auditLog: []
+        };
+
+        // Initialize system
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSystemData();
+            checkSession();
+            setupEventListeners();
+            startAutoSave();
+        });
+
+        function loadSystemData() {
+            const savedData = JSON.parse(localStorage.getItem('calzadosMirlaData') || '{}');
+            if (Object.keys(savedData).length > 0) {
+                systemData = { ...systemData, ...savedData };
+            } else {
+                generateSampleData();
+                saveSystemData();
+            }
+        }
+
+        function saveSystemData() {
+            localStorage.setItem('calzadosMirlaData', JSON.stringify(systemData));
+        }
+
+        function generateSampleData() {
+            const today = new Date().toISOString().split('T')[0];
+            systemData.movements = [
+                {
+                    id: 1,
+                    date: today,
+                    type: 'production',
+                    from: 'sistema',
+                    to: 'central',
+                    quantity: 100,
+                    price: 50,
+                    value: 5000,
+                    user: 'admin',
+                    notes: 'Producción inicial'
+                },
+                {
+                    id: 2,
+                    date: today,
+                    type: 'transfer',
+                    from: 'central',
+                    to: 'tienda-lima',
+                    quantity: 50,
+                    price: 50,
+                    value: 2500,
+                    user: 'admin',
+                    notes: 'Transferencia inicial'
+                },
+                {
+                    id: 3,
+                    date: today,
+                    type: 'sale',
+                    from: 'tienda-lima',
+                    to: 'ventas-realizadas',
+                    quantity: 25,
+                    price: 50,
+                    value: 1250,
+                    user: 'maria.gonzalez',
+                    notes: 'Venta del día'
+                }
+            ];
+
+            systemData.transfers = [
+                {
+                    id: 1,
+                    date: today,
+                    from: 'central',
+                    to: 'tienda-huancayo',
+                    quantity: 25,
+                    status: 'pending',
+                    user: 'admin',
+                    notes: 'Transferencia pendiente'
+                }
+            ];
+
+            systemData.auditLog = [
+                {
+                    id: 1,
+                    date: new Date().toISOString(),
+                    user: 'admin',
+                    action: 'login',
+                    details: 'Inicio de sesión exitoso'
+                }
+            ];
+        }
+
+        function checkSession() {
+            const savedUser = localStorage.getItem('currentUser');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                showMainApp();
+            } else {
+                showLogin();
+            }
+        }
+
+        function setupEventListeners() {
+            // Login form
+            document.getElementById('loginForm').addEventListener('submit', login);
+
+            // Navigation
+            document.querySelectorAll('.nav-link[data-section]').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    showSection(this.dataset.section);
+                });
+            });
+
+            // Movement form calculations
+            const quantityInput = document.getElementById('movementQuantity');
+            const priceInput = document.getElementById('movementPrice');
+            const totalInput = document.getElementById('movementTotal');
+
+            function calculateTotal() {
+                const quantity = parseFloat(quantityInput.value) || 0;
+                const price = parseFloat(priceInput.value) || 0;
+                totalInput.value = (quantity * price).toFixed(2);
+            }
+
+            quantityInput.addEventListener('input', calculateTotal);
+            priceInput.addEventListener('input', calculateTotal);
+
+            // Transfer form warehouse selection
+            document.getElementById('transferFrom').addEventListener('change', updateAvailableStock);
+            document.getElementById('movementType').addEventListener('change', updateMovementWarehouses);
+
+            // Audit filters
+            document.getElementById('auditUserFilter').addEventListener('change', filterAuditLog);
+            document.getElementById('auditActionFilter').addEventListener('change', filterAuditLog);
+            document.getElementById('auditDateFilter').addEventListener('change', filterAuditLog);
+
+            // Keyboard shortcuts
+            document.addEventListener('keydown', function(e) {
+                if (e.ctrlKey && e.key === 's') {
+                    e.preventDefault();
+                    exportData();
+                }
+                if (e.key === 'Escape') {
+                    const openModal = document.querySelector('.modal.show');
+                    if (openModal) {
+                        bootstrap.Modal.getInstance(openModal).hide();
+                    }
+                }
+            });
+        }
+
+        function startAutoSave() {
+            setInterval(() => {
+                if (currentUser) {
+                    saveSystemData();
+                }
+            }, 300000); // Auto-save every 5 minutes
+        }
+
+        function login(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            const user = systemData.users.find(u => u.username === username && u.password === password && u.active);
+
+            if (user) {
+                currentUser = user;
+                localStorage.setItem('currentUser', JSON.stringify(user));
+                
+                addAuditLog('login', 'Inicio de sesión exitoso');
+                
+                showMainApp();
+                bootstrap.Modal.getInstance(document.getElementById('loginModal')).hide();
+                showAlert('success', `Bienvenido, ${user.name}`);
+            } else {
+                showAlert('danger', 'Usuario o contraseña incorrectos');
+            }
+        }
+
+        function logout() {
+            if (currentUser) {
+                addAuditLog('logout', 'Cierre de sesión');
+                saveSystemData();
+            }
+            
+            currentUser = null;
+            localStorage.removeItem('currentUser');
+            showLogin();
+        }
+
+        function showLogin() {
+            const loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
+            loginModal.show();
+        }
+
+        function showMainApp() {
+            document.getElementById('currentUser').textContent = `${currentUser.name} (${getRoleName(currentUser.role)})`;
+            
+            if (currentUser.role !== 'admin') {
+                document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+            }
+
+            updateDashboard();
+            showSection('dashboard');
+        }
+
+        function showSection(sectionName) {
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.add('hidden');
+            });
+
+            document.getElementById(sectionName).classList.remove('hidden');
+
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            document.querySelector(`[data-section="${sectionName}"]`).classList.add('active');
+
+            switch(sectionName) {
+                case 'dashboard':
+                    updateDashboard();
+                    break;
+                case 'movements':
+                    loadMovements();
+                    break;
+                case 'transfers':
+                    loadTransfers();
+                    break;
+                case 'reports':
+                    loadReports();
+                    break;
+                case 'warehouses':
+                    loadWarehouses();
+                    break;
+                case 'users':
+                    if (currentUser.role === 'admin') loadUsers();
+                    break;
+                case 'audit':
+                    loadAuditLog();
+                    break;
+            }
+        }
+
+        function updateDashboard() {
+            const physicalWarehouses = systemData.warehouses.filter(w => w.type === 'physical' || w.type === 'transit');
+            const totalStock = physicalWarehouses.reduce((sum, w) => sum + w.stock, 0);
+            const totalValue = physicalWarehouses.reduce((sum, w) => sum + w.value, 0);
+            
+            const avgPrice = totalStock > 0 ? totalValue / totalStock : 0;
+
+            const today = new Date().toISOString().split('T')[0];
+            const todayMovements = systemData.movements.filter(m => m.date === today).length;
+
+            document.getElementById('totalStock').textContent = totalStock.toLocaleString();
+            document.getElementById('totalValue').textContent = `S/ ${totalValue.toLocaleString('es-PE', {minimumFractionDigits: 2})}`;
+            document.getElementById('totalMovements').textContent = todayMovements;
+            document.getElementById('avgPrice').textContent = `S/ ${avgPrice.toFixed(2)}`;
+
+            updateWarehouseStats();
+            updateRecentActivity();
+        }
+
+        function updateWarehouseStats() {
+            const userWarehouses = getUserWarehouses();
+            const statsHtml = userWarehouses.map(warehouse => `
+                <div class="row mb-2">
+                    <div class="col-6">
+                        <strong>${warehouse.name}</strong><br>
+                        <small class="text-muted">${warehouse.manager}</small>
+                    </div>
+                    <div class="col-3 text-end">
+                        <span class="badge bg-primary">${warehouse.stock} pares</span>
+                    </div>
+                    <div class="col-3 text-end">
+                        <span class="badge bg-success">S/ ${warehouse.value.toFixed(2)}</span>
+                    </div>
+                </div>
+            `).join('');
+            
+            document.getElementById('warehouseStats').innerHTML = statsHtml;
+        }
+
+        function updateRecentActivity() {
+            const recentLogs = systemData.auditLog
+                .slice(-10)
+                .reverse()
+                .map(log => `
+                    <div class="d-flex justify-content-between align-items-center mb-2 p-2 border-bottom">
+                        <div>
+                            <strong>${log.user}</strong> - ${log.action}
+                            <br><small class="text-muted">${log.details}</small>
+                        </div>
+                        <small class="text-muted">${formatDateTime(log.date)}</small>
+                    </div>
+                `).join('');
+            
+            document.getElementById('recentActivity').innerHTML = recentLogs || '<p class="text-muted">No hay actividad reciente</p>';
+        }
+
+        function loadMovements() {
+            updateMovementWarehouses();
+            const userWarehouses = getUserWarehouses().map(w => w.id);
+            const userMovements = systemData.movements.filter(m => 
+                (currentUser.role === 'admin' || currentUser.warehouses.includes('all')) ||
+                userWarehouses.includes(m.from) || userWarehouses.includes(m.to)
+            );
+
+            const movementsHtml = userMovements.map(movement => `
+                <tr>
+                    <td>${formatDate(movement.date)}</td>
+                    <td><span class="badge bg-${getMovementBadgeColor(movement.type)}">${getMovementTypeName(movement.type)}</span></td>
+                    <td>${getWarehouseName(movement.from)}</td>
+                    <td>${getWarehouseName(movement.to)}</td>
+                    <td>${movement.quantity} pares</td>
+                    <td>S/ ${movement.value.toFixed(2)}</td>
+                    <td>${movement.user}</td>
+                </tr>
+            `).join('');
+
+            document.getElementById('movementsTable').innerHTML = movementsHtml;
+        }
+
+        function loadTransfers() {
+            updateTransferWarehouses();
+            const userWarehouses = getUserWarehouses().map(w => w.id);
+            const userTransfers = systemData.transfers.filter(t => 
+                (currentUser.role === 'admin' || currentUser.warehouses.includes('all')) ||
+                userWarehouses.includes(t.from) || userWarehouses.includes(t.to)
+            );
+
+            const transfersHtml = userTransfers.map(transfer => `
+                <tr>
+                    <td>${formatDate(transfer.date)}</td>
+                    <td>${getWarehouseName(transfer.from)}</td>
+                    <td>${getWarehouseName(transfer.to)}</td>
+                    <td>${transfer.quantity} pares</td>
+                    <td><span class="badge bg-${transfer.status === 'completed' ? 'success' : 'warning'}">${transfer.status === 'completed' ? 'Completada' : 'Pendiente'}</span></td>
+                    <td>
+                        ${transfer.status === 'pending' && canConfirmTransfer(transfer) ? 
+                            `<button class="btn btn-sm btn-success" onclick="confirmTransfer(${transfer.id})">
+                                <i class="fas fa-check"></i> Confirmar
+                            </button>` : 
+                            '<span class="text-muted">No disponible</span>'
+                        }
+                    </td>
+                </tr>
+            `).join('');
+
+            document.getElementById('transfersTable').innerHTML = transfersHtml;
+        }
+
+        function loadReports() {
+            loadWarehouseReport();
+            loadAccountingVerification();
+        }
+
+        function loadWarehouseReport() {
+            const userWarehouses = getUserWarehouses();
+            const reportHtml = userWarehouses.map(warehouse => {
+                const entries = systemData.movements.filter(m => m.to === warehouse.id).reduce((sum, m) => sum + m.quantity, 0);
+                const exits = systemData.movements.filter(m => m.from === warehouse.id).reduce((sum, m) => sum + m.quantity, 0);
+                
+                return `
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h6>${warehouse.name}</h6>
+                            <div class="row">
+                                <div class="col-3">
+                                    <small class="text-muted">Entradas</small><br>
+                                    <strong class="text-success">${entries}</strong>
+                                </div>
+                                <div class="col-3">
+                                    <small class="text-muted">Salidas</small><br>
+                                    <strong class="text-danger">${exits}</strong>
+                                </div>
+                                <div class="col-3">
+                                    <small class="text-muted">Stock</small><br>
+                                    <strong>${warehouse.stock}</strong>
+                                </div>
+                                <div class="col-3">
+                                    <small class="text-muted">Valor</small><br>
+                                    <strong>S/ ${warehouse.value.toFixed(2)}</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('warehouseReport').innerHTML = reportHtml;
+        }
+
+        function loadAccountingVerification() {
+            const totalEntries = systemData.movements.reduce((sum, m) => sum + m.quantity, 0);
+            const totalExits = systemData.movements.reduce((sum, m) => sum + m.quantity, 0);
+            const isBalanced = Math.abs(totalEntries - totalExits) < 0.01;
+
+            const verificationHtml = `
+                <div class="alert alert-${isBalanced ? 'success' : 'danger'}">
+                    <h6><i class="fas fa-${isBalanced ? 'check-circle' : 'exclamation-triangle'}"></i> 
+                        ${isBalanced ? 'Sistema Balanceado' : 'Sistema Desbalanceado'}
+                    </h6>
+                    <p>Total Entradas: ${totalEntries} pares<br>
+                       Total Salidas: ${totalExits} pares<br>
+                       Diferencia: ${(totalEntries - totalExits).toFixed(2)} pares</p>
+                </div>
+                <div class="mt-3">
+                    <h6>Resumen por Tipo de Almacén:</h6>
+                    ${['physical', 'virtual', 'transit'].map(type => {
+                        const warehouses = systemData.warehouses.filter(w => w.type === type);
+                        const totalStock = warehouses.reduce((sum, w) => sum + w.stock, 0);
+                        const totalValue = warehouses.reduce((sum, w) => sum + w.value, 0);
+                        
+                        return `
+                            <div class="row mb-2">
+                                <div class="col-4"><strong>${type === 'physical' ? 'Físicos' : type === 'virtual' ? 'Virtuales' : 'Tránsito'}</strong></div>
+                                <div class="col-4">${totalStock} pares</div>
+                                <div class="col-4">S/ ${totalValue.toFixed(2)}</div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+
+            document.getElementById('accountingVerification').innerHTML = verificationHtml;
+        }
+
+        function loadWarehouses() {
+            const userWarehouses = getUserWarehouses();
+            const warehousesHtml = userWarehouses.map(warehouse => `
+                <div class="col-md-4 mb-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="fas fa-warehouse me-2"></i>${warehouse.name}
+                            </h5>
+                            <p class="card-text">
+                                <strong>Encargado:</strong> ${warehouse.manager}<br>
+                                <strong>Tipo:</strong> ${warehouse.type === 'physical' ? 'Físico' : warehouse.type === 'virtual' ? 'Virtual' : 'Tránsito'}<br>
+                                <strong>Ubicación:</strong> ${warehouse.location}
+                            </p>
+                            <div class="row">
+                                <div class="col-6">
+                                    <span class="badge bg-primary fs-6">${warehouse.stock} pares</span>
+                                </div>
+                                <div class="col-6">
+                                    <span class="badge bg-success fs-6">S/ ${warehouse.value.toFixed(2)}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('warehouseCards').innerHTML = warehousesHtml;
+        }
+
+        function loadUsers() {
+            if (currentUser.role !== 'admin') return;
+
+            const usersHtml = systemData.users.map(user => `
+                <tr>
+                    <td>${user.username}</td>
+                    <td>${user.name}</td>
+                    <td><span class="badge bg-info">${getRoleName(user.role)}</span></td>
+                    <td>${user.warehouses.includes('all') ? 'Todos' : user.warehouses.map(w => getWarehouseName(w)).join(', ')}</td>
+                    <td><span class="badge bg-${user.active ? 'success' : 'danger'}">${user.active ? 'Activo' : 'Inactivo'}</span></td>
+                </tr>
+            `).join('');
+
+            document.getElementById('usersTable').innerHTML = usersHtml;
+        }
+
+        function loadAuditLog() {
+            populateAuditFilters();
+            filterAuditLog();
+        }
+
+        function populateAuditFilters() {
+            const users = [...new Set(systemData.auditLog.map(log => log.user))];
+            const userOptions = users.map(user => `<option value="${user}">${user}</option>`).join('');
+            document.getElementById('auditUserFilter').innerHTML = '<option value="">Todos los usuarios</option>' + userOptions;
+        }
+
+        function filterAuditLog() {
+            const userFilter = document.getElementById('auditUserFilter').value;
+            const actionFilter = document.getElementById('auditActionFilter').value;
+            const dateFilter = document.getElementById('auditDateFilter').value;
+
+            let filteredLogs = systemData.auditLog;
+
+            if (userFilter) {
+                filteredLogs = filteredLogs.filter(log => log.user === userFilter);
+            }
+
+            if (actionFilter) {
+                filteredLogs = filteredLogs.filter(log => log.action === actionFilter);
+            }
+
+            if (dateFilter) {
+                filteredLogs = filteredLogs.filter(log => log.date.startsWith(dateFilter));
+            }
+
+            const auditHtml = filteredLogs.reverse().map(log => `
+                <tr>
+                    <td>${formatDateTime(log.date)}</td>
+                    <td>${log.user}</td>
+                    <td><span class="badge bg-secondary">${log.action}</span></td>
+                    <td>${log.details}</td>
+                </tr>
+            `).join('');
+
+            document.getElementById('auditTable').innerHTML = auditHtml;
+        }
+
+        function createMovement() {
+            const type = document.getElementById('movementType').value;
+            const warehouse = document.getElementById('movementWarehouse').value;
+            const quantity = parseInt(document.getElementById('movementQuantity').value);
+            const price = parseFloat(document.getElementById('movementPrice').value);
+            const notes = document.getElementById('movementNotes').value;
+
+            if (!type || !warehouse || !quantity || !price) {
+                showAlert('danger', 'Por favor complete todos los campos requeridos');
+                return;
+            }
+
+            if (!canAccessWarehouse(warehouse)) {
+                showAlert('danger', 'No tiene permisos para este almacén');
+                return;
+            }
+
+            if (['sale', 'loss', 'damage'].includes(type)) {
+                const warehouseData = systemData.warehouses.find(w => w.id === warehouse);
+                if (warehouseData.stock < quantity) {
+                    showAlert('danger', 'Stock insuficiente en el almacén');
+                    return;
+                }
+            }
+
+            const movement = {
+                id: Date.now(),
+                date: new Date().toISOString().split('T')[0],
+                type: type,
+                from: getMovementFrom(type, warehouse),
+                to: getMovementTo(type, warehouse),
+                quantity: quantity,
+                price: price,
+                value: quantity * price,
+                user: currentUser.username,
+                notes: notes
+            };
+
+            executeMovement(movement);
+
+            addAuditLog('movement', `${getMovementTypeName(type)} - ${quantity} pares - ${getWarehouseName(warehouse)}`);
+
+            document.getElementById('movementForm').reset();
+            bootstrap.Modal.getInstance(document.getElementById('movementModal')).hide();
+
+            showAlert('success', 'Movimiento creado exitosamente');
+            updateDashboard();
+            
+            if (document.getElementById('movements').classList.contains('hidden') === false) {
+                loadMovements();
+            }
+        }
+
+        function createTransfer() {
+            const from = document.getElementById('transferFrom').value;
+            const to = document.getElementById('transferTo').value;
+            const quantity = parseInt(document.getElementById('transferQuantity').value);
+            const notes = document.getElementById('transferNotes').value;
+
+            if (!from || !to || !quantity) {
+                showAlert('danger', 'Por favor complete todos los campos requeridos');
+                return;
+            }
+
+            if (from === to) {
+                showAlert('danger', 'El almacén origen y destino no pueden ser el mismo');
+                return;
+            }
+
+            if (!canAccessWarehouse(from)) {
+                showAlert('danger', 'No tiene permisos para el almacén origen');
+                return;
+            }
+
+            const fromWarehouse = systemData.warehouses.find(w => w.id === from);
+            if (fromWarehouse.stock < quantity) {
+                showAlert('danger', 'Stock insuficiente en el almacén origen');
+                return;
+            }
+
+            const transfer = {
+                id: Date.now(),
+                date: new Date().toISOString().split('T')[0],
+                from: from,
+                to: to,
+                quantity: quantity,
+                status: 'pending',
+                user: currentUser.username,
+                notes: notes
+            };
+
+            const avgPrice = fromWarehouse.value / fromWarehouse.stock;
+            executeTransfer(from, 'en-transito', quantity, avgPrice);
+
+            systemData.transfers.push(transfer);
+            saveSystemData();
+
+            addAuditLog('transfer', `Transferencia iniciada: ${quantity} pares de ${getWarehouseName(from)} a ${getWarehouseName(to)}`);
+
+            document.getElementById('transferForm').reset();
+            bootstrap.Modal.getInstance(document.getElementById('transferModal')).hide();
+
+            showAlert('success', 'Transferencia iniciada exitosamente');
+            updateDashboard();
+            
+            if (document.getElementById('transfers').classList.contains('hidden') === false) {
+                loadTransfers();
+            }
+        }
+
+        function confirmTransfer(transferId) {
+            const transfer = systemData.transfers.find(t => t.id === transferId);
+            if (!transfer || transfer.status !== 'pending') {
+                showAlert('danger', 'Transferencia no encontrada o ya confirmada');
+                return;
+            }
+
+            if (!canAccessWarehouse(transfer.to)) {
+                showAlert('danger', 'No tiene permisos para confirmar esta transferencia');
+                return;
+            }
+
+            const transitWarehouse = systemData.warehouses.find(w => w.id === 'en-transito');
+            const avgPrice = transitWarehouse.value / transitWarehouse.stock;
+            executeTransfer('en-transito', transfer.to, transfer.quantity, avgPrice);
+
+            transfer.status = 'completed';
+            saveSystemData();
+
+            addAuditLog('transfer', `Transferencia confirmada: ${transfer.quantity} pares recibidos en ${getWarehouseName(transfer.to)}`);
+
+            showAlert('success', 'Transferencia confirmada exitosamente');
+            updateDashboard();
+            loadTransfers();
+        }
+
+        function executeMovement(movement) {
+            systemData.movements.push(movement);
+
+            const fromWarehouse = systemData.warehouses.find(w => w.id === movement.from);
+            const toWarehouse = systemData.warehouses.find(w => w.id === movement.to);
+
+            if (fromWarehouse && movement.from !== 'sistema') {
+                fromWarehouse.stock -= movement.quantity;
+                fromWarehouse.value -= movement.value;
+            }
+
+            if (toWarehouse && movement.to !== 'sistema') {
+                toWarehouse.stock += movement.quantity;
+                toWarehouse.value += movement.value;
+            }
+
+            saveSystemData();
+        }
+
+        function executeTransfer(from, to, quantity, price) {
+            const fromWarehouse = systemData.warehouses.find(w => w.id === from);
+            const toWarehouse = systemData.warehouses.find(w => w.id === to);
+
+            if (fromWarehouse) {
+                fromWarehouse.stock -= quantity;
+                fromWarehouse.value -= quantity * price;
+            }
+
+            if (toWarehouse) {
+                toWarehouse.stock += quantity;
+                toWarehouse.value += quantity * price;
+            }
+
+            saveSystemData();
+        }
+
+        function getMovementFrom(type, warehouse) {
+            switch(type) {
+                case 'production': return 'sistema';
+                case 'sale': return warehouse;
+                case 'return': return 'ventas-realizadas';
+                case 'loss': return warehouse;
+                case 'damage': return warehouse;
+                default: return warehouse;
+            }
+        }
+
+        function getMovementTo(type, warehouse) {
+            switch(type) {
+                case 'production': return warehouse;
+                case 'sale': return 'ventas-realizadas';
+                case 'return': return warehouse;
+                case 'loss': return 'productos-perdidos';
+                case 'damage': return 'productos-dañados';
+                default: return warehouse;
+            }
+        }
+
+        function updateMovementWarehouses() {
+            const type = document.getElementById('movementType').value;
+            const warehouseSelect = document.getElementById('movementWarehouse');
+            
+            let availableWarehouses = [];
+            
+            switch(type) {
+                case 'production':
+                    availableWarehouses = getUserWarehouses().filter(w => w.type === 'physical');
+                    break;
+                case 'sale':
+                case 'loss':
+                case 'damage':
+                    availableWarehouses = getUserWarehouses().filter(w => w.type === 'physical' && w.stock > 0);
+                    break;
+                case 'return':
+                    availableWarehouses = getUserWarehouses().filter(w => w.type === 'physical');
+                    break;
+                default:
+                    availableWarehouses = getUserWarehouses();
+            }
+
+            warehouseSelect.innerHTML = '<option value="">Seleccionar...</option>' +
+                availableWarehouses.map(w => `<option value="${w.id}">${w.name}</option>`).join('');
+        }
+
+        function updateTransferWarehouses() {
+            const userWarehouses = getUserWarehouses().filter(w => w.type === 'physical');
+            const warehouseOptions = userWarehouses.map(w => `<option value="${w.id}">${w.name}</option>`).join('');
+            
+            document.getElementById('transferFrom').innerHTML = '<option value="">Seleccionar...</option>' + warehouseOptions;
+            document.getElementById('transferTo').innerHTML = '<option value="">Seleccionar...</option>' + warehouseOptions;
+        }
+
+        function updateAvailableStock() {
+            const warehouseId = document.getElementById('transferFrom').value;
+            const warehouse = systemData.warehouses.find(w => w.id === warehouseId);
+            document.getElementById('availableStock').textContent = warehouse ? warehouse.stock : 0;
+        }
+
+        function getUserWarehouses() {
+            if (currentUser.warehouses.includes('all')) {
+                return systemData.warehouses;
+            }
+            return systemData.warehouses.filter(w => currentUser.warehouses.includes(w.id));
+        }
+
+        function canAccessWarehouse(warehouseId) {
+            return currentUser.warehouses.includes('all') || currentUser.warehouses.includes(warehouseId);
+        }
+
+        function canConfirmTransfer(transfer) {
+            return canAccessWarehouse(transfer.to) && ['manager', 'admin'].includes(currentUser.role);
+        }
+
+        function getWarehouseName(warehouseId) {
+            if (warehouseId === 'sistema') return 'Sistema';
+            const warehouse = systemData.warehouses.find(w => w.id === warehouseId);
+            return warehouse ? warehouse.name : warehouseId;
+        }
+
+        function getMovementTypeName(type) {
+            const types = {
+                'production': 'Producción',
+                'sale': 'Venta',
+                'return': 'Devolución',
+                'loss': 'Pérdida',
+                'damage': 'Daño',
+                'transfer': 'Transferencia'
+            };
+            return types[type] || type;
+        }
+
+        function getMovementBadgeColor(type) {
+            const colors = {
+                'production': 'success',
+                'sale': 'primary',
+                'return': 'info',
+                'loss': 'warning',
+                'damage': 'danger',
+                'transfer': 'secondary'
+            };
+            return colors[type] || 'secondary';
+        }
+
+        function getRoleName(role) {
+            const roles = {
+                'admin': 'Administrador',
+                'manager': 'Encargado',
+                'operator': 'Operador',
+                'viewer': 'Solo Consulta'
+            };
+            return roles[role] || role;
+        }
+
+        function addAuditLog(action, details) {
+            systemData.auditLog.push({
+                id: Date.now(),
+                date: new Date().toISOString(),
+                user: currentUser.username,
+                action: action,
+                details: details
+            });
+            saveSystemData();
+        }
+
+        function formatDate(dateString) {
+            return new Date(dateString).toLocaleDateString('es-PE');
+        }
+
+        function formatDateTime(dateString) {
+            return new Date(dateString).toLocaleString('es-PE');
+        }
+
+        function showAlert(type, message) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+            alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            document.body.appendChild(alertDiv);
+            
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.parentNode.removeChild(alertDiv);
+                }
+            }, 5000);
+        }
+
+        function exportData() {
+            if (currentUser.role !== 'admin') {
+                showAlert('danger', 'Solo los administradores pueden exportar datos');
+                return;
+            }
+
+            const dataToExport = {
+                exportDate: new Date().toISOString(),
+                exportedBy: currentUser.username,
+                data: systemData
+            };
+
+            const dataStr = JSON.stringify(dataToExport, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(dataBlob);
+            link.download = `calzados-mirla-backup-${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+
+            addAuditLog('export', 'Datos exportados exitosamente');
+            showAlert('success', 'Datos exportados exitosamente');
+        }
+
+        function clearAllData() {
+            if (currentUser.role !== 'admin') {
+                showAlert('danger', 'Solo los administradores pueden limpiar datos');
+                return;
+            }
+
+            if (confirm('¿Está seguro de que desea limpiar todos los datos? Esta acción no se puede deshacer.')) {
+                localStorage.removeItem('calzadosMirlaData');
+                addAuditLog('clear', 'Todos los datos fueron limpiados');
+                showAlert('success', 'Datos limpiados exitosamente. Recargando...');
+                setTimeout(() => location.reload(), 2000);
+            }
+        }
+
+        function resetWarehouseStocks() {
+            if (currentUser.role !== 'admin') {
+                showAlert('danger', 'Solo los administradores pueden reiniciar stocks');
+                return;
+            }
+
+            if (confirm('¿Desea reiniciar todos los stocks a valores iniciales?')) {
+                systemData.warehouses.forEach(warehouse => {
+                    switch(warehouse.id) {
+                        case 'central':
+                            warehouse.stock = 150;
+                            warehouse.value = 7500;
+                            break;
+                        case 'tienda-lima':
+                            warehouse.stock = 75;
+                            warehouse.value = 3750;
+                            break;
+                        case 'tienda-huancayo':
+                            warehouse.stock = 50;
+                            warehouse.value = 2500;
+                            break;
+                        case 'tienda-huaraz':
+                            warehouse.stock = 30;
+                            warehouse.value = 1500;
+                            break;
+                        case 'en-transito':
+                            warehouse.stock = 0;
+                            warehouse.value = 0;
+                            break;
+                        case 'productos-perdidos':
+                            warehouse.stock = 5;
+                            warehouse.value = 250;
+                            break;
+                        case 'ventas-realizadas':
+                            warehouse.stock = 200;
+                            warehouse.value = 10000;
+                            break;
+                        case 'productos-dañados':
+                            warehouse.stock = 10;
+                            warehouse.value = 500;
+                            break;
+                    }
+                });
+
+                saveSystemData();
+                addAuditLog('reset', 'Stocks reiniciados a valores iniciales');
+                showAlert('success', 'Stocks reiniciados exitosamente');
+                updateDashboard();
+            }
+        }
+
+        function validateMovementPermissions(type, warehouse) {
+            if (currentUser.role === 'viewer') {
+                return false;
+            }
+
+            if (!canAccessWarehouse(warehouse)) {
+                return false;
+            }
+
+            if (type === 'production' && !['admin', 'manager'].includes(currentUser.role)) {
+                return false;
+            }
+
+            return true;
+        }
+
+        function validateStock(warehouseId, quantity) {
+            const warehouse = systemData.warehouses.find(w => w.id === warehouseId);
+            return warehouse && warehouse.stock >= quantity;
+        }
+
+        function initializeBootstrap() {
+            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+
+            const popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
+            popoverTriggerList.map(function (popoverTriggerEl) {
+                return new bootstrap.Popover(popoverTriggerEl);
+            });
+        }
+
+        function addAdminControls() {
+            if (currentUser && currentUser.role === 'admin') {
+                const sidebar = document.querySelector('.sidebar .nav');
+                const adminControls = document.createElement('li');
+                adminControls.className = 'nav-item mt-3';
+                adminControls.innerHTML = `
+                    <div class="px-3">
+                        <h6 class="text-white-50 mb-2">Controles Admin</h6>
+                        <button class="btn btn-outline-light btn-sm w-100 mb-2" onclick="resetWarehouseStocks()">
+                            <i class="fas fa-refresh me-1"></i> Reiniciar Stocks
+                        </button>
+                        <button class="btn btn-outline-danger btn-sm w-100" onclick="clearAllData()">
+                            <i class="fas fa-trash me-1"></i> Limpiar Datos
+                        </button>
+                    </div>
+                `;
+                sidebar.appendChild(adminControls);
+            }
+        }
+
+        function filterTable(tableId, searchTerm) {
+            const table = document.getElementById(tableId);
+            const rows = table.getElementsByTagName('tr');
+            
+            for (let i = 0; i < rows.length; i++) {
+                const row = rows[i];
+                const cells = row.getElementsByTagName('td');
+                let found = false;
+                
+                for (let j = 0; j < cells.length; j++) {
+                    if (cells[j].textContent.toLowerCase().includes(searchTerm.toLowerCase())) {
+                        found = true;
+                        break;
+                    }
+                }
+                
+                row.style.display = found ? '' : 'none';
+            }
+        }
+
+        function confirmCriticalAction(action, callback) {
+            const modal = document.createElement('div');
+            modal.className = 'modal fade';
+            modal.innerHTML = `
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header bg-warning">
+                            <h5 class="modal-title">
+                                <i class="fas fa-exclamation-triangle me-2"></i>Confirmación Requerida
+                            </h5>
+                        </div>
+                        <div class="modal-body">
+                            <p>¿Está seguro de que desea ${action}?</p>
+                            <p class="text-muted">Esta acción no se puede deshacer.</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="button" class="btn btn-danger" onclick="executeConfirmedAction()">Confirmar</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            const modalInstance = new bootstrap.Modal(modal);
+            modalInstance.show();
+            
+            window.executeConfirmedAction = function() {
+                callback();
+                modalInstance.hide();
+                document.body.removeChild(modal);
+                delete window.executeConfirmedAction;
+            };
+        }
+
+        function handleError(error, context) {
+            console.error(`Error in ${context}:`, error);
+            addAuditLog('error', `Error en ${context}: ${error.message}`);
+            showAlert('danger', `Error: ${error.message}`);
+        }
+
+        function startSessionTimeout() {
+            let timeout;
+            
+            function resetTimeout() {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => {
+                    showAlert('warning', 'Su sesión expirará en 2 minutos por inactividad');
+                    setTimeout(() => {
+                        showAlert('info', 'Sesión cerrada por inactividad');
+                        logout();
+                    }, 120000);
+                }, 1800000);
+            }
+            
+            document.addEventListener('click', resetTimeout);
+            document.addEventListener('keypress', resetTimeout);
+            document.addEventListener('scroll', resetTimeout);
+            
+            resetTimeout();
+        }
+
+        function initializeSession() {
+            if (currentUser) {
+                startSessionTimeout();
+                addAdminControls();
+                initializeBootstrap();
+            }
+        }
+
+        function monitorPerformance() {
+            const start = performance.now();
+            
+            return function(operation) {
+                const end = performance.now();
+                const duration = end - start;
+                
+                if (duration > 1000) {
+                    console.warn(`Slow operation detected: ${operation} took ${duration}ms`);
+                    addAuditLog('performance', `Operación lenta: ${operation} (${duration}ms)`);
+                }
+            };
+        }
+
+        function validateDataIntegrity() {
+            try {
+                const warehouseIds = systemData.warehouses.map(w => w.id);
+                const invalidMovements = systemData.movements.filter(m => 
+                    !warehouseIds.includes(m.from) && m.from !== 'sistema' ||
+                    !warehouseIds.includes(m.to) && m.to !== 'sistema'
+                );
+                
+                if (invalidMovements.length > 0) {
+                    console.warn('Found movements with invalid warehouse references:', invalidMovements);
+                }
+                
+                const calculatedStocks = {};
+                warehouseIds.forEach(id => calculatedStocks[id] = 0);
+                
+                systemData.movements.forEach(movement => {
+                    if (movement.from !== 'sistema' && calculatedStocks[movement.from] !== undefined) {
+                        calculatedStocks[movement.from] -= movement.quantity;
+                    }
+                    if (movement.to !== 'sistema' && calculatedStocks[movement.to] !== undefined) {
+                        calculatedStocks[movement.to] += movement.quantity;
+                    }
+                });
+                
+                const stockDiscrepancies = [];
+                systemData.warehouses.forEach(warehouse => {
+                    const calculated = calculatedStocks[warehouse.id] || 0;
+                    if (Math.abs(warehouse.stock - calculated) > 0.01) {
+                        stockDiscrepancies.push({
+                            warehouse: warehouse.name,
+                            actual: warehouse.stock,
+                            calculated: calculated,
+                            difference: warehouse.stock - calculated
+                        });
+                    }
+                });
+                
+                if (stockDiscrepancies.length > 0) {
+                    console.warn('Stock discrepancies found:', stockDiscrepancies);
+                    addAuditLog('integrity', `Discrepancias de stock encontradas: ${stockDiscrepancies.length} almacenes`);
+                }
+                
+                return {
+                    invalidMovements: invalidMovements.length,
+                    stockDiscrepancies: stockDiscrepancies.length,
+                    isValid: invalidMovements.length === 0 && stockDiscrepancies.length === 0
+                };
+                
+            } catch (error) {
+                handleError(error, 'validateDataIntegrity');
+                return { isValid: false, error: error.message };
+            }
+        }
+
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                if (currentUser) {
+                    const integrity = validateDataIntegrity();
+                    if (!integrity.isValid && currentUser.role === 'admin') {
+                        showAlert('warning', 'Se encontraron problemas de integridad en los datos. Revise la auditoría.');
+                    }
+                    initializeSession();
+                }
+            }, 2000);
+        });
+    </script>
+</body>
+</html>

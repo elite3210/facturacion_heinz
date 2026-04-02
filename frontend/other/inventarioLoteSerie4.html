@@ -1,0 +1,2008 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gestión de Inventario de Calzados</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.min.css" rel="stylesheet">
+    <style>
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .serial-input { font-family: monospace; }
+        .stock-badge { font-size: 0.8em; }
+        .lot-card { border-left: 4px solid #007bff; }
+        .transfer-pending { border-left: 4px solid #ffc107; }
+        .scanner-section { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .operation-btn { margin: 0.25rem; }
+        .kardex-table { font-size: 0.9em; }
+        .warehouse-badge { 
+            display: inline-block; 
+            padding: 0.25rem 0.5rem; 
+            border-radius: 0.25rem; 
+            font-size: 0.75rem; 
+            font-weight: 600;
+        }
+        .warehouse-main { background-color: #198754; color: white; }
+        .warehouse-production { background-color: #fd7e14; color: white; }
+        .warehouse-store { background-color: #0d6efd; color: white; }
+        .warehouse-transit { background-color: #ffc107; color: black; }
+        .warehouse-clients { background-color: #6f42c1; color: white; }
+        .warehouse-suppliers { background-color: #20c997; color: black; }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <!-- Header -->
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+            <div class="container-fluid">
+                <span class="navbar-brand">
+                    <i class="bi bi-box-seam"></i> Sistema de Inventario - Calzados
+                </span>
+                <div class="navbar-nav ms-auto">
+                    <span class="nav-link">Usuario: <span id="currentUser">Admin</span></span>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Tabs Navigation -->
+        <ul class="nav nav-tabs" id="mainTabs">
+            <li class="nav-item">
+                <button class="nav-link active" data-tab="scanner">
+                    <i class="bi bi-upc-scan"></i> Escáner
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-tab="templates">
+                    <i class="bi bi-diagram-2"></i> Plantillas
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-tab="products">
+                    <i class="bi bi-box"></i> Productos
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-tab="lots">
+                    <i class="bi bi-collection"></i> Lotes
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-tab="inventory">
+                    <i class="bi bi-boxes"></i> Inventario
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-tab="transfers">
+                    <i class="bi bi-arrow-left-right"></i> Transferencias
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-tab="kardex">
+                    <i class="bi bi-graph-up"></i> Kardex
+                </button>
+            </li>
+        </ul>
+
+        <!-- Tab Contents -->
+        
+        <!-- Scanner Tab -->
+        <div id="scanner" class="tab-content active">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card scanner-section">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="bi bi-upc-scan"></i> Escáner de Números de Serie</h5>
+                            <div class="mb-3">
+                                <label class="form-label">Número de Serie</label>
+                                <input type="text" id="serialInput" class="form-control serial-input" 
+                                       placeholder="Ej: 100001-01" autocomplete="off">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Operación</label>
+                                <select id="operationType" class="form-select">
+                                    <option value="transfer">Transferir</option>
+                                    <option value="sale">Venta</option>
+                                    <option value="return">Devolución</option>
+                                </select>
+                            </div>
+                            <div class="mb-3" id="warehouseContainer">
+                                <label class="form-label">Destino</label>
+                                <select id="destinationWarehouse" class="form-select">
+                                    <option value="">Seleccionar almacén...</option>
+                                </select>
+                            </div>
+                            <button id="processSerial" class="btn btn-light btn-lg w-100">
+                                <i class="bi bi-check-circle"></i> Procesar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6 class="card-title">Información del Producto</h6>
+                            <div id="serialInfo" class="text-muted">
+                                <p>Escanee un número de serie para ver la información del producto</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card mt-3">
+                        <div class="card-body">
+                            <h6 class="card-title">Operaciones Recientes</h6>
+                            <div id="recentOperations" style="max-height: 300px; overflow-y: auto;">
+                                <!-- Recent operations will be displayed here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Templates Tab -->
+        <div id="templates" class="tab-content">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Nueva Plantilla</h5>
+                            <form id="templateForm">
+                                <div class="mb-3">
+                                    <label class="form-label">Código</label>
+                                    <input type="text" id="templateCode" class="form-control" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Nombre</label>
+                                    <input type="text" id="templateName" class="form-control" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Categoría</label>
+                                    <select id="templateCategory" class="form-select" required>
+                                        <option value="">Seleccionar...</option>
+                                        <option value="formal">Formal</option>
+                                        <option value="deportivo">Deportivo</option>
+                                        <option value="sandalia">Sandalia</option>
+                                        <option value="bota">Bota</option>
+                                        <option value="casual">Casual</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Descripción</label>
+                                    <textarea id="templateDescription" class="form-control" rows="3"></textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Precio Base</label>
+                                    <input type="number" id="templatePrice" class="form-control" step="0.01" required>
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-plus-circle"></i> Crear Plantilla
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="card-title mb-0">Plantillas Registradas</h5>
+                                <input type="text" id="templateSearch" class="form-control" 
+                                       style="width: 250px;" placeholder="Buscar plantillas...">
+                            </div>
+                            <div id="templatesList">
+                                <!-- Templates will be displayed here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Products Tab -->
+        <div id="products" class="tab-content">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title mb-0">Productos por Talla</h5>
+                        <div class="d-flex gap-2">
+                            <select id="productTemplateFilter" class="form-select" style="width: auto;">
+                                <option value="">Todas las plantillas</option>
+                            </select>
+                            <select id="productSizeFilter" class="form-select" style="width: auto;">
+                                <option value="">Todas las tallas</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="productsList">
+                        <!-- Products will be displayed here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lots Tab -->
+        <div id="lots" class="tab-content">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title mb-0">Gestión de Lotes</h5>
+                        <div class="d-flex gap-2">
+                            <select id="lotStatusFilter" class="form-select" style="width: auto;">
+                                <option value="">Todos los estados</option>
+                                <option value="available">Disponible</option>
+                                <option value="partial">Parcial</option>
+                                <option value="sold">Vendido</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="lotsList">
+                        <!-- Lots will be displayed here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Inventory Tab -->
+        <div id="inventory" class="tab-content">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title mb-0">Inventario por Ubicación</h5>
+                        <select id="warehouseFilter" class="form-select" style="width: 250px;">
+                            <option value="">Todos los almacenes</option>
+                        </select>
+                    </div>
+                    <div id="inventoryList">
+                        <!-- Inventory will be displayed here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Transfers Tab -->
+        <div id="transfers" class="tab-content">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Documentos de Transferencia</h5>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <select id="transferStatusFilter" class="form-select">
+                                        <option value="">Todos los estados</option>
+                                        <option value="pending">Pendiente</option>
+                                        <option value="confirmed">Confirmado</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div id="transfersList">
+                                <!-- Transfers will be displayed here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Kardex Tab -->
+        <div id="kardex" class="tab-content">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Nivel de Reporte</label>
+                            <select id="kardexLevel" class="form-select">
+                                <option value="template">Por Plantilla</option>
+                                <option value="product">Por Producto+Talla</option>
+                                <option value="lot">Por Lote</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Plantilla</label>
+                            <select id="kardexTemplateFilter" class="form-select">
+                                <option value="">Todas</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Almacén</label>
+                            <select id="kardexWarehouseFilter" class="form-select">
+                                <option value="">Todos</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">&nbsp;</label>
+                            <button id="generateKardex" class="btn btn-primary d-block w-100">
+                                <i class="bi bi-file-earmark-spreadsheet"></i> Generar Reporte
+                            </button>
+                        </div>
+                    </div>
+                    <div id="kardexReport">
+                        <!-- Kardex report will be displayed here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    
+    <!-- Generate Products Modal -->
+    <div class="modal fade" id="generateProductsModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Generar Productos y Lotes</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Rango de Tallas</label>
+                        <div class="row">
+                            <div class="col-6">
+                                <input type="number" id="sizeFrom" class="form-control" 
+                                       placeholder="Desde (ej: 36)" min="30" max="50" value="36">
+                            </div>
+                            <div class="col-6">
+                                <input type="number" id="sizeTo" class="form-control" 
+                                       placeholder="Hasta (ej: 42)" min="30" max="50" value="42">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Cantidad de Lotes por Talla</label>
+                        <input type="number" id="lotsPerSize" class="form-control" 
+                               placeholder="Ej: 2" min="1" max="10" value="1">
+                    </div>
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> 
+                        Se generarán productos para cada talla y lotes de 12 pares cada uno con números de serie únicos.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" id="confirmGenerate" class="btn btn-primary">
+                        <i class="bi bi-gear"></i> Generar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirm Transfer Modal -->
+    <div class="modal fade" id="confirmTransferModal">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirmar Recepción de Transferencia</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="transferDetails">
+                        <!-- Transfer details will be displayed here -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" id="confirmTransferBtn" class="btn btn-success">
+                        <i class="bi bi-check-circle"></i> Confirmar Recepción
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // =================== MODELS ===================
+        
+        class ProductTemplate {
+            constructor(code, name, category, description, price) {
+                this.id = this.generateId();
+                this.code = code;
+                this.name = name;
+                this.category = category;
+                this.description = description;
+                this.price = parseFloat(price);
+                this.createdAt = new Date().toISOString();
+            }
+            
+            generateId() {
+                return 'tpl_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            }
+        }
+
+        class Product {
+            constructor(templateId, size) {
+                this.id = this.generateId();
+                this.templateId = templateId;
+                this.size = size;
+                this.createdAt = new Date().toISOString();
+            }
+            
+            generateId() {
+                return 'prd_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            }
+        }
+
+        class Lot {
+            constructor(productId, lotNumber) {
+                this.id = this.generateId();
+                this.productId = productId;
+                this.lotNumber = lotNumber;
+                this.quantity = 12; // Always 12 pairs per lot
+                this.createdAt = new Date().toISOString();
+            }
+            
+            generateId() {
+                return 'lot_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            }
+        }
+
+        class SerialNumber {
+            constructor(lotId, serialNumber) {
+                this.id = this.generateId();
+                this.lotId = lotId;
+                this.serialNumber = serialNumber;
+                this.currentWarehouse = 'suppliers'; // Initial location
+                this.status = 'available'; // available, sold, returned
+                this.createdAt = new Date().toISOString();
+            }
+            
+            generateId() {
+                return 'ser_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            }
+        }
+
+        class StockMove {
+            constructor(serialNumberId, fromWarehouse, toWarehouse, operation, transferDocumentId = null) {
+                this.id = this.generateId();
+                this.serialNumberId = serialNumberId;
+                this.fromWarehouse = fromWarehouse;
+                this.toWarehouse = toWarehouse;
+                this.operation = operation; // transfer, sale, return
+                this.transferDocumentId = transferDocumentId;
+                this.timestamp = new Date().toISOString();
+                this.user = 'Admin'; // In a real app, get from auth
+            }
+            
+            generateId() {
+                return 'mov_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            }
+        }
+
+        class TransferDocument {
+            constructor(fromWarehouse, toWarehouse, serialNumbers) {
+                this.id = this.generateId();
+                this.documentNumber = this.generateDocumentNumber();
+                this.fromWarehouse = fromWarehouse;
+                this.toWarehouse = toWarehouse;
+                this.serialNumbers = serialNumbers; // Array of serial number IDs
+                this.status = 'pending'; // pending, confirmed
+                this.createdAt = new Date().toISOString();
+                this.confirmedAt = null;
+                this.createdBy = 'Admin';
+                this.confirmedBy = null;
+            }
+            
+            generateId() {
+                return 'trf_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            }
+            
+            generateDocumentNumber() {
+                const counter = parseInt(localStorage.getItem('transferCounter') || '0') + 1;
+                localStorage.setItem('transferCounter', counter.toString());
+                return 'TR-' + counter.toString().padStart(6, '0');
+            }
+        }
+
+        class Sale {
+            constructor(serialNumberId, salePrice, customerInfo = null) {
+                this.id = this.generateId();
+                this.serialNumberId = serialNumberId;
+                this.salePrice = parseFloat(salePrice);
+                this.customerInfo = customerInfo;
+                this.timestamp = new Date().toISOString();
+                this.user = 'Admin';
+            }
+            
+            generateId() {
+                return 'sal_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            }
+        }
+
+        // =================== DATA MANAGER ===================
+        
+        class DataManager {
+            constructor() {
+                this.warehouses = {
+                    'main': 'Almacén Principal',
+                    'production': 'Sistema Producción',
+                    'store_center': 'Tienda Centro',
+                    'store_north': 'Tienda Norte',
+                    'store_south': 'Tienda Sur',
+                    'transit': 'En Tránsito',
+                    'clients': 'Clientes',
+                    'suppliers': 'Proveedores'
+                };
+                
+                this.physicalWarehouses = ['main', 'production', 'store_center', 'store_north', 'store_south'];
+                this.storeWarehouses = ['store_center', 'store_north', 'store_south'];
+                
+                this.initializeData();
+            }
+            
+            initializeData() {
+                // Initialize sample data if empty
+                if (!this.getTemplates().length) {
+                    this.createSampleData();
+                }
+            }
+            
+            createSampleData() {
+                // Create sample templates
+                const template1 = new ProductTemplate('ZAP001', 'Zapato Formal Negro', 'formal', 'Zapato formal de cuero negro para oficina', 150.00);
+                const template2 = new ProductTemplate('DEP001', 'Zapatilla Deportiva Blanca', 'deportivo', 'Zapatilla deportiva para running', 120.00);
+                
+                this.saveTemplate(template1);
+                this.saveTemplate(template2);
+            }
+            
+            // Generic storage methods
+            save(key, data) {
+                const items = this.getAll(key);
+                const existingIndex = items.findIndex(item => item.id === data.id);
+                
+                if (existingIndex >= 0) {
+                    items[existingIndex] = data;
+                } else {
+                    items.push(data);
+                }
+                
+                localStorage.setItem(key, JSON.stringify(items));
+            }
+            
+            getAll(key) {
+                const data = localStorage.getItem(key);
+                return data ? JSON.parse(data) : [];
+            }
+            
+            getById(key, id) {
+                const items = this.getAll(key);
+                return items.find(item => item.id === id);
+            }
+            
+            deleteById(key, id) {
+                const items = this.getAll(key);
+                const filtered = items.filter(item => item.id !== id);
+                localStorage.setItem(key, JSON.stringify(filtered));
+            }
+            
+            // Specific methods for each entity
+            saveTemplate(template) { this.save('templates', template); }
+            getTemplates() { return this.getAll('templates'); }
+            getTemplateById(id) { return this.getById('templates', id); }
+            
+            saveProduct(product) { this.save('products', product); }
+            getProducts() { return this.getAll('products'); }
+            getProductById(id) { return this.getById('products', id); }
+            getProductsByTemplate(templateId) {
+                return this.getProducts().filter(p => p.templateId === templateId);
+            }
+            
+            saveLot(lot) { this.save('lots', lot); }
+            getLots() { return this.getAll('lots'); }
+            getLotById(id) { return this.getById('lots', id); }
+            getLotsByProduct(productId) {
+                return this.getLots().filter(l => l.productId === productId);
+            }
+            
+            saveSerialNumber(serial) { this.save('serialNumbers', serial); }
+            getSerialNumbers() { return this.getAll('serialNumbers'); }
+            getSerialNumberById(id) { return this.getById('serialNumbers', id); }
+            getSerialNumberBySerial(serialNumber) {
+                return this.getSerialNumbers().find(s => s.serialNumber === serialNumber);
+            }
+            getSerialNumbersByLot(lotId) {
+                return this.getSerialNumbers().filter(s => s.lotId === lotId);
+            }
+            
+            saveStockMove(move) { this.save('stockMoves', move); }
+            getStockMoves() { return this.getAll('stockMoves'); }
+            getStockMovesBySerial(serialNumberId) {
+                return this.getStockMoves().filter(m => m.serialNumberId === serialNumberId);
+            }
+            
+            saveTransferDocument(transfer) { this.save('transferDocuments', transfer); }
+            getTransferDocuments() { return this.getAll('transferDocuments'); }
+            getTransferDocumentById(id) { return this.getById('transferDocuments', id); }
+            
+            saveSale(sale) { this.save('sales', sale); }
+            getSales() { return this.getAll('sales'); }
+            getSalesBySerial(serialNumberId) {
+                return this.getSales().filter(s => s.serialNumberId === serialNumberId);
+            }
+            
+            // Business logic methods
+            generateProductsAndLots(templateId, sizeFrom, sizeTo, lotsPerSize) {
+                const template = this.getTemplateById(templateId);
+                if (!template) throw new Error('Template not found');
+                
+                let lastLotNumber = parseInt(localStorage.getItem('lastLotNumber') || '100000');
+                const results = {
+                    products: [],
+                    lots: [],
+                    serialNumbers: []
+                };
+                
+                for (let size = sizeFrom; size <= sizeTo; size++) {
+                    // Create product for this size
+                    const product = new Product(templateId, size);
+                    this.saveProduct(product);
+                    results.products.push(product);
+                    
+                    // Create lots for this product
+                    for (let lotIndex = 0; lotIndex < lotsPerSize; lotIndex++) {
+                        lastLotNumber++;
+                        const lot = new Lot(product.id, 'L' + lastLotNumber.toString());
+                        this.saveLot(lot);
+                        results.lots.push(lot);
+                        
+                        // Create 12 serial numbers for this lot
+                        for (let serialIndex = 1; serialIndex <= 12; serialIndex++) {
+                            const serialNumber = lastLotNumber.toString() + '-' + serialIndex.toString().padStart(2, '0');
+                            const serial = new SerialNumber(lot.id, serialNumber);
+                            this.saveSerialNumber(serial);
+                            results.serialNumbers.push(serial);
+                        }
+                    }
+                }
+                
+                localStorage.setItem('lastLotNumber', lastLotNumber.toString());
+                return results;
+            }
+            
+            processSerialOperation(serialNumber, operation, destinationWarehouse) {
+                const serial = this.getSerialNumberBySerial(serialNumber);
+                if (!serial) throw new Error('Número de serie no encontrado');
+                
+                const currentWarehouse = serial.currentWarehouse;
+                
+                // Validate operation
+                switch (operation) {
+                    case 'sale':
+                        if (!this.storeWarehouses.includes(currentWarehouse)) {
+                            throw new Error('Las ventas solo se pueden realizar desde tiendas');
+                        }
+                        if (serial.status !== 'available') {
+                            throw new Error('El producto no está disponible para venta');
+                        }
+                        destinationWarehouse = 'clients';
+                        break;
+                        
+                    case 'return':
+                        if (currentWarehouse !== 'clients') {
+                            throw new Error('Solo se pueden devolver productos que estén con clientes');
+                        }
+                        if (!destinationWarehouse || !this.storeWarehouses.includes(destinationWarehouse)) {
+                            throw new Error('Las devoluciones deben ir a una tienda');
+                        }
+                        break;
+                        
+                    case 'transfer':
+                        if (!this.physicalWarehouses.includes(currentWarehouse)) {
+                            throw new Error('Solo se pueden transferir productos desde almacenes físicos');
+                        }
+                        if (!destinationWarehouse || !this.physicalWarehouses.includes(destinationWarehouse)) {
+                            throw new Error('Las transferencias deben ser entre almacenes físicos');
+                        }
+                        break;
+                }
+                
+                let transferDocument = null;
+                let finalDestination = destinationWarehouse;
+                
+                // For transfers between physical warehouses, create transfer document
+                if (operation === 'transfer') {
+                    transferDocument = new TransferDocument(currentWarehouse, destinationWarehouse, [serial.id]);
+                    this.saveTransferDocument(transferDocument);
+                    finalDestination = 'transit'; // First move to transit
+                }
+                
+                // Create stock move
+                const stockMove = new StockMove(
+                    serial.id,
+                    currentWarehouse,
+                    finalDestination,
+                    operation,
+                    transferDocument ? transferDocument.id : null
+                );
+                this.saveStockMove(stockMove);
+                
+                // Update serial number
+                serial.currentWarehouse = finalDestination;
+                if (operation === 'sale') {
+                    serial.status = 'sold';
+                    // Create sale record
+                    const template = this.getTemplateById(this.getProductById(this.getLotById(serial.lotId).productId).templateId);
+                    const sale = new Sale(serial.id, template.price);
+                    this.saveSale(sale);
+                } else if (operation === 'return') {
+                    serial.status = 'available';
+                }
+                this.saveSerialNumber(serial);
+                
+                return {
+                    serial,
+                    stockMove,
+                    transferDocument,
+                    operation
+                };
+            }
+            
+            confirmTransfer(transferDocumentId) {
+                const transfer = this.getTransferDocumentById(transferDocumentId);
+                if (!transfer) throw new Error('Documento de transferencia no encontrado');
+                if (transfer.status !== 'pending') throw new Error('La transferencia ya fue confirmada');
+                
+                // Move all serial numbers from transit to final destination
+                transfer.serialNumbers.forEach(serialId => {
+                    const serial = this.getSerialNumberById(serialId);
+                    if (serial && serial.currentWarehouse === 'transit') {
+                        // Create final stock move
+                        const stockMove = new StockMove(
+                            serial.id,
+                            'transit',
+                            transfer.toWarehouse,
+                            'transfer_confirm',
+                            transfer.id
+                        );
+                        this.saveStockMove(stockMove);
+                        
+                        // Update serial location
+                        serial.currentWarehouse = transfer.toWarehouse;
+                        this.saveSerialNumber(serial);
+                    }
+                });
+                
+                // Mark transfer as confirmed
+                transfer.status = 'confirmed';
+                transfer.confirmedAt = new Date().toISOString();
+                transfer.confirmedBy = 'Admin';
+                this.saveTransferDocument(transfer);
+                
+                return transfer;
+            }
+            
+            getInventoryByWarehouse(warehouseId = null) {
+                const serialNumbers = this.getSerialNumbers();
+                const inventory = {};
+                
+                serialNumbers.forEach(serial => {
+                    if (warehouseId && serial.currentWarehouse !== warehouseId) return;
+                    
+                    const lot = this.getLotById(serial.lotId);
+                    const product = this.getProductById(lot.productId);
+                    const template = this.getTemplateById(product.templateId);
+                    
+                    const key = `${template.code}-${product.size}`;
+                    
+                    if (!inventory[key]) {
+                        inventory[key] = {
+                            template,
+                            product,
+                            warehouses: {},
+                            totalQuantity: 0,
+                            totalValue: 0
+                        };
+                    }
+                    
+                    if (!inventory[key].warehouses[serial.currentWarehouse]) {
+                        inventory[key].warehouses[serial.currentWarehouse] = {
+                            quantity: 0,
+                            serials: []
+                        };
+                    }
+                    
+                    inventory[key].warehouses[serial.currentWarehouse].quantity++;
+                    inventory[key].warehouses[serial.currentWarehouse].serials.push(serial);
+                    inventory[key].totalQuantity++;
+                    inventory[key].totalValue += template.price;
+                });
+                
+                return inventory;
+            }
+            
+            generateKardex(level, templateId = null, warehouseId = null) {
+                const serialNumbers = this.getSerialNumbers();
+                const stockMoves = this.getStockMoves();
+                const kardex = {};
+                
+                serialNumbers.forEach(serial => {
+                    const lot = this.getLotById(serial.lotId);
+                    const product = this.getProductById(lot.productId);
+                    const template = this.getTemplateById(product.templateId);
+                    
+                    if (templateId && template.id !== templateId) return;
+                    
+                    let key;
+                    switch (level) {
+                        case 'template':
+                            key = template.code;
+                            break;
+                        case 'product':
+                            key = `${template.code}-${product.size}`;
+                            break;
+                        case 'lot':
+                            key = `${template.code}-${product.size}-${lot.lotNumber}`;
+                            break;
+                    }
+                    
+                    if (!kardex[key]) {
+                        kardex[key] = {
+                            template,
+                            product: level !== 'template' ? product : null,
+                            lot: level === 'lot' ? lot : null,
+                            movements: [],
+                            summary: {
+                                entries: 0,
+                                transfers: 0,
+                                sales: 0,
+                                returns: 0,
+                                currentStock: 0,
+                                currentValue: 0
+                            }
+                        };
+                    }
+                    
+                    // Get movements for this serial
+                    const serialMoves = stockMoves.filter(move => move.serialNumberId === serial.id);
+                    kardex[key].movements = kardex[key].movements.concat(serialMoves);
+                    
+                    // Update summary
+                    if (serial.currentWarehouse !== 'clients') {
+                        if (!warehouseId || serial.currentWarehouse === warehouseId) {
+                            kardex[key].summary.currentStock++;
+                            kardex[key].summary.currentValue += template.price;
+                        }
+                    }
+                    
+                    serialMoves.forEach(move => {
+                        switch (move.operation) {
+                            case 'sale':
+                                kardex[key].summary.sales++;
+                                break;
+                            case 'return':
+                                kardex[key].summary.returns++;
+                                break;
+                            case 'transfer':
+                                kardex[key].summary.transfers++;
+                                break;
+                        }
+                    });
+                });
+                
+                return kardex;
+            }
+            
+            getSerialInfo(serialNumber) {
+                const serial = this.getSerialNumberBySerial(serialNumber);
+                if (!serial) return null;
+                
+                const lot = this.getLotById(serial.lotId);
+                const product = this.getProductById(lot.productId);
+                const template = this.getTemplateById(product.templateId);
+                const moves = this.getStockMovesBySerial(serial.id);
+                
+                return {
+                    serial,
+                    lot,
+                    product,
+                    template,
+                    moves: moves.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+                };
+            }
+        }
+
+        // =================== CONTROLLERS ===================
+        
+        class ScannerController {
+            constructor(dataManager, view) {
+                this.dataManager = dataManager;
+                this.view = view;
+                this.initializeEvents();
+            }
+            
+            initializeEvents() {
+                document.getElementById('serialInput').addEventListener('input', (e) => {
+                    this.handleSerialInput(e.target.value);
+                });
+                
+                document.getElementById('operationType').addEventListener('change', (e) => {
+                    this.handleOperationChange(e.target.value);
+                });
+                
+                document.getElementById('processSerial').addEventListener('click', () => {
+                    this.processSerial();
+                });
+            }
+            
+            handleSerialInput(serialNumber) {
+                if (serialNumber.length >= 6) {
+                    const info = this.dataManager.getSerialInfo(serialNumber);
+                    this.view.updateSerialInfo(info);
+                } else {
+                    this.view.clearSerialInfo();
+                }
+            }
+            
+            handleOperationChange(operation) {
+                this.view.updateWarehouseOptions(operation, this.dataManager.warehouses, this.dataManager.physicalWarehouses, this.dataManager.storeWarehouses);
+            }
+            
+            processSerial() {
+                const serialNumber = document.getElementById('serialInput').value.trim();
+                const operation = document.getElementById('operationType').value;
+                const destination = document.getElementById('destinationWarehouse').value;
+                
+                if (!serialNumber) {
+                    this.view.showAlert('error', 'Ingrese un número de serie');
+                    return;
+                }
+                
+                if (operation === 'transfer' && !destination) {
+                    this.view.showAlert('error', 'Seleccione un almacén de destino');
+                    return;
+                }
+                
+                try {
+                    const result = this.dataManager.processSerialOperation(serialNumber, operation, destination);
+                    this.view.showAlert('success', 'Operación procesada exitosamente');
+                    this.view.addRecentOperation(result);
+                    document.getElementById('serialInput').value = '';
+                    this.view.clearSerialInfo();
+                    
+                    // Refresh other views if needed
+                    if (window.currentView) {
+                        window.currentView.refresh();
+                    }
+                } catch (error) {
+                    this.view.showAlert('error', error.message);
+                }
+            }
+        }
+        
+        class TemplateController {
+            constructor(dataManager, view) {
+                this.dataManager = dataManager;
+                this.view = view;
+                this.initializeEvents();
+            }
+            
+            initializeEvents() {
+                document.getElementById('templateForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.createTemplate();
+                });
+                
+                document.getElementById('templateSearch').addEventListener('input', (e) => {
+                    this.view.filterTemplates(e.target.value);
+                });
+            }
+            
+            createTemplate() {
+                const code = document.getElementById('templateCode').value.trim();
+                const name = document.getElementById('templateName').value.trim();
+                const category = document.getElementById('templateCategory').value;
+                const description = document.getElementById('templateDescription').value.trim();
+                const price = document.getElementById('templatePrice').value;
+                
+                if (!code || !name || !category || !price) {
+                    this.view.showAlert('error', 'Complete todos los campos obligatorios');
+                    return;
+                }
+                
+                // Check if code already exists
+                const existing = this.dataManager.getTemplates().find(t => t.code === code);
+                if (existing) {
+                    this.view.showAlert('error', 'El código ya existe');
+                    return;
+                }
+                
+                try {
+                    const template = new ProductTemplate(code, name, category, description, price);
+                    this.dataManager.saveTemplate(template);
+                    this.view.showAlert('success', 'Plantilla creada exitosamente');
+                    document.getElementById('templateForm').reset();
+                    this.view.refreshTemplates();
+                } catch (error) {
+                    this.view.showAlert('error', error.message);
+                }
+            }
+            
+            generateProducts(templateId) {
+                const sizeFrom = parseInt(document.getElementById('sizeFrom').value) || 36;
+                const sizeTo = parseInt(document.getElementById('sizeTo').value) || 42;
+                const lotsPerSize = parseInt(document.getElementById('lotsPerSize').value) || 1;
+                
+                if (sizeFrom > sizeTo) {
+                    this.view.showAlert('error', 'El rango de tallas no es válido');
+                    return;
+                }
+                
+                try {
+                    const result = this.dataManager.generateProductsAndLots(templateId, sizeFrom, sizeTo, lotsPerSize);
+                    this.view.showAlert('success', `Generados: ${result.products.length} productos, ${result.lots.length} lotes, ${result.serialNumbers.length} números de serie`);
+                    this.view.refreshTemplates();
+                    
+                    // Close modal
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('generateProductsModal'));
+                    modal.hide();
+                } catch (error) {
+                    this.view.showAlert('error', error.message);
+                }
+            }
+        }
+        
+        class ProductController {
+            constructor(dataManager, view) {
+                this.dataManager = dataManager;
+                this.view = view;
+                this.initializeEvents();
+            }
+            
+            initializeEvents() {
+                document.getElementById('productTemplateFilter').addEventListener('change', () => {
+                    this.view.refreshProducts();
+                });
+                
+                document.getElementById('productSizeFilter').addEventListener('change', () => {
+                    this.view.refreshProducts();
+                });
+            }
+        }
+        
+        class LotController {
+            constructor(dataManager, view) {
+                this.dataManager = dataManager;
+                this.view = view;
+                this.initializeEvents();
+            }
+            
+            initializeEvents() {
+                document.getElementById('lotStatusFilter').addEventListener('change', () => {
+                    this.view.refreshLots();
+                });
+            }
+        }
+        
+        class InventoryController {
+            constructor(dataManager, view) {
+                this.dataManager = dataManager;
+                this.view = view;
+                this.initializeEvents();
+            }
+            
+            initializeEvents() {
+                document.getElementById('warehouseFilter').addEventListener('change', () => {
+                    this.view.refreshInventory();
+                });
+            }
+        }
+        
+        class TransferController {
+            constructor(dataManager, view) {
+                this.dataManager = dataManager;
+                this.view = view;
+                this.initializeEvents();
+            }
+            
+            initializeEvents() {
+                document.getElementById('transferStatusFilter').addEventListener('change', () => {
+                    this.view.refreshTransfers();
+                });
+                
+                document.getElementById('confirmTransferBtn').addEventListener('click', () => {
+                    this.confirmTransfer();
+                });
+            }
+            
+            confirmTransfer() {
+                const transferId = document.getElementById('confirmTransferBtn').dataset.transferId;
+                
+                try {
+                    this.dataManager.confirmTransfer(transferId);
+                    this.view.showAlert('success', 'Transferencia confirmada exitosamente');
+                    this.view.refreshTransfers();
+                    
+                    // Close modal
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('confirmTransferModal'));
+                    modal.hide();
+                } catch (error) {
+                    this.view.showAlert('error', error.message);
+                }
+            }
+        }
+        
+        class KardexController {
+            constructor(dataManager, view) {
+                this.dataManager = dataManager;
+                this.view = view;
+                this.initializeEvents();
+            }
+            
+            initializeEvents() {
+                document.getElementById('generateKardex').addEventListener('click', () => {
+                    this.generateKardex();
+                });
+            }
+            
+            generateKardex() {
+                const level = document.getElementById('kardexLevel').value;
+                const templateId = document.getElementById('kardexTemplateFilter').value || null;
+                const warehouseId = document.getElementById('kardexWarehouseFilter').value || null;
+                
+                const kardex = this.dataManager.generateKardex(level, templateId, warehouseId);
+                this.view.displayKardex(kardex, level);
+            }
+        }
+
+        // =================== VIEWS ===================
+        
+        class ScannerView {
+            constructor() {
+                this.recentOperations = [];
+            }
+            
+            updateSerialInfo(info) {
+                const container = document.getElementById('serialInfo');
+                
+                if (!info) {
+                    container.innerHTML = '<p class="text-muted">Número de serie no encontrado</p>';
+                    return;
+                }
+                
+                const { serial, lot, product, template, moves } = info;
+                
+                container.innerHTML = `
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Producto</h6>
+                            <p><strong>${template.name}</strong><br>
+                            Código: ${template.code}<br>
+                            Talla: ${product.size}<br>
+                            Precio: S/ ${template.price.toFixed(2)}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Estado Actual</h6>
+                            <p>Ubicación: <span class="warehouse-badge warehouse-${serial.currentWarehouse}">${dataManager.warehouses[serial.currentWarehouse]}</span><br>
+                            Estado: <span class="badge bg-${serial.status === 'available' ? 'success' : serial.status === 'sold' ? 'danger' : 'warning'}">${serial.status}</span><br>
+                            Lote: ${lot.lotNumber}</p>
+                        </div>
+                    </div>
+                    ${moves.length > 0 ? `
+                        <h6 class="mt-3">Últimos Movimientos</h6>
+                        <div style="max-height: 150px; overflow-y: auto;">
+                            ${moves.slice(0, 5).map(move => `
+                                <small class="d-block text-muted">
+                                    ${new Date(move.timestamp).toLocaleString()} - 
+                                    ${move.operation.toUpperCase()}: 
+                                    ${dataManager.warehouses[move.fromWarehouse]} → ${dataManager.warehouses[move.toWarehouse]}
+                                </small>
+                            `).join('')}
+                        </div>
+                    ` : ''}
+                `;
+            }
+            
+            clearSerialInfo() {
+                document.getElementById('serialInfo').innerHTML = '<p class="text-muted">Escanee un número de serie para ver la información del producto</p>';
+            }
+            
+            updateWarehouseOptions(operation, warehouses, physicalWarehouses, storeWarehouses) {
+                const container = document.getElementById('warehouseContainer');
+                const select = document.getElementById('destinationWarehouse');
+                
+                if (operation === 'sale') {
+                    container.style.display = 'none';
+                    select.value = '';
+                } else if (operation === 'return') {
+                    container.style.display = 'block';
+                    select.innerHTML = '<option value="">Seleccionar tienda...</option>' +
+                        storeWarehouses.map(id => `<option value="${id}">${warehouses[id]}</option>`).join('');
+                } else if (operation === 'transfer') {
+                    container.style.display = 'block';
+                    select.innerHTML = '<option value="">Seleccionar almacén...</option>' +
+                        physicalWarehouses.map(id => `<option value="${id}">${warehouses[id]}</option>`).join('');
+                }
+            }
+            
+            addRecentOperation(result) {
+                this.recentOperations.unshift({
+                    ...result,
+                    timestamp: new Date().toLocaleString()
+                });
+                
+                if (this.recentOperations.length > 10) {
+                    this.recentOperations = this.recentOperations.slice(0, 10);
+                }
+                
+                this.refreshRecentOperations();
+            }
+            
+            refreshRecentOperations() {
+                const container = document.getElementById('recentOperations');
+                
+                if (this.recentOperations.length === 0) {
+                    container.innerHTML = '<p class="text-muted">No hay operaciones recientes</p>';
+                    return;
+                }
+                
+                container.innerHTML = this.recentOperations.map(op => `
+                    <div class="border-bottom pb-2 mb-2">
+                        <small class="text-muted">${op.timestamp}</small><br>
+                        <strong>${op.operation.toUpperCase()}</strong>: ${op.serial.serialNumber}<br>
+                        <small>${dataManager.warehouses[op.stockMove.fromWarehouse]} → ${dataManager.warehouses[op.stockMove.toWarehouse]}</small>
+                        ${op.transferDocument ? `<br><small class="text-info">Doc: ${op.transferDocument.documentNumber}</small>` : ''}
+                    </div>
+                `).join('');
+            }
+            
+            showAlert(type, message) {
+                // Create alert element
+                const alertDiv = document.createElement('div');
+                alertDiv.className = `alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show position-fixed`;
+                alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 400px;';
+                alertDiv.innerHTML = `
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                
+                document.body.appendChild(alertDiv);
+                
+                // Auto remove after 5 seconds
+                setTimeout(() => {
+                    if (alertDiv.parentNode) {
+                        alertDiv.remove();
+                    }
+                }, 5000);
+            }
+        }
+        
+        class TemplateView {
+            constructor() {
+                this.templates = [];
+                this.filteredTemplates = [];
+            }
+            
+            refreshTemplates() {
+                this.templates = dataManager.getTemplates();
+                this.filteredTemplates = [...this.templates];
+                this.renderTemplates();
+                this.updateFilters();
+            }
+            
+            renderTemplates() {
+                const container = document.getElementById('templatesList');
+                
+                if (this.filteredTemplates.length === 0) {
+                    container.innerHTML = '<p class="text-muted">No hay plantillas registradas</p>';
+                    return;
+                }
+                
+                container.innerHTML = this.filteredTemplates.map(template => {
+                    const products = dataManager.getProductsByTemplate(template.id);
+                    const totalStock = products.reduce((total, product) => {
+                        const lots = dataManager.getLotsByProduct(product.id);
+                        return total + lots.reduce((lotTotal, lot) => {
+                            const serials = dataManager.getSerialNumbersByLot(lot.id);
+                            return lotTotal + serials.filter(s => s.currentWarehouse !== 'clients').length;
+                        }, 0);
+                    }, 0);
+                    
+                    return `
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <h6 class="card-title">${template.name}</h6>
+                                        <p class="card-text">
+                                            <strong>Código:</strong> ${template.code}<br>
+                                            <strong>Categoría:</strong> <span class="badge bg-secondary">${template.category}</span><br>
+                                            <strong>Precio:</strong> S/ ${template.price.toFixed(2)}<br>
+                                            ${template.description ? `<strong>Descripción:</strong> ${template.description}<br>` : ''}
+                                            <strong>Stock Total:</strong> <span class="badge bg-info">${totalStock} pares</span>
+                                        </p>
+                                    </div>
+                                    <div class="col-md-4 text-end">
+                                        <button class="btn btn-primary btn-sm mb-2" 
+                                                onclick="showGenerateModal('${template.id}')">
+                                            <i class="bi bi-gear"></i> Generar Productos
+                                        </button><br>
+                                        <small class="text-muted">Productos: ${products.length}</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+            
+            filterTemplates(searchTerm) {
+                const term = searchTerm.toLowerCase();
+                this.filteredTemplates = this.templates.filter(template => 
+                    template.name.toLowerCase().includes(term) ||
+                    template.code.toLowerCase().includes(term) ||
+                    template.category.toLowerCase().includes(term)
+                );
+                this.renderTemplates();
+            }
+            
+            updateFilters() {
+                // Update template filters in other views
+                const templateSelects = document.querySelectorAll('#productTemplateFilter, #kardexTemplateFilter');
+                templateSelects.forEach(select => {
+                    const currentValue = select.value;
+                    select.innerHTML = '<option value="">Todas las plantillas</option>' +
+                        this.templates.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+                    select.value = currentValue;
+                });
+            }
+            
+            showAlert(type, message) {
+                scannerView.showAlert(type, message);
+            }
+        }
+        
+        class ProductView {
+            refreshProducts() {
+                const templateFilter = document.getElementById('productTemplateFilter').value;
+                const sizeFilter = document.getElementById('productSizeFilter').value;
+                
+                let products = dataManager.getProducts();
+                
+                if (templateFilter) {
+                    products = products.filter(p => p.templateId === templateFilter);
+                }
+                
+                if (sizeFilter) {
+                    products = products.filter(p => p.size.toString() === sizeFilter);
+                }
+                
+                this.renderProducts(products);
+                this.updateSizeFilter();
+            }
+            
+            renderProducts(products) {
+                const container = document.getElementById('productsList');
+                
+                if (products.length === 0) {
+                    container.innerHTML = '<p class="text-muted">No hay productos registrados</p>';
+                    return;
+                }
+                
+                // Group by template
+                const grouped = {};
+                products.forEach(product => {
+                    const template = dataManager.getTemplateById(product.templateId);
+                    if (!grouped[template.id]) {
+                        grouped[template.id] = {
+                            template,
+                            products: []
+                        };
+                    }
+                    grouped[template.id].products.push(product);
+                });
+                
+                container.innerHTML = Object.values(grouped).map(group => `
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h6 class="card-title">${group.template.name} (${group.template.code})</h6>
+                            <div class="row">
+                                ${group.products.map(product => {
+                                    const lots = dataManager.getLotsByProduct(product.id);
+                                    const totalStock = lots.reduce((total, lot) => {
+                                        const serials = dataManager.getSerialNumbersByLot(lot.id);
+                                        return total + serials.filter(s => s.currentWarehouse !== 'clients').length;
+                                    }, 0);
+                                    
+                                    return `
+                                        <div class="col-md-2 col-sm-3 col-4 mb-2">
+                                            <div class="text-center p-2 border rounded">
+                                                <div class="fw-bold">Talla ${product.size}</div>
+                                                <span class="badge bg-${totalStock > 0 ? 'success' : 'danger'} stock-badge">
+                                                    ${totalStock} pares
+                                                </span>
+                                                <div class="small text-muted">${lots.length} lotes</div>
+                                            </div>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            
+            updateSizeFilter() {
+                const sizeSelect = document.getElementById('productSizeFilter');
+                const currentValue = sizeSelect.value;
+                
+                // Get unique sizes
+                const sizes = [...new Set(dataManager.getProducts().map(p => p.size))].sort((a, b) => a - b);
+                
+                sizeSelect.innerHTML = '<option value="">Todas las tallas</option>' +
+                    sizes.map(size => `<option value="${size}">Talla ${size}</option>`).join('');
+                
+                sizeSelect.value = currentValue;
+            }
+        }
+        
+        class LotView {
+            refreshLots() {
+                const statusFilter = document.getElementById('lotStatusFilter').value;
+                let lots = dataManager.getLots();
+                
+                // Calculate lot status
+                const lotsWithStatus = lots.map(lot => {
+                    const serials = dataManager.getSerialNumbersByLot(lot.id);
+                    const available = serials.filter(s => s.status === 'available').length;
+                    const sold = serials.filter(s => s.status === 'sold').length;
+                    
+                    let status;
+                    if (sold === 12) status = 'sold';
+                    else if (available === 12) status = 'available';
+                    else status = 'partial';
+                    
+                    return { ...lot, status, available, sold, serials };
+                });
+                
+                if (statusFilter) {
+                    lots = lotsWithStatus.filter(l => l.status === statusFilter);
+                } else {
+                    lots = lotsWithStatus;
+                }
+                
+                this.renderLots(lots);
+            }
+            
+            renderLots(lots) {
+                const container = document.getElementById('lotsList');
+                
+                if (lots.length === 0) {
+                    container.innerHTML = '<p class="text-muted">No hay lotes registrados</p>';
+                    return;
+                }
+                
+                container.innerHTML = lots.map(lot => {
+                    const product = dataManager.getProductById(lot.productId);
+                    const template = dataManager.getTemplateById(product.templateId);
+                    
+                    const statusColor = lot.status === 'available' ? 'success' : 
+                                      lot.status === 'sold' ? 'danger' : 'warning';
+                    
+                    return `
+                        <div class="card lot-card mb-3">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6 class="card-title">${lot.lotNumber}</h6>
+                                        <p class="card-text">
+                                            <strong>Producto:</strong> ${template.name}<br>
+                                            <strong>Talla:</strong> ${product.size}<br>
+                                            <strong>Código:</strong> ${template.code}
+                                        </p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="text-end">
+                                            <span class="badge bg-${statusColor} mb-2">${lot.status.toUpperCase()}</span><br>
+                                            <div class="small">
+                                                Disponibles: ${lot.available}/12<br>
+                                                Vendidos: ${lot.sold}/12<br>
+                                                Valor: S/ ${(template.price * lot.available).toFixed(2)}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row mt-2">
+                                    <div class="col-12">
+                                        <small class="text-muted">
+                                            <strong>Números de Serie:</strong><br>
+                                            ${lot.serials.slice(0, 6).map(s => `
+                                                <span class="badge bg-${s.status === 'available' ? 'success' : 'danger'} me-1 mb-1" style="font-size: 0.7em;">
+                                                    ${s.serialNumber}
+                                                </span>
+                                            `).join('')}
+                                            ${lot.serials.length > 6 ? `<span class="text-muted">... y ${lot.serials.length - 6} más</span>` : ''}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+        
+        class InventoryView {
+            refreshInventory() {
+                const warehouseFilter = document.getElementById('warehouseFilter').value;
+                const inventory = dataManager.getInventoryByWarehouse(warehouseFilter);
+                this.renderInventory(inventory, warehouseFilter);
+            }
+            
+            renderInventory(inventory, warehouseFilter) {
+                const container = document.getElementById('inventoryList');
+                
+                if (Object.keys(inventory).length === 0) {
+                    container.innerHTML = '<p class="text-muted">No hay inventario disponible</p>';
+                    return;
+                }
+                
+                const totalValue = Object.values(inventory).reduce((sum, item) => sum + item.totalValue, 0);
+                const totalQuantity = Object.values(inventory).reduce((sum, item) => sum + item.totalQuantity, 0);
+                
+                container.innerHTML = `
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card bg-primary text-white">
+                                <div class="card-body text-center">
+                                    <h4>${totalQuantity}</h4>
+                                    <p class="mb-0">Total de Pares</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card bg-success text-white">
+                                <div class="card-body text-center">
+                                    <h4>S/ ${totalValue.toFixed(2)}</h4>
+                                    <p class="mb-0">Valor Total del Inventario</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    ${Object.entries(inventory).map(([key, item]) => `
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6 class="card-title">${item.template.name}</h6>
+                                        <p class="card-text">
+                                            <strong>Código:</strong> ${item.template.code}<br>
+                                            ${item.product ? `<strong>Talla:</strong> ${item.product.size}<br>` : ''}
+                                            <strong>Precio:</strong> S/ ${item.template.price.toFixed(2)}<br>
+                                            <strong>Categoría:</strong> <span class="badge bg-secondary">${item.template.category}</span>
+                                        </p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="row">
+                                            ${Object.entries(item.warehouses).map(([warehouseId, warehouseData]) => `
+                                                <div class="col-12 mb-2">
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <span class="warehouse-badge warehouse-${warehouseId}">
+                                                            ${dataManager.warehouses[warehouseId]}
+                                                        </span>
+                                                        <span class="badge bg-info">${warehouseData.quantity} pares</span>
+                                                    </div>
+                                                </div>
+                                            `).join('')}
+                                        </div>
+                                        <div class="text-end mt-2">
+                                            <strong>Total: ${item.totalQuantity} pares</strong><br>
+                                            <strong>Valor: S/ ${item.totalValue.toFixed(2)}</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                `;
+            }
+            
+            updateWarehouseFilter() {
+                const warehouseSelect = document.getElementById('warehouseFilter');
+                const currentValue = warehouseSelect.value;
+                
+                warehouseSelect.innerHTML = '<option value="">Todos los almacenes</option>' +
+                    Object.entries(dataManager.warehouses).map(([id, name]) => 
+                        `<option value="${id}">${name}</option>`
+                    ).join('');
+                
+                warehouseSelect.value = currentValue;
+            }
+        }
+        
+        class TransferView {
+            refreshTransfers() {
+                const statusFilter = document.getElementById('transferStatusFilter').value;
+                let transfers = dataManager.getTransferDocuments();
+                
+                if (statusFilter) {
+                    transfers = transfers.filter(t => t.status === statusFilter);
+                }
+                
+                // Sort by creation date (newest first)
+                transfers.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                
+                this.renderTransfers(transfers);
+            }
+            
+            renderTransfers(transfers) {
+                const container = document.getElementById('transfersList');
+                
+                if (transfers.length === 0) {
+                    container.innerHTML = '<p class="text-muted">No hay documentos de transferencia</p>';
+                    return;
+                }
+                
+                container.innerHTML = transfers.map(transfer => {
+                    const serialNumbers = transfer.serialNumbers.map(id => dataManager.getSerialNumberById(id));
+                    const productInfo = this.getTransferProductInfo(serialNumbers);
+                    
+                    return `
+                        <div class="card mb-3 ${transfer.status === 'pending' ? 'transfer-pending' : ''}">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <h6 class="card-title">
+                                            ${transfer.documentNumber}
+                                            <span class="badge bg-${transfer.status === 'pending' ? 'warning' : 'success'} ms-2">
+                                                ${transfer.status.toUpperCase()}
+                                            </span>
+                                        </h6>
+                                        <p class="card-text">
+                                            <strong>Origen:</strong> 
+                                            <span class="warehouse-badge warehouse-${transfer.fromWarehouse}">
+                                                ${dataManager.warehouses[transfer.fromWarehouse]}
+                                            </span><br>
+                                            <strong>Destino:</strong> 
+                                            <span class="warehouse-badge warehouse-${transfer.toWarehouse}">
+                                                ${dataManager.warehouses[transfer.toWarehouse]}
+                                            </span><br>
+                                            <strong>Cantidad:</strong> ${transfer.serialNumbers.length} pares<br>
+                                            <strong>Creado:</strong> ${new Date(transfer.createdAt).toLocaleString()}<br>
+                                            ${transfer.confirmedAt ? `<strong>Confirmado:</strong> ${new Date(transfer.confirmedAt).toLocaleString()}<br>` : ''}
+                                            <strong>Usuario:</strong> ${transfer.createdBy}
+                                        </p>
+                                    </div>
+                                    <div class="col-md-4 text-end">
+                                        ${transfer.status === 'pending' ? `
+                                            <button class="btn btn-success btn-sm" 
+                                                    onclick="showConfirmTransferModal('${transfer.id}')">
+                                                <i class="bi bi-check-circle"></i> Confirmar Recepción
+                                            </button>
+                                        ` : `
+                                            <span class="text-success">
+                                                <i class="bi bi-check-circle-fill"></i> Confirmado
+                                            </span>
+                                        `}
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-3">
+                                    <h6>Productos en Transferencia:</h6>
+                                    <div class="row">
+                                        ${Object.entries(productInfo).map(([key, info]) => `
+                                            <div class="col-md-4 col-sm-6 mb-2">
+                                                <div class="border rounded p-2">
+                                                    <strong>${info.template.name}</strong><br>
+                                                    <small>Talla ${info.product.size} - ${info.quantity} pares</small>
+                                                </div>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+            
+            getTransferProductInfo(serialNumbers) {
+                const productInfo = {};
+                
+                serialNumbers.forEach(serial => {
+                    const lot = dataManager.getLotById(serial.lotId);
+                    const product = dataManager.getProductById(lot.productId);
+                    const template = dataManager.getTemplateById(product.templateId);
+                    
+                    const key = `${template.code}-${product.size}`;
+                    
+                    if (!productInfo[key]) {
+                        productInfo[key] = {
+                            template,
+                            product,
+                            quantity: 0
+                        };
+                    }
+                    
+                    productInfo[key].quantity++;
+                });
+                
+                return productInfo;
+            }
+            
+            showAlert(type, message) {
+                scannerView.showAlert(type, message);
+            }
+        }
+        
+        class KardexView {
+            displayKardex(kardex, level) {
+                const container = document.getElementById('kardexReport');
+                
+                if (Object.keys(kardex).length === 0) {
+                    container.innerHTML = '<p class="text-muted">No hay datos para mostrar</p>';
+                    return;
+                }
+                
+                const totalStock = Object.values(kardex).reduce((sum, item) => sum + item.summary.currentStock, 0);
+                const totalValue = Object.values(kardex).reduce((sum, item) => sum + item.summary.currentValue, 0);
+                const totalSales = Object.values(kardex).reduce((sum, item) => sum + item.summary.sales, 0);
+                
+                container.innerHTML = `
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="card bg-primary text-white">
+                                <div class="card-body text-center">
+                                    <h5>${totalStock}</h5>
+                                    <p class="mb-0">Stock Actual</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-success text-white">
+                                <div class="card-body text-center">
+                                    <h5>S/ ${totalValue.toFixed(2)}</h5>
+                                    <p class="mb-0">Valor Total</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-info text-white">
+                                <div class="card-body text-center">
+                                    <h5>${totalSales}</h5>
+                                    <p class="mb-0">Ventas Totales</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-warning text-white">
+                                <div class="card-body text-center">
+                                    <h5>${Object.keys(kardex).length}</h5>
+                                    <p class="mb-0">Items Únicos</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-striped kardex-table">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Código</th>
+                                    <th>Nombre</th>
+                                    ${level !== 'template' ? '<th>Talla</th>' : ''}
+                                    ${level === 'lot' ? '<th>Lote</th>' : ''}
+                                    <th>Stock Actual</th>
+                                    <th>Valor</th>
+                                    <th>Ventas</th>
+                                    <th>Transferencias</th>
+                                    <th>Devoluciones</th>
+                                    <th>Precio Unit.</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${Object.entries(kardex).map(([key, item]) => `
+                                    <tr>
+                                        <td>${item.template.code}</td>
+                                        <td>${item.template.name}</td>
+                                        ${level !== 'template' ? `<td>${item.product ? item.product.size : '-'}</td>` : ''}
+                                        ${level === 'lot' ? `<td>${item.lot ? item.lot.lotNumber : '-'}</td>` : ''}
+                                        <td>
+                                            <span class="badge bg-${item.summary.currentStock > 0 ? 'success' : 'danger'}">
+                                                ${item.summary.currentStock}
+                                            </span>
+                                        </td>
+                                        <td>S/ ${item.summary.currentValue.toFixed(2)}</td>
+                                        <td>${item.summary.sales}</td>
+                                        <td>${item.summary.transfers}</td>
+                                        <td>${item.summary.returns}</td>
+                                        <td>S/ ${item.template.price.toFixed(2)}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            }
+            
+            updateFilters() {
+                // Update template filter
+                const templateSelect = document.getElementById('kardexTemplateFilter');
+                const templates = dataManager.getTemplates();
+                templateSelect.innerHTML = '<option value="">Todas</option>' +
+                    templates.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+                
+                // Update warehouse filter
+                const warehouseSelect = document.getElementById('kardexWarehouseFilter');
+                warehouseSelect.innerHTML = '<option value="">Todos</option>' +
+                    Object.entries(dataManager.warehouses).map(([id, name]) => 
+                        `<option value="${id}">${name}</option>`
+                    ).join('');
+            }
+        }
+
+        // =================== MAIN APPLICATION ===================
+        
+        class InventoryApp {
+            constructor() {
+                this.dataManager = new DataManager();
+                this.initializeViews();
+                this.initializeControllers();
+                this.initializeEventListeners();
+                this.initializeApp();
+            }
+            
+            initializeViews() {
+                this.scannerView = new ScannerView();
+                this.templateView = new TemplateView();
+                this.productView = new ProductView();
+                this.lotView = new LotView();
+                this.inventoryView = new InventoryView();
+                this.transferView = new TransferView();
+                this.kardexView = new KardexView();
+                
+                // Set global reference for controllers
+                window.scannerView = this.scannerView;
+            }
+            
+            initializeControllers() {
+                this.scannerController = new ScannerController(this.dataManager, this.scannerView);
+                this.templateController = new TemplateController(this.dataManager, this.templateView);
+                this.productController = new ProductController(this.dataManager, this.productView);
+                this.lotController = new LotController(this.dataManager, this.lotView);
+                this.inventoryController = new InventoryController(this.dataManager, this.inventoryView);
+                this.transferController = new TransferController(this.dataManager, this.transferView);
+                this.kardexController = new KardexController(this.dataManager, this.kardexView);
+            }
+            
+            initializeEventListeners() {
+                // Tab navigation
+                document.querySelectorAll('.nav-link[data-tab]').forEach(link => {
+                    link.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        this.switchTab(e.target.dataset.tab);
+                    });
+                });
+                
+                // Global functions for modal interactions
+                window.showGenerateModal = (templateId) => {
+                    window.currentTemplateId = templateId;
+                    const modal = new bootstrap.Modal(document.getElementById('generateProductsModal'));
+                    modal.show();
+                };
+                
+                window.showConfirmTransferModal = (transferId) => {
+                    const transfer = this.dataManager.getTransferDocumentById(transferId);
+                    const serialNumbers = transfer.serialNumbers.map(id => this.dataManager.getSerialNumberById(id));
+                    const productInfo = this.transferView.getTransferProductInfo(serialNumbers);
+                    
+                    document.getElementById('transferDetails').innerHTML = `
+                        <div class="mb-3">
+                            <h6>Documento: ${transfer.documentNumber}</h6>
+                            <p>
+                                <strong>Origen:</strong> ${this.dataManager.warehouses[transfer.fromWarehouse]}<br>
+                                <strong>Destino:</strong> ${this.dataManager.warehouses[transfer.toWarehouse]}<br>
+                                <strong>Cantidad:</strong> ${transfer.serialNumbers.length} pares
+                            </p>
+                        </div>
+                        
+                        <h6>Productos:</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Producto</th>
+                                        <th>Talla</th>
+                                        <th>Cantidad</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${Object.values(productInfo).map(info => `
+                                        <tr>
+                                            <td>${info.template.name}</td>
+                                            <td>${info.product.size}</td>
+                                            <td>${info.quantity}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    `;
+                    
+                    document.getElementById('confirmTransferBtn').dataset.transferId = transferId;
+                    
+                    const modal = new bootstrap.Modal(document.getElementById('confirmTransferModal'));
+                    modal.show();
+                };
+                
+                // Generate products modal
+                document.getElementById('confirmGenerate').addEventListener('click', () => {
+                    this.templateController.generateProducts(window.currentTemplateId);
+                });
+            }
+            
+            initializeApp() {
+                // Set global references
+                window.dataManager = this.dataManager;
+                window.currentView = null;
+                
+                // Initialize warehouse options
+                this.scannerView.updateWarehouseOptions('transfer', this.dataManager.warehouses, this.dataManager.physicalWarehouses, this.dataManager.storeWarehouses);
+                
+                // Initialize first tab
+                this.switchTab('scanner');
+            }
+            
+            switchTab(tabName) {
+                // Hide all tab contents
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                
+                // Remove active class from all nav links
+                document.querySelectorAll('.nav-link[data-tab]').forEach(link => {
+                    link.classList.remove('active');
+                });
+                
+                // Show selected tab content
+                document.getElementById(tabName).classList.add('active');
+                
+                // Add active class to selected nav link
+                document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+                
+                // Refresh the view data when switching tabs
+                switch (tabName) {
+                    case 'templates':
+                        this.templateView.refreshTemplates();
+                        window.currentView = this.templateView;
+                        break;
+                    case 'products':
+                        this.productView.refreshProducts();
+                        this.productView.updateSizeFilter();
+                        window.currentView = this.productView;
+                        break;
+                    case 'lots':
+                        this.lotView.refreshLots();
+                        window.currentView = this.lotView;
+                        break;
+                    case 'inventory':
+                        this.inventoryView.updateWarehouseFilter();
+                        this.inventoryView.refreshInventory();
+                        window.currentView = this.inventoryView;
+                        break;
+                    case 'transfers':
+                        this.transferView.refreshTransfers();
+                        window.currentView = this.transferView;
+                        break;
+                    case 'kardex':
+                        this.kardexView.updateFilters();
+                        window.currentView = this.kardexView;
+                        break;
+                    case 'scanner':
+                        window.currentView = this.scannerView;
+                        break;
+                }
+            }
+        }
+
+        // =================== APPLICATION STARTUP ===================
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            window.app = new InventoryApp();
+            console.log('Sistema de Inventario de Calzados iniciado correctamente');
+        });
+    </script>
+</body>
+</html>

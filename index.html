@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Facturación Electrónica - Heinz Sport SAC</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #101075 0%, #1a1a8f 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            text-align: center;
+            padding: 40px;
+        }
+        .logo {
+            margin-bottom: 30px;
+        }
+        .logo h1 {
+            color: #ffffff;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        .logo p {
+            color: #0bd498;
+            font-size: 1.1rem;
+            font-style: italic;
+        }
+        .cards {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 40px;
+        }
+        .card {
+            background: #ffffff;
+            border-radius: 15px;
+            padding: 40px 50px;
+            text-decoration: none;
+            color: #101075;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            min-width: 250px;
+        }
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+        .card-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+        .card h2 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+        .card p {
+            color: #666;
+            font-size: 0.95rem;
+        }
+        .card-factura:hover {
+            background: #0bd498;
+            color: #ffffff;
+        }
+        .card-factura:hover p {
+            color: #e0e0e0;
+        }
+        .card-guia:hover {
+            background: #101075;
+            color: #ffffff;
+        }
+        .card-guia:hover p {
+            color: #e0e0e0;
+        }
+        footer {
+            position: fixed;
+            bottom: 20px;
+            color: rgba(255,255,255,0.6);
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <h1>HEINZ SPORT SAC</h1>
+            <p>Sistema de Facturación Electrónica</p>
+        </div>
+        
+        <div class="cards">
+            <a href="frontend/views/factura.html" class="card card-factura">
+                <div class="card-icon">📄</div>
+                <h2>Facturas</h2>
+                <p>Emisión de facturas y boletas electrónicas</p>
+            </a>
+            
+            <a href="frontend/views/guia.html" class="card card-guia">
+                <div class="card-icon">🚚</div>
+                <h2>Guías de Remisión</h2>
+                <p>Emisión de guías de remisión electrónicas</p>
+            </a>
+
+            <a href="frontend/views/adminLogs.html" class="card card-guia">
+                <div class="card-icon">🚚</div>
+                <h2>Logs</h2>
+                <p>Logs del sistema</p>
+            </a>
+
+            <a href="frontend/views/vouchers.html" class="card card-guia">
+                <div class="card-icon">🚚</div>
+                <h2>Vouchers</h2>
+                <p>Vouchers de pago de facturas de compra y venta</p>
+            </a>
+        </div>
+    </div>
+    
+    <footer>
+        &copy; 2026 Heinz Sport SAC - Usted imagina, nosotros lo creamos
+    </footer>
+</body>
+</html>

@@ -1,0 +1,2168 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Inventario - Calzados Mirla SAC</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+            --danger-color: #e74c3c;
+            --light-bg: #ecf0f1;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .sidebar {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #34495e 100%);
+            min-height: 100vh;
+            width: 280px;
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 4px 0 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar-header h4 {
+            color: white;
+            margin: 0;
+            font-weight: 600;
+        }
+
+        .sidebar-menu {
+            padding: 20px 0;
+        }
+
+        .sidebar-menu a {
+            display: block;
+            padding: 12px 20px;
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+        }
+
+        .sidebar-menu a:hover,
+        .sidebar-menu a.active {
+            color: white;
+            background: rgba(255,255,255,0.1);
+            border-left-color: var(--secondary-color);
+        }
+
+        .sidebar-menu a i {
+            width: 20px;
+            margin-right: 10px;
+        }
+
+        .main-content {
+            margin-left: 280px;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .content-section {
+            display: none;
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .content-section.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .stats-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            transition: transform 0.3s ease;
+        }
+
+        .stats-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stats-card h3 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .stats-card p {
+            margin: 0;
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--secondary-color) 0%, #2980b9 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 10px 20px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--success-color) 0%, #229954 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 10px 20px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, var(--warning-color) 0%, #e67e22 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 10px 20px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, var(--danger-color) 0%, #c0392b 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 10px 20px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .table {
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+
+        .table thead {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #34495e 100%);
+            color: white;
+        }
+
+        .table tbody tr:hover {
+            background-color: rgba(52, 152, 219, 0.05);
+        }
+
+        .modal-content {
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #34495e 100%);
+            color: white;
+            border-radius: 15px 15px 0 0;
+        }
+
+        .form-control {
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            padding: 12px 15px;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+        }
+
+        .badge {
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .alert {
+            border-radius: 10px;
+            border: none;
+            padding: 15px 20px;
+        }
+
+        .page-title {
+            color: var(--primary-color);
+            font-weight: 700;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .filters-section {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.show {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+        }
+
+        .warehouse-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            border-left: 5px solid var(--secondary-color);
+            transition: transform 0.3s ease;
+        }
+
+        .warehouse-card:hover {
+            transform: translateX(5px);
+        }
+
+        .movement-type-production { border-left-color: #27ae60; }
+        .movement-type-transfer { border-left-color: #3498db; }
+        .movement-type-sale { border-left-color: #f39c12; }
+        .movement-type-return { border-left-color: #9b59b6; }
+        .movement-type-loss { border-left-color: #e74c3c; }
+        .movement-type-damage { border-left-color: #95a5a6; }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h4><i class="fas fa-shoe-prints"></i> Calzados Mirla</h4>
+            <small style="color: rgba(255,255,255,0.7);">Sistema de Inventario</small>
+        </div>
+        <div class="sidebar-menu">
+            <a href="#" onclick="showSection('dashboard')" class="active">
+                <i class="fas fa-chart-dashboard"></i> Dashboard
+            </a>
+            <a href="#" onclick="showSection('movements')">
+                <i class="fas fa-exchange-alt"></i> Movimientos
+            </a>
+            <a href="#" onclick="showSection('transfers')">
+                <i class="fas fa-truck"></i> Transferencias
+            </a>
+            <a href="#" onclick="showSection('warehouses')">
+                <i class="fas fa-warehouse"></i> Almacenes
+            </a>
+            <a href="#" onclick="showSection('reports')">
+                <i class="fas fa-chart-bar"></i> Reportes
+            </a>
+            <a href="#" onclick="showSection('audit')">
+                <i class="fas fa-balance-scale"></i> Auditoría
+            </a>
+            <a href="#" onclick="showSection('settings')">
+                <i class="fas fa-cog"></i> Configuración
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Dashboard Section -->
+        <div id="dashboard" class="content-section active">
+            <h1 class="page-title">Dashboard - Sistema de Inventario</h1>
+            
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="stats-card">
+                        <h3 id="totalStock">0</h3>
+                        <p><i class="fas fa-boxes"></i> Total Stock</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stats-card">
+                        <h3 id="totalValue">S/ 0</h3>
+                        <p><i class="fas fa-dollar-sign"></i> Valor Total</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stats-card">
+                        <h3 id="totalMovements">0</h3>
+                        <p><i class="fas fa-exchange-alt"></i> Movimientos</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stats-card">
+                        <h3 id="avgPrice">S/ 0</h3>
+                        <p><i class="fas fa-chart-line"></i> Precio Promedio</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <h4>Stock por Almacén</h4>
+                    <div id="warehouseStocks"></div>
+                </div>
+                <div class="col-md-6">
+                    <h4>Últimos Movimientos</h4>
+                    <div id="recentMovements"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Movements Section -->
+        <div id="movements" class="content-section">
+            <h1 class="page-title">Gestión de Movimientos</h1>
+            
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="btn-group">
+                    <button class="btn btn-success" onclick="openAddMovementModal('production')">
+                        <i class="fas fa-plus"></i> Producción
+                    </button>
+                    <button class="btn btn-primary" onclick="openAddMovementModal('transfer')">
+                        <i class="fas fa-truck"></i> Transferencia
+                    </button>
+                    <button class="btn btn-warning" onclick="openAddMovementModal('sale')">
+                        <i class="fas fa-cash-register"></i> Venta
+                    </button>
+                    <button class="btn btn-info" onclick="openAddMovementModal('return')">
+                        <i class="fas fa-undo"></i> Devolución
+                    </button>
+                    <button class="btn btn-danger" onclick="openAddMovementModal('loss')">
+                        <i class="fas fa-exclamation-triangle"></i> Pérdida
+                    </button>
+                    <button class="btn btn-secondary" onclick="openAddMovementModal('damage')">
+                        <i class="fas fa-tools"></i> Merma
+                    </button>
+                </div>
+            </div>
+
+            <div class="filters-section">
+                <div class="row">
+                    <div class="col-md-3">
+                        <select id="filterWarehouse" class="form-control" onchange="filterMovements()">
+                            <option value="">Todos los almacenes</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select id="filterType" class="form-control" onchange="filterMovements()">
+                            <option value="">Todos los tipos</option>
+                            <option value="production">Producción</option>
+                            <option value="transfer">Transferencia</option>
+                            <option value="sale">Venta</option>
+                            <option value="return">Devolución</option>
+                            <option value="loss">Pérdida</option>
+                            <option value="damage">Merma</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <input type="date" id="filterDateFrom" class="form-control" onchange="filterMovements()">
+                    </div>
+                    <div class="col-md-3">
+                        <input type="date" id="filterDateTo" class="form-control" onchange="filterMovements()">
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Tipo</th>
+                            <th>Origen</th>
+                            <th>Destino</th>
+                            <th>Cantidad</th>
+                            <th>Valor Unit.</th>
+                            <th>Valor Total</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="movementsTable">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Transfers Section -->
+        <div id="transfers" class="content-section">
+            <h1 class="page-title">Gestión de Transferencias</h1>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <h4>Transferencias Pendientes</h4>
+                    <div id="pendingTransfers"></div>
+                </div>
+                <div class="col-md-6">
+                    <h4>Transferencias Completadas</h4>
+                    <div id="completedTransfers"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Warehouses Section -->
+        <div id="warehouses" class="content-section">
+            <h1 class="page-title">Estado de Almacenes</h1>
+            <div id="warehousesDetail"></div>
+        </div>
+
+        <!-- Reports Section -->
+        <div id="reports" class="content-section">
+            <h1 class="page-title">Reportes del Sistema</h1>
+            
+            <div class="filters-section">
+                <div class="row">
+                    <div class="col-md-4">
+                        <select id="reportWarehouse" class="form-control">
+                            <option value="">Todos los almacenes</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <input type="date" id="reportDateFrom" class="form-control">
+                    </div>
+                    <div class="col-md-3">
+                        <input type="date" id="reportDateTo" class="form-control">
+                    </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-primary w-100" onclick="generateReport()">
+                            <i class="fas fa-chart-bar"></i> Generar
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="reportResults"></div>
+        </div>
+
+        <!-- Audit Section -->
+        <div id="audit" class="content-section">
+            <h1 class="page-title">Auditoría y Verificación</h1>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header bg-primary text-white">
+                            <h5><i class="fas fa-balance-scale"></i> Verificación de Partida Doble</h5>
+                        </div>
+                        <div class="card-body">
+                            <button class="btn btn-primary" onclick="verifyDoubleEntry()">
+                                Verificar Equilibrio Contable
+                            </button>
+                            <div id="auditResults" class="mt-3"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header bg-success text-white">
+                            <h5><i class="fas fa-database"></i> Integridad de Datos</h5>
+                        </div>
+                        <div class="card-body">
+                            <button class="btn btn-success" onclick="validateDataIntegrity()">
+                                Validar Integridad
+                            </button>
+                            <div id="integrityResults" class="mt-3"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Section -->
+        <div id="settings" class="content-section">
+            <h1 class="page-title">Configuración del Sistema</h1>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header bg-warning text-white">
+                            <h5><i class="fas fa-download"></i> Gestión de Datos</h5>
+                        </div>
+                        <div class="card-body">
+                            <button class="btn btn-success mb-2" onclick="loadSampleData()">
+                                <i class="fas fa-database"></i> Cargar Datos de Ejemplo
+                            </button>
+                            <button class="btn btn-primary mb-2" onclick="exportData()">
+                                <i class="fas fa-download"></i> Exportar Datos
+                            </button>
+                            <button class="btn btn-danger" onclick="clearAllData()">
+                                <i class="fas fa-trash"></i> Limpiar Todos los Datos
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header bg-info text-white">
+                            <h5><i class="fas fa-info-circle"></i> Información del Sistema</h5>
+                        </div>
+                        <div class="card-body">
+                            <p><strong>Empresa:</strong> Calzados Mirla SAC</p>
+                            <p><strong>Producto:</strong> Calzado Modelo Genérico</p>
+                            <p><strong>Almacenes:</strong> <span id="totalWarehouses">0</span></p>
+                            <p><strong>Última actualización:</strong> <span id="lastUpdate">-</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Movement Modal -->
+    <div class="modal fade" id="addMovementModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="movementModalTitle">Agregar Movimiento</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="movementForm">
+                        <input type="hidden" id="movementType">
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label class="form-label">Almacén Origen</label>
+                                <select id="originWarehouse" class="form-control" required>
+                                    <option value="">Seleccionar origen</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Almacén Destino</label>
+                                <select id="destinationWarehouse" class="form-control" required>
+                                    <option value="">Seleccionar destino</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row mt-3">
+                            <div class="col-md-4">
+                                <label class="form-label">Cantidad (pares)</label>
+                                <input type="number" id="quantity" class="form-control" min="1" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Precio Unitario (S/)</label>
+                                <input type="number" id="unitPrice" class="form-control" min="0" step="0.01" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Valor Total (S/)</label>
+                                <input type="number" id="totalValue" class="form-control" readonly>
+                            </div>
+                        </div>
+
+                        <div class="mt-3">
+                            <label class="form-label">Observaciones</label>
+                            <textarea id="observations" class="form-control" rows="3"></textarea>
+                        </div>
+
+                        <div id="stockValidation" class="mt-3"></div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="saveMovement()">Guardar Movimiento</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirm Transfer Modal -->
+    <div class="modal fade" id="confirmTransferModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirmar Recepción</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>¿Confirma la recepción de esta transferencia?</p>
+                    <div id="transferDetails"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success" onclick="confirmTransfer()">Confirmar Recepción</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div class="loading" id="loading">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Cargando...</span>
+        </div>
+        <p class="mt-2">Procesando...</p>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Sistema de gestión de inventario para Calzados Mirla SAC
+        class InventorySystem {
+            constructor() {
+                this.warehouses = [];
+                this.movements = [];
+                this.transfers = [];
+                this.currentTransferId = null;
+                this.init();
+            }
+
+            init() {
+                this.loadData();
+                this.setupEventListeners();
+                this.refreshDashboard();
+                this.populateSelects();
+                this.updateLastModified();
+            }
+
+            // Configuración inicial de almacenes
+            initializeWarehouses() {
+                this.warehouses = [
+                    {
+                        id: 'central',
+                        name: 'Almacén Central',
+                        type: 'physical',
+                        manager: 'Juan Pérez',
+                        location: 'Planta de Producción',
+                        stock: 0,
+                        value: 0,
+                        avgPrice: 0
+                    },
+                    {
+                        id: 'lima',
+                        name: 'Tienda Lima',
+                        type: 'physical',
+                        manager: 'María González',
+                        location: 'Lima',
+                        stock: 0,
+                        value: 0,
+                        avgPrice: 0
+                    },
+                    {
+                        id: 'huancayo',
+                        name: 'Tienda Huancayo',
+                        type: 'physical',
+                        manager: 'Carlos Mendoza',
+                        location: 'Huancayo',
+                        stock: 0,
+                        value: 0,
+                        avgPrice: 0
+                    },
+                    {
+                        id: 'huaraz',
+                        name: 'Tienda Huaraz',
+                        type: 'physical',
+                        manager: 'Ana Rodríguez',
+                        location: 'Huaraz',
+                        stock: 0,
+                        value: 0,
+                        avgPrice: 0
+                    },
+                    {
+                        id: 'lost',
+                        name: 'Productos Perdidos',
+                        type: 'virtual',
+                        manager: 'Sistema',
+                        location: 'Virtual',
+                        stock: 0,
+                        value: 0,
+                        avgPrice: 0
+                    },
+                    {
+                        id: 'sales',
+                        name: 'Ventas Realizadas',
+                        type: 'virtual',
+                        manager: 'Sistema',
+                        location: 'Virtual',
+                        stock: 0,
+                        value: 0,
+                        avgPrice: 0
+                    },
+                    {
+                        id: 'damaged',
+                        name: 'Productos Dañados',
+                        type: 'virtual',
+                        manager: 'Sistema',
+                        location: 'Virtual',
+                        stock: 0,
+                        value: 0,
+                        avgPrice: 0
+                    }
+                ];
+            }
+
+            // Gestión de datos
+            loadData() {
+                const savedWarehouses = JSON.parse(localStorage.getItem('mirla_warehouses') || 'null');
+                const savedMovements = JSON.parse(localStorage.getItem('mirla_movements') || '[]');
+                const savedTransfers = JSON.parse(localStorage.getItem('mirla_transfers') || '[]');
+
+                if (savedWarehouses) {
+                    this.warehouses = savedWarehouses;
+                } else {
+                    this.initializeWarehouses();
+                    this.saveData();
+                }
+
+                this.movements = savedMovements;
+                this.transfers = savedTransfers;
+            }
+
+            saveData() {
+                localStorage.setItem('mirla_warehouses', JSON.stringify(this.warehouses));
+                localStorage.setItem('mirla_movements', JSON.stringify(this.movements));
+                localStorage.setItem('mirla_transfers', JSON.stringify(this.transfers));
+                this.updateLastModified();
+            }
+
+            updateLastModified() {
+                const now = new Date().toLocaleString('es-PE');
+                document.getElementById('lastUpdate').textContent = now;
+            }
+
+            // Event Listeners
+            setupEventListeners() {
+                // Los event listeners se configurarán cuando se abra el modal
+                // debido a que los elementos pueden no existir al inicializar
+            }
+
+            setupModalEventListeners() {
+                // Cálculo automático del valor total
+                const quantityInput = document.getElementById('quantity');
+                const unitPriceInput = document.getElementById('unitPrice');
+                
+                console.log('Configurando event listeners del modal');
+                console.log('Quantity input:', quantityInput);
+                console.log('Unit price input:', unitPriceInput);
+                
+                if (quantityInput && unitPriceInput) {
+                    // Remover listeners previos si existen
+                    quantityInput.removeEventListener('input', this.boundCalculateTotal);
+                    unitPriceInput.removeEventListener('input', this.boundCalculateTotal);
+                    quantityInput.removeEventListener('keyup', this.boundCalculateTotal);
+                    unitPriceInput.removeEventListener('keyup', this.boundCalculateTotal);
+                    
+                    // Crear función enlazada si no existe
+                    if (!this.boundCalculateTotal) {
+                        this.boundCalculateTotal = this.calculateTotal.bind(this);
+                    }
+                    
+                    // Agregar múltiples event listeners para asegurar funcionamiento
+                    quantityInput.addEventListener('input', this.boundCalculateTotal);
+                    unitPriceInput.addEventListener('input', this.boundCalculateTotal);
+                    quantityInput.addEventListener('keyup', this.boundCalculateTotal);
+                    unitPriceInput.addEventListener('keyup', this.boundCalculateTotal);
+                    quantityInput.addEventListener('change', this.boundCalculateTotal);
+                    unitPriceInput.addEventListener('change', this.boundCalculateTotal);
+                    
+                    console.log('Event listeners configurados correctamente');
+                }
+                
+                // Validación de stock
+                const originWarehouse = document.getElementById('originWarehouse');
+                if (originWarehouse && quantityInput) {
+                    // Crear función enlazada si no existe
+                    if (!this.boundValidateStock) {
+                        this.boundValidateStock = this.validateStock.bind(this);
+                    }
+                    
+                    originWarehouse.removeEventListener('change', this.boundValidateStock);
+                    quantityInput.removeEventListener('input', this.boundValidateStock);
+                    
+                    originWarehouse.addEventListener('change', this.boundValidateStock);
+                    quantityInput.addEventListener('input', this.boundValidateStock);
+                }
+            }
+
+            calculateTotal() {
+                const quantityInput = document.getElementById('quantity');
+                const unitPriceInput = document.getElementById('unitPrice');
+                const totalValueInput = document.getElementById('totalValue');
+                
+                if (!quantityInput || !unitPriceInput || !totalValueInput) {
+                    console.log('Elementos del formulario no encontrados para cálculo');
+                    return;
+                }
+                
+                const quantity = parseFloat(quantityInput.value) || 0;
+                const unitPrice = parseFloat(unitPriceInput.value) || 0;
+                const total = quantity * unitPrice;
+                
+                totalValueInput.value = total.toFixed(2);
+                console.log(`Cálculo automático: ${quantity} x ${unitPrice} = ${total.toFixed(2)}`);
+            }
+
+            validateStock() {
+                const originId = document.getElementById('originWarehouse').value;
+                const quantity = parseFloat(document.getElementById('quantity').value) || 0;
+                const validationDiv = document.getElementById('stockValidation');
+
+                if (!originId || quantity <= 0) {
+                    validationDiv.innerHTML = '';
+                    return;
+                }
+
+                // Para movimientos de producción o devoluciones, no validar stock
+                const movementType = document.getElementById('movementType').value;
+                if (movementType === 'production' || movementType === 'return') {
+                    validationDiv.innerHTML = `
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            ${movementType === 'production' ? 'Movimiento de producción - No requiere stock previo' : 'Devolución desde ventas - No requiere validación de stock'}
+                        </div>
+                    `;
+                    return;
+                }
+
+                const warehouse = this.warehouses.find(w => w.id === originId);
+                if (!warehouse) {
+                    validationDiv.innerHTML = `
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            Almacén no encontrado
+                        </div>
+                    `;
+                    return;
+                }
+
+                if (warehouse.stock < quantity) {
+                    validationDiv.innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            Stock insuficiente. Disponible: ${warehouse.stock} pares
+                        </div>
+                    `;
+                } else {
+                    validationDiv.innerHTML = `
+                        <div class="alert alert-success">
+                            <i class="fas fa-check"></i>
+                            Stock disponible: ${warehouse.stock} pares
+                        </div>
+                    `;
+                }
+            }
+
+            // Gestión de movimientos
+            addMovement(type, originId, destinationId, quantity, unitPrice, observations = '') {
+                const movement = {
+                    id: 'MOV-' + Date.now(),
+                    type: type,
+                    originId: originId,
+                    destinationId: destinationId,
+                    quantity: quantity,
+                    unitPrice: unitPrice,
+                    totalValue: quantity * unitPrice,
+                    observations: observations,
+                    date: new Date().toISOString(),
+                    status: type === 'transfer' ? 'pending' : 'completed'
+                };
+
+                this.movements.push(movement);
+
+                // Aplicar movimiento según el principio de partida doble
+                if (type !== 'transfer' || movement.status === 'completed') {
+                    this.applyMovement(movement);
+                }
+
+                this.saveData();
+                return movement;
+            }
+
+            applyMovement(movement) {
+                // Tratamiento especial para movimientos de producción
+                if (movement.type === 'production') {
+                    // En producción, solo hay entrada al almacén destino
+                    const destination = this.warehouses.find(w => w.id === movement.destinationId);
+                    if (!destination) {
+                        console.error('Almacén destino no encontrado para producción');
+                        return false;
+                    }
+
+                    // Calcular nuevo precio promedio ponderado
+                    const currentValue = destination.value || 0;
+                    const currentStock = destination.stock || 0;
+                    const addedValue = movement.totalValue;
+                    const addedQuantity = movement.quantity;
+
+                    destination.stock = currentStock + addedQuantity;
+                    destination.value = currentValue + addedValue;
+                    
+                    // Calcular nuevo precio promedio
+                    if (destination.stock > 0) {
+                        destination.avgPrice = destination.value / destination.stock;
+                    }
+
+                    console.log(`Producción aplicada - ${destination.name}: Stock=${destination.stock}, Valor=${destination.value}, Promedio=${destination.avgPrice}`);
+                    return true;
+                }
+
+                // Para otros tipos de movimientos (requieren origen y destino)
+                const origin = this.warehouses.find(w => w.id === movement.originId);
+                const destination = this.warehouses.find(w => w.id === movement.destinationId);
+
+                if (!origin || !destination) {
+                    console.error('Almacén no encontrado - Origen:', origin, 'Destino:', destination);
+                    return false;
+                }
+
+                // Validar stock suficiente en origen
+                if (origin.stock < movement.quantity) {
+                    throw new Error(`Stock insuficiente en ${origin.name}. Disponible: ${origin.stock}, Requerido: ${movement.quantity}`);
+                }
+
+                // Salida del almacén origen
+                const newOriginStock = origin.stock - movement.quantity;
+                const removedValue = movement.quantity * (origin.avgPrice || 0);
+                
+                origin.value = Math.max(0, origin.value - removedValue);
+                origin.stock = newOriginStock;
+                
+                if (origin.stock > 0 && origin.value > 0) {
+                    origin.avgPrice = origin.value / origin.stock;
+                } else {
+                    origin.avgPrice = 0;
+                    origin.value = 0;
+                }
+
+                // Entrada al almacén destino
+                const currentDestValue = destination.value || 0;
+                const currentDestStock = destination.stock || 0;
+                const addedValue = movement.totalValue;
+
+                destination.stock = currentDestStock + movement.quantity;
+                destination.value = currentDestValue + addedValue;
+                
+                // Calcular nuevo precio promedio ponderado
+                if (destination.stock > 0) {
+                    destination.avgPrice = destination.value / destination.stock;
+                }
+
+                console.log(`Movimiento aplicado - Origen: ${origin.name} (${origin.stock}), Destino: ${destination.name} (${destination.stock})`);
+                return true;
+            }
+
+            // Gestión de transferencias
+            confirmTransferReceipt(movementId) {
+                const movement = this.movements.find(m => m.id === movementId);
+                if (!movement || movement.type !== 'transfer' || movement.status !== 'pending') {
+                    return false;
+                }
+
+                movement.status = 'completed';
+                movement.completedDate = new Date().toISOString();
+                
+                this.applyMovement(movement);
+                this.saveData();
+                return true;
+            }
+
+            // Funciones de interfaz
+            showSection(sectionId) {
+                // Ocultar todas las secciones
+                document.querySelectorAll('.content-section').forEach(section => {
+                    section.classList.remove('active');
+                });
+
+                // Mostrar la sección seleccionada
+                document.getElementById(sectionId).classList.add('active');
+
+                // Actualizar menú activo
+                document.querySelectorAll('.sidebar-menu a').forEach(link => {
+                    link.classList.remove('active');
+                });
+                event.target.classList.add('active');
+
+                // Actualizar contenido según la sección
+                switch(sectionId) {
+                    case 'dashboard':
+                        this.refreshDashboard();
+                        break;
+                    case 'movements':
+                        this.refreshMovements();
+                        break;
+                    case 'transfers':
+                        this.refreshTransfers();
+                        break;
+                    case 'warehouses':
+                        this.refreshWarehouses();
+                        break;
+                    case 'reports':
+                        this.setupReports();
+                        break;
+                }
+            }
+
+            refreshDashboard() {
+                // Estadísticas generales - SOLO almacenes físicos para el Total Stock
+                const physicalWarehouses = this.warehouses.filter(w => w.type === 'physical');
+                const virtualWarehouses = this.warehouses.filter(w => w.type === 'virtual');
+                
+                // Total Stock: Solo almacenes físicos (Central, Lima, Huancayo, Huaraz)
+                const totalStock = physicalWarehouses.reduce((sum, w) => sum + w.stock, 0);
+                
+                // Total Value: Solo almacenes físicos
+                const totalValue = physicalWarehouses.reduce((sum, w) => sum + w.value, 0);
+                
+                // Total de todos los movimientos
+                const totalMovements = this.movements.length;
+                
+                // Precio promedio: Solo basado en almacenes físicos
+                const avgPrice = totalStock > 0 ? totalValue / totalStock : 0;
+
+                // Actualizar display
+                document.getElementById('totalStock').textContent = totalStock.toLocaleString();
+                document.getElementById('totalValue').textContent = 'S/ ' + totalValue.toLocaleString('es-PE', {minimumFractionDigits: 2});
+                document.getElementById('totalMovements').textContent = totalMovements.toLocaleString();
+                document.getElementById('avgPrice').textContent = 'S/ ' + avgPrice.toLocaleString('es-PE', {minimumFractionDigits: 2});
+
+                // Mostrar información adicional en consola para debugging
+                console.log('=== ESTADÍSTICAS DEL DASHBOARD ===');
+                console.log('Almacenes Físicos:');
+                physicalWarehouses.forEach(w => {
+                    console.log(`  ${w.name}: ${w.stock} pares, S/ ${w.value.toFixed(2)}`);
+                });
+                console.log('Almacenes Virtuales:');
+                virtualWarehouses.forEach(w => {
+                    console.log(`  ${w.name}: ${w.stock} pares, S/ ${w.value.toFixed(2)}`);
+                });
+                console.log(`Total Stock (físicos): ${totalStock}`);
+                console.log(`Total Value (físicos): S/ ${totalValue.toFixed(2)}`);
+                console.log(`Precio Promedio: S/ ${avgPrice.toFixed(2)}`);
+                console.log('=====================================');
+
+                // Stock por almacén y movimientos recientes
+                this.refreshWarehouseStocks();
+                this.refreshRecentMovements();
+            }
+
+            refreshWarehouseStocks() {
+                const container = document.getElementById('warehouseStocks');
+                const physicalWarehouses = this.warehouses.filter(w => w.type === 'physical');
+                
+                container.innerHTML = physicalWarehouses.map(warehouse => `
+                    <div class="warehouse-card">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">${warehouse.name}</h6>
+                                <small class="text-muted">${warehouse.manager}</small>
+                            </div>
+                            <div class="text-end">
+                                <div class="h5 mb-0">${warehouse.stock} pares</div>
+                                <small class="text-muted">S/ ${warehouse.value.toLocaleString('es-PE', {minimumFractionDigits: 2})}</small>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            refreshRecentMovements() {
+                const container = document.getElementById('recentMovements');
+                const recent = this.movements.slice(-5).reverse();
+                
+                container.innerHTML = recent.map(movement => {
+                    const origin = this.warehouses.find(w => w.id === movement.originId);
+                    const destination = this.warehouses.find(w => w.id === movement.destinationId);
+                    const date = new Date(movement.date).toLocaleDateString('es-PE');
+                    
+                    return `
+                        <div class="warehouse-card movement-type-${movement.type}">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">${this.getMovementTypeName(movement.type)}</h6>
+                                    <small class="text-muted">${origin?.name} → ${destination?.name}</small>
+                                </div>
+                                <div class="text-end">
+                                    <div class="h6 mb-0">${movement.quantity} pares</div>
+                                    <small class="text-muted">${date}</small>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            refreshMovements() {
+                const tbody = document.getElementById('movementsTable');
+                const movements = this.getFilteredMovements();
+                
+                tbody.innerHTML = movements.map(movement => {
+                    const origin = this.warehouses.find(w => w.id === movement.originId);
+                    const destination = this.warehouses.find(w => w.id === movement.destinationId);
+                    const date = new Date(movement.date).toLocaleString('es-PE');
+                    
+                    return `
+                        <tr>
+                            <td>${date}</td>
+                            <td><span class="badge bg-${this.getMovementColor(movement.type)}">${this.getMovementTypeName(movement.type)}</span></td>
+                            <td>${origin?.name || 'N/A'}</td>
+                            <td>${destination?.name || 'N/A'}</td>
+                            <td>${movement.quantity}</td>
+                            <td>S/ ${movement.unitPrice.toFixed(2)}</td>
+                            <td>S/ ${movement.totalValue.toFixed(2)}</td>
+                            <td><span class="badge bg-${movement.status === 'completed' ? 'success' : 'warning'}">${movement.status === 'completed' ? 'Completado' : 'Pendiente'}</span></td>
+                            <td>
+                                ${movement.type === 'transfer' && movement.status === 'pending' ? 
+                                    `<button class="btn btn-sm btn-success" onclick="inventory.openConfirmTransfer('${movement.id}')">
+                                        <i class="fas fa-check"></i> Confirmar
+                                    </button>` : 
+                                    `<button class="btn btn-sm btn-info" onclick="inventory.viewMovementDetails('${movement.id}')">
+                                        <i class="fas fa-eye"></i> Ver
+                                    </button>`
+                                }
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            refreshTransfers() {
+                const pending = document.getElementById('pendingTransfers');
+                const completed = document.getElementById('completedTransfers');
+                
+                const transfers = this.movements.filter(m => m.type === 'transfer');
+                const pendingTransfers = transfers.filter(t => t.status === 'pending');
+                const completedTransfers = transfers.filter(t => t.status === 'completed');
+
+                pending.innerHTML = pendingTransfers.map(transfer => {
+                    const origin = this.warehouses.find(w => w.id === transfer.originId);
+                    const destination = this.warehouses.find(w => w.id === transfer.destinationId);
+                    const date = new Date(transfer.date).toLocaleDateString('es-PE');
+                    
+                    return `
+                        <div class="warehouse-card">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">${origin?.name} → ${destination?.name}</h6>
+                                    <small class="text-muted">${date} • ${transfer.quantity} pares</small>
+                                </div>
+                                <button class="btn btn-sm btn-success" onclick="inventory.openConfirmTransfer('${transfer.id}')">
+                                    <i class="fas fa-check"></i> Confirmar
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                completed.innerHTML = completedTransfers.slice(-10).map(transfer => {
+                    const origin = this.warehouses.find(w => w.id === transfer.originId);
+                    const destination = this.warehouses.find(w => w.id === transfer.destinationId);
+                    const date = new Date(transfer.completedDate || transfer.date).toLocaleDateString('es-PE');
+                    
+                    return `
+                        <div class="warehouse-card">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">${origin?.name} → ${destination?.name}</h6>
+                                    <small class="text-muted">${date} • ${transfer.quantity} pares</small>
+                                </div>
+                                <span class="badge bg-success">Completada</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            refreshWarehouses() {
+                const container = document.getElementById('warehousesDetail');
+                
+                container.innerHTML = this.warehouses.map(warehouse => `
+                    <div class="warehouse-card">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <h5>${warehouse.name}</h5>
+                                <p class="mb-1"><i class="fas fa-user"></i> <strong>Encargado:</strong> ${warehouse.manager}</p>
+                                <p class="mb-1"><i class="fas fa-map-marker-alt"></i> <strong>Ubicación:</strong> ${warehouse.location}</p>
+                                <p class="mb-0"><i class="fas fa-tag"></i> <strong>Tipo:</strong> ${warehouse.type === 'physical' ? 'Físico' : 'Virtual'}</p>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <div class="h4 text-primary">${warehouse.stock} pares</div>
+                                <div class="h6 text-success">S/ ${warehouse.value.toLocaleString('es-PE', {minimumFractionDigits: 2})}</div>
+                                <small class="text-muted">Precio promedio: S/ ${warehouse.avgPrice.toFixed(2)}</small>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            // Filtros y búsquedas
+            getFilteredMovements() {
+                let filtered = [...this.movements];
+                
+                const warehouseFilter = document.getElementById('filterWarehouse')?.value;
+                const typeFilter = document.getElementById('filterType')?.value;
+                const dateFromFilter = document.getElementById('filterDateFrom')?.value;
+                const dateToFilter = document.getElementById('filterDateTo')?.value;
+
+                if (warehouseFilter) {
+                    filtered = filtered.filter(m => 
+                        m.originId === warehouseFilter || m.destinationId === warehouseFilter
+                    );
+                }
+
+                if (typeFilter) {
+                    filtered = filtered.filter(m => m.type === typeFilter);
+                }
+
+                if (dateFromFilter) {
+                    const fromDate = new Date(dateFromFilter);
+                    filtered = filtered.filter(m => new Date(m.date) >= fromDate);
+                }
+
+                if (dateToFilter) {
+                    const toDate = new Date(dateToFilter);
+                    toDate.setHours(23, 59, 59, 999);
+                    filtered = filtered.filter(m => new Date(m.date) <= toDate);
+                }
+
+                return filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+            }
+
+            // Modales
+            openAddMovementModal(type) {
+                this.resetForm();
+                document.getElementById('movementType').value = type;
+                document.getElementById('movementModalTitle').textContent = 'Agregar ' + this.getMovementTypeName(type);
+                
+                this.setupMovementModal(type);
+                
+                // Mostrar modal
+                const modal = new bootstrap.Modal(document.getElementById('addMovementModal'));
+                modal.show();
+                
+                // Configurar event listeners con un pequeño delay para asegurar que el DOM esté listo
+                setTimeout(() => {
+                    this.setupModalEventListeners();
+                    
+                    // Trigger inicial del cálculo si hay valores
+                    const quantity = document.getElementById('quantity').value;
+                    const unitPrice = document.getElementById('unitPrice').value;
+                    if (quantity || unitPrice) {
+                        this.calculateTotal();
+                    }
+                }, 100);
+            }
+
+            setupMovementModal(type) {
+                const originSelect = document.getElementById('originWarehouse');
+                const destinationSelect = document.getElementById('destinationWarehouse');
+                
+                // Limpiar opciones
+                originSelect.innerHTML = '<option value="">Seleccionar origen</option>';
+                destinationSelect.innerHTML = '<option value="">Seleccionar destino</option>';
+
+                // Configurar orígenes y destinos según el tipo de movimiento
+                switch(type) {
+                    case 'production':
+                        originSelect.innerHTML = '<option value="system">Sistema de Producción</option>';
+                        originSelect.disabled = true;
+                        this.warehouses.filter(w => w.type === 'physical').forEach(w => {
+                            destinationSelect.innerHTML += `<option value="${w.id}">${w.name}</option>`;
+                        });
+                        break;
+                        
+                    case 'transfer':
+                        this.warehouses.filter(w => w.type === 'physical').forEach(w => {
+                            originSelect.innerHTML += `<option value="${w.id}">${w.name}</option>`;
+                            destinationSelect.innerHTML += `<option value="${w.id}">${w.name}</option>`;
+                        });
+                        break;
+                        
+                    case 'sale':
+                        this.warehouses.filter(w => w.type === 'physical').forEach(w => {
+                            originSelect.innerHTML += `<option value="${w.id}">${w.name}</option>`;
+                        });
+                        destinationSelect.innerHTML = '<option value="sales">Ventas Realizadas</option>';
+                        destinationSelect.disabled = true;
+                        break;
+                        
+                    case 'return':
+                        originSelect.innerHTML = '<option value="sales">Ventas Realizadas</option>';
+                        originSelect.disabled = true;
+                        this.warehouses.filter(w => w.type === 'physical').forEach(w => {
+                            destinationSelect.innerHTML += `<option value="${w.id}">${w.name}</option>`;
+                        });
+                        break;
+                        
+                    case 'loss':
+                        this.warehouses.filter(w => w.type === 'physical').forEach(w => {
+                            originSelect.innerHTML += `<option value="${w.id}">${w.name}</option>`;
+                        });
+                        destinationSelect.innerHTML = '<option value="lost">Productos Perdidos</option>';
+                        destinationSelect.disabled = true;
+                        break;
+                        
+                    case 'damage':
+                        this.warehouses.filter(w => w.type === 'physical').forEach(w => {
+                            originSelect.innerHTML += `<option value="${w.id}">${w.name}</option>`;
+                        });
+                        destinationSelect.innerHTML = '<option value="damaged">Productos Dañados</option>';
+                        destinationSelect.disabled = true;
+                        break;
+                }
+                
+                originSelect.disabled = originSelect.disabled || false;
+                destinationSelect.disabled = destinationSelect.disabled || false;
+            }
+
+            openConfirmTransfer(movementId) {
+                this.currentTransferId = movementId;
+                const movement = this.movements.find(m => m.id === movementId);
+                
+                if (!movement) return;
+                
+                const origin = this.warehouses.find(w => w.id === movement.originId);
+                const destination = this.warehouses.find(w => w.id === movement.destinationId);
+                
+                document.getElementById('transferDetails').innerHTML = `
+                    <div class="alert alert-info">
+                        <h6>Detalles de la transferencia:</h6>
+                        <p><strong>Origen:</strong> ${origin?.name}</p>
+                        <p><strong>Destino:</strong> ${destination?.name}</p>
+                        <p><strong>Cantidad:</strong> ${movement.quantity} pares</p>
+                        <p><strong>Valor:</strong> S/ ${movement.totalValue.toFixed(2)}</p>
+                        <p><strong>Fecha:</strong> ${new Date(movement.date).toLocaleString('es-PE')}</p>
+                    </div>
+                `;
+                
+                new bootstrap.Modal(document.getElementById('confirmTransferModal')).show();
+            }
+
+            // Acciones
+            saveMovement() {
+                const form = document.getElementById('movementForm');
+                if (!form.checkValidity()) {
+                    form.reportValidity();
+                    return;
+                }
+
+                const type = document.getElementById('movementType').value;
+                let originId = document.getElementById('originWarehouse').value;
+                let destinationId = document.getElementById('destinationWarehouse').value;
+                const quantity = parseFloat(document.getElementById('quantity').value);
+                const unitPrice = parseFloat(document.getElementById('unitPrice').value);
+                const observations = document.getElementById('observations').value;
+
+                // Validaciones básicas
+                if (!quantity || quantity <= 0) {
+                    alert('La cantidad debe ser mayor a 0');
+                    return;
+                }
+                
+                if (!unitPrice || unitPrice <= 0) {
+                    alert('El precio unitario debe ser mayor a 0');
+                    return;
+                }
+
+                // Ajustar IDs según el tipo de movimiento
+                if (type === 'production') {
+                    originId = 'system';
+                } else if (type === 'sale') {
+                    destinationId = 'sales';
+                } else if (type === 'return') {
+                    originId = 'sales';
+                } else if (type === 'loss') {
+                    destinationId = 'lost';
+                } else if (type === 'damage') {
+                    destinationId = 'damaged';
+                }
+
+                // Validar que se hayan seleccionado origen y destino apropiados
+                if (!originId || !destinationId) {
+                    alert('Debe seleccionar origen y destino válidos');
+                    return;
+                }
+
+                // Validar que origen y destino sean diferentes (excepto para ciertos casos)
+                if (originId === destinationId && type === 'transfer') {
+                    alert('El almacén origen y destino no pueden ser el mismo');
+                    return;
+                }
+
+                // Validar stock disponible (excepto para producción y devoluciones)
+                if (type !== 'production' && type !== 'return') {
+                    const originWarehouse = this.warehouses.find(w => w.id === originId);
+                    if (originWarehouse && originWarehouse.stock < quantity) {
+                        alert(`Stock insuficiente en ${originWarehouse.name}. Disponible: ${originWarehouse.stock} pares`);
+                        return;
+                    }
+                }
+
+                try {
+                    const movement = this.addMovement(type, originId, destinationId, quantity, unitPrice, observations);
+                    
+                    bootstrap.Modal.getInstance(document.getElementById('addMovementModal')).hide();
+                    this.showAlert(`${this.getMovementTypeName(type)} registrado exitosamente`, 'success');
+                    
+                    // Actualizar todas las vistas
+                    this.refreshDashboard();
+                    this.refreshMovements();
+                    this.refreshTransfers();
+                    this.refreshWarehouses();
+                    
+                    console.log('Movimiento guardado:', movement);
+                    
+                } catch (error) {
+                    console.error('Error al registrar movimiento:', error);
+                    this.showAlert('Error al registrar movimiento: ' + error.message, 'danger');
+                }
+            }
+
+            confirmTransfer() {
+                if (!this.currentTransferId) return;
+                
+                try {
+                    this.confirmTransferReceipt(this.currentTransferId);
+                    bootstrap.Modal.getInstance(document.getElementById('confirmTransferModal')).hide();
+                    this.showAlert('Transferencia confirmada exitosamente', 'success');
+                    this.refreshDashboard();
+                    this.refreshMovements();
+                    this.refreshTransfers();
+                    this.currentTransferId = null;
+                } catch (error) {
+                    this.showAlert('Error al confirmar transferencia: ' + error.message, 'danger');
+                }
+            }
+
+            // Utilidades
+            resetForm() {
+                const form = document.getElementById('movementForm');
+                if (form) {
+                    form.reset();
+                }
+                
+                // Limpiar campos específicos
+                const stockValidation = document.getElementById('stockValidation');
+                const originWarehouse = document.getElementById('originWarehouse');
+                const destinationWarehouse = document.getElementById('destinationWarehouse');
+                const totalValue = document.getElementById('totalValue');
+                
+                if (stockValidation) stockValidation.innerHTML = '';
+                if (originWarehouse) originWarehouse.disabled = false;
+                if (destinationWarehouse) destinationWarehouse.disabled = false;
+                if (totalValue) totalValue.value = '0.00';
+                
+                console.log('Formulario reiniciado');
+            }
+
+            populateSelects() {
+                // Llenar selects de filtros
+                const filterWarehouse = document.getElementById('filterWarehouse');
+                const reportWarehouse = document.getElementById('reportWarehouse');
+                
+                if (filterWarehouse) {
+                    filterWarehouse.innerHTML = '<option value="">Todos los almacenes</option>';
+                    this.warehouses.forEach(w => {
+                        filterWarehouse.innerHTML += `<option value="${w.id}">${w.name}</option>`;
+                    });
+                }
+                
+                if (reportWarehouse) {
+                    reportWarehouse.innerHTML = '<option value="">Todos los almacenes</option>';
+                    this.warehouses.forEach(w => {
+                        reportWarehouse.innerHTML += `<option value="${w.id}">${w.name}</option>`;
+                    });
+                }
+
+                // Actualizar contador de almacenes
+                document.getElementById('totalWarehouses').textContent = this.warehouses.length;
+            }
+
+            getMovementTypeName(type) {
+                const types = {
+                    'production': 'Producción',
+                    'transfer': 'Transferencia',
+                    'sale': 'Venta',
+                    'return': 'Devolución',
+                    'loss': 'Pérdida',
+                    'damage': 'Merma'
+                };
+                return types[type] || type;
+            }
+
+            getMovementColor(type) {
+                const colors = {
+                    'production': 'success',
+                    'transfer': 'primary',
+                    'sale': 'warning',
+                    'return': 'info',
+                    'loss': 'danger',
+                    'damage': 'secondary'
+                };
+                return colors[type] || 'secondary';
+            }
+
+            showAlert(message, type = 'info') {
+                const alertDiv = document.createElement('div');
+                alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+                alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+                alertDiv.innerHTML = `
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                
+                document.body.appendChild(alertDiv);
+                
+                setTimeout(() => {
+                    if (alertDiv.parentNode) {
+                        alertDiv.parentNode.removeChild(alertDiv);
+                    }
+                }, 5000);
+            }
+
+            // Reportes
+            setupReports() {
+                // Configurar fechas por defecto
+                const today = new Date();
+                const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+                
+                document.getElementById('reportDateFrom').value = firstDay.toISOString().split('T')[0];
+                document.getElementById('reportDateTo').value = today.toISOString().split('T')[0];
+            }
+
+            generateReport() {
+                const warehouseId = document.getElementById('reportWarehouse').value;
+                const dateFrom = document.getElementById('reportDateFrom').value;
+                const dateTo = document.getElementById('reportDateTo').value;
+                
+                const container = document.getElementById('reportResults');
+                
+                if (warehouseId) {
+                    this.generateWarehouseReport(warehouseId, dateFrom, dateTo, container);
+                } else {
+                    this.generateGeneralReport(dateFrom, dateTo, container);
+                }
+            }
+
+            generateWarehouseReport(warehouseId, dateFrom, dateTo, container) {
+                const warehouse = this.warehouses.find(w => w.id === warehouseId);
+                if (!warehouse) return;
+
+                // Filtrar movimientos del período
+                const movements = this.movements.filter(m => {
+                    const moveDate = new Date(m.date);
+                    let inRange = true;
+                    
+                    if (dateFrom) inRange = inRange && moveDate >= new Date(dateFrom);
+                    if (dateTo) {
+                        const toDate = new Date(dateTo);
+                        toDate.setHours(23, 59, 59, 999);
+                        inRange = inRange && moveDate <= toDate;
+                    }
+                    
+                    return inRange && (m.originId === warehouseId || m.destinationId === warehouseId);
+                });
+
+                // Calcular estadísticas
+                const incomingMovements = movements.filter(m => m.destinationId === warehouseId && m.status === 'completed');
+                const outgoingMovements = movements.filter(m => m.originId === warehouseId && m.status === 'completed');
+                
+                const totalIncoming = incomingMovements.reduce((sum, m) => sum + m.quantity, 0);
+                const totalOutgoing = outgoingMovements.reduce((sum, m) => sum + m.quantity, 0);
+                const totalIncomingValue = incomingMovements.reduce((sum, m) => sum + m.totalValue, 0);
+                const totalOutgoingValue = outgoingMovements.reduce((sum, m) => sum + m.totalValue, 0);
+
+                container.innerHTML = `
+                    <div class="card">
+                        <div class="card-header bg-primary text-white">
+                            <h5>Reporte de ${warehouse.name}</h5>
+                            <small>Período: ${dateFrom || 'Inicio'} - ${dateTo || 'Hoy'}</small>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="stats-card">
+                                        <h3>${warehouse.stock}</h3>
+                                        <p>Stock Actual</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="stats-card">
+                                        <h3>S/ ${warehouse.value.toFixed(2)}</h3>
+                                        <p>Valor Actual</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="stats-card">
+                                        <h3>${totalIncoming}</h3>
+                                        <p>Entradas</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="stats-card">
+                                        <h3>${totalOutgoing}</h3>
+                                        <p>Salidas</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-4">
+                                <h6>Movimientos del Período</h6>
+                                <div class="table-responsive">
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>Fecha</th>
+                                                <th>Tipo</th>
+                                                <th>Cantidad</th>
+                                                <th>Valor</th>
+                                                <th>Flujo</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${movements.map(m => `
+                                                <tr>
+                                                    <td>${new Date(m.date).toLocaleDateString('es-PE')}</td>
+                                                    <td><span class="badge bg-${this.getMovementColor(m.type)}">${this.getMovementTypeName(m.type)}</span></td>
+                                                    <td>${m.quantity}</td>
+                                                    <td>S/ ${m.totalValue.toFixed(2)}</td>
+                                                    <td>
+                                                        ${m.destinationId === warehouseId ? 
+                                                            '<span class="text-success"><i class="fas fa-arrow-up"></i> Entrada</span>' : 
+                                                            '<span class="text-danger"><i class="fas fa-arrow-down"></i> Salida</span>'
+                                                        }
+                                                    </td>
+                                                </tr>
+                                            `).join('')}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            generateGeneralReport(dateFrom, dateTo, container) {
+                // Filtrar movimientos del período
+                const movements = this.movements.filter(m => {
+                    const moveDate = new Date(m.date);
+                    let inRange = true;
+                    
+                    if (dateFrom) inRange = inRange && moveDate >= new Date(dateFrom);
+                    if (dateTo) {
+                        const toDate = new Date(dateTo);
+                        toDate.setHours(23, 59, 59, 999);
+                        inRange = inRange && moveDate <= toDate;
+                    }
+                    
+                    return inRange;
+                });
+
+                // Agrupar por tipo de movimiento
+                const movementsByType = {};
+                movements.forEach(m => {
+                    if (!movementsByType[m.type]) {
+                        movementsByType[m.type] = {
+                            count: 0,
+                            quantity: 0,
+                            value: 0
+                        };
+                    }
+                    movementsByType[m.type].count++;
+                    movementsByType[m.type].quantity += m.quantity;
+                    movementsByType[m.type].value += m.totalValue;
+                });
+
+                // Estadísticas por almacén
+                const warehouseStats = this.warehouses.map(warehouse => {
+                    const warehouseMovements = movements.filter(m => 
+                        m.originId === warehouse.id || m.destinationId === warehouse.id
+                    );
+                    
+                    const incoming = warehouseMovements.filter(m => 
+                        m.destinationId === warehouse.id && m.status === 'completed'
+                    ).reduce((sum, m) => sum + m.quantity, 0);
+                    
+                    const outgoing = warehouseMovements.filter(m => 
+                        m.originId === warehouse.id && m.status === 'completed'
+                    ).reduce((sum, m) => sum + m.quantity, 0);
+
+                    return {
+                        ...warehouse,
+                        incoming,
+                        outgoing,
+                        movementCount: warehouseMovements.length
+                    };
+                });
+
+                container.innerHTML = `
+                    <div class="card mb-4">
+                        <div class="card-header bg-success text-white">
+                            <h5>Reporte General del Sistema</h5>
+                            <small>Período: ${dateFrom || 'Inicio'} - ${dateTo || 'Hoy'}</small>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="stats-card">
+                                        <h3>${movements.length}</h3>
+                                        <p>Total Movimientos</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="stats-card">
+                                        <h3>${movements.reduce((sum, m) => sum + m.quantity, 0)}</h3>
+                                        <p>Unidades Movidas</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="stats-card">
+                                        <h3>S/ ${movements.reduce((sum, m) => sum + m.totalValue, 0).toFixed(2)}</h3>
+                                        <p>Valor Total Movido</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mt-4">
+                                <div class="col-md-6">
+                                    <h6>Movimientos por Tipo</h6>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm">
+                                            <thead>
+                                                <tr>
+                                                    <th>Tipo</th>
+                                                    <th>Cantidad</th>
+                                                    <th>Unidades</th>
+                                                    <th>Valor</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                ${Object.entries(movementsByType).map(([type, stats]) => `
+                                                    <tr>
+                                                        <td><span class="badge bg-${this.getMovementColor(type)}">${this.getMovementTypeName(type)}</span></td>
+                                                        <td>${stats.count}</td>
+                                                        <td>${stats.quantity}</td>
+                                                        <td>S/ ${stats.value.toFixed(2)}</td>
+                                                    </tr>
+                                                `).join('')}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6>Estado Actual de Almacenes</h6>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm">
+                                            <thead>
+                                                <tr>
+                                                    <th>Almacén</th>
+                                                    <th>Stock</th>
+                                                    <th>Valor</th>
+                                                    <th>Movimientos</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                ${warehouseStats.map(w => `
+                                                    <tr>
+                                                        <td>${w.name}</td>
+                                                        <td>${w.stock}</td>
+                                                        <td>S/ ${w.value.toFixed(2)}</td>
+                                                        <td>${w.movementCount}</td>
+                                                    </tr>
+                                                `).join('')}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Auditoría y verificación
+            verifyDoubleEntry() {
+                const results = document.getElementById('auditResults');
+                results.innerHTML = '<div class="spinner-border spinner-border-sm"></div> Verificando...';
+
+                setTimeout(() => {
+                    let isBalanced = true;
+                    const errors = [];
+
+                    // Verificar que cada movimiento completado tenga entrada y salida
+                    const completedMovements = this.movements.filter(m => m.status === 'completed');
+                    
+                    completedMovements.forEach(movement => {
+                        // Para movimientos normales (no de producción)
+                        if (movement.type !== 'production') {
+                            const origin = this.warehouses.find(w => w.id === movement.originId);
+                            if (!origin) {
+                                isBalanced = false;
+                                errors.push(`Movimiento ${movement.id}: Almacén origen no encontrado`);
+                            }
+                        }
+
+                        const destination = this.warehouses.find(w => w.id === movement.destinationId);
+                        if (!destination) {
+                            isBalanced = false;
+                            errors.push(`Movimiento ${movement.id}: Almacén destino no encontrado`);
+                        }
+                    });
+
+                    // Verificar integridad de stock y valores
+                    this.warehouses.forEach(warehouse => {
+                        if (warehouse.stock < 0) {
+                            isBalanced = false;
+                            errors.push(`${warehouse.name}: Stock negativo (${warehouse.stock})`);
+                        }
+                        
+                        if (warehouse.value < 0) {
+                            isBalanced = false;
+                            errors.push(`${warehouse.name}: Valor negativo (${warehouse.value})`);
+                        }
+
+                        if (warehouse.stock > 0 && warehouse.avgPrice <= 0) {
+                            isBalanced = false;
+                            errors.push(`${warehouse.name}: Precio promedio inválido con stock positivo`);
+                        }
+                    });
+
+                    // Mostrar resultados
+                    if (isBalanced) {
+                        results.innerHTML = `
+                            <div class="alert alert-success">
+                                <h6><i class="fas fa-check-circle"></i> Verificación Exitosa</h6>
+                                <p>El sistema está en equilibrio contable. Todos los movimientos cumplen con el principio de partida doble.</p>
+                                <small>Movimientos verificados: ${completedMovements.length}</small>
+                            </div>
+                        `;
+                    } else {
+                        results.innerHTML = `
+                            <div class="alert alert-danger">
+                                <h6><i class="fas fa-exclamation-triangle"></i> Errores Detectados</h6>
+                                <p>Se encontraron ${errors.length} problemas:</p>
+                                <ul class="mb-0">
+                                    ${errors.map(error => `<li>${error}</li>`).join('')}
+                                </ul>
+                            </div>
+                        `;
+                    }
+                }, 1000);
+            }
+
+            validateDataIntegrity() {
+                const results = document.getElementById('integrityResults');
+                results.innerHTML = '<div class="spinner-border spinner-border-sm"></div> Validando...';
+
+                setTimeout(() => {
+                    const issues = [];
+
+                    // Verificar IDs únicos
+                    const movementIds = this.movements.map(m => m.id);
+                    const uniqueMovementIds = [...new Set(movementIds)];
+                    if (movementIds.length !== uniqueMovementIds.length) {
+                        issues.push('IDs de movimientos duplicados detectados');
+                    }
+
+                    // Verificar referencias de almacenes
+                    this.movements.forEach(movement => {
+                        if (movement.originId !== 'system' && !this.warehouses.find(w => w.id === movement.originId)) {
+                            issues.push(`Movimiento ${movement.id}: Referencia de almacén origen inválida`);
+                        }
+                        if (!this.warehouses.find(w => w.id === movement.destinationId)) {
+                            issues.push(`Movimiento ${movement.id}: Referencia de almacén destino inválida`);
+                        }
+                    });
+
+                    // Verificar campos requeridos
+                    this.movements.forEach(movement => {
+                        if (!movement.id || !movement.type || !movement.date) {
+                            issues.push(`Movimiento ${movement.id || 'sin ID'}: Campos requeridos faltantes`);
+                        }
+                        if (movement.quantity <= 0 || movement.unitPrice < 0) {
+                            issues.push(`Movimiento ${movement.id}: Valores numéricos inválidos`);
+                        }
+                    });
+
+                    // Verificar consistencia de cálculos
+                    this.movements.forEach(movement => {
+                        const calculatedTotal = movement.quantity * movement.unitPrice;
+                        if (Math.abs(calculatedTotal - movement.totalValue) > 0.01) {
+                            issues.push(`Movimiento ${movement.id}: Inconsistencia en cálculo de valor total`);
+                        }
+                    });
+
+                    if (issues.length === 0) {
+                        results.innerHTML = `
+                            <div class="alert alert-success">
+                                <h6><i class="fas fa-shield-alt"></i> Integridad Verificada</h6>
+                                <p>Todos los datos son consistentes y válidos.</p>
+                                <small>Registros verificados: ${this.movements.length} movimientos, ${this.warehouses.length} almacenes</small>
+                            </div>
+                        `;
+                    } else {
+                        results.innerHTML = `
+                            <div class="alert alert-warning">
+                                <h6><i class="fas fa-exclamation-circle"></i> Problemas de Integridad</h6>
+                                <p>Se encontraron ${issues.length} problemas:</p>
+                                <ul class="mb-0">
+                                    ${issues.map(issue => `<li>${issue}</li>`).join('')}
+                                </ul>
+                            </div>
+                        `;
+                    }
+                }, 1000);
+            }
+
+            // Gestión de datos
+            loadSampleData() {
+                if (confirm('¿Está seguro de cargar datos de ejemplo? Esto sobrescribirá los datos actuales.')) {
+                    this.initializeWarehouses();
+                    this.movements = [];
+                    
+                    // Agregar movimientos de ejemplo
+                    const sampleMovements = [
+                        // Producción inicial
+                        { type: 'production', originId: 'system', destinationId: 'central', quantity: 1000, unitPrice: 45.00, observations: 'Producción inicial' },
+                        { type: 'production', originId: 'system', destinationId: 'central', quantity: 500, unitPrice: 50.00, observations: 'Segunda producción' },
+                        
+                        // Transferencias a tiendas
+                        { type: 'transfer', originId: 'central', destinationId: 'lima', quantity: 300, unitPrice: 47.00, observations: 'Envío inicial a Lima' },
+                        { type: 'transfer', originId: 'central', destinationId: 'huancayo', quantity: 200, unitPrice: 47.00, observations: 'Envío inicial a Huancayo' },
+                        { type: 'transfer', originId: 'central', destinationId: 'huaraz', quantity: 150, unitPrice: 47.00, observations: 'Envío inicial a Huaraz' },
+                        
+                        // Ventas
+                        { type: 'sale', originId: 'lima', destinationId: 'sales', quantity: 50, unitPrice: 80.00, observations: 'Ventas Lima semana 1' },
+                        { type: 'sale', originId: 'huancayo', destinationId: 'sales', quantity: 30, unitPrice: 75.00, observations: 'Ventas Huancayo semana 1' },
+                        { type: 'sale', originId: 'huaraz', destinationId: 'sales', quantity: 25, unitPrice: 78.00, observations: 'Ventas Huaraz semana 1' },
+                        
+                        // Devoluciones
+                        { type: 'return', originId: 'sales', destinationId: 'lima', quantity: 5, unitPrice: 80.00, observations: 'Devolución por defecto' },
+                        
+                        // Pérdidas y mermas
+                        { type: 'loss', originId: 'lima', destinationId: 'lost', quantity: 3, unitPrice: 47.00, observations: 'Pérdida por robo' },
+                        { type: 'damage', originId: 'huancayo', destinationId: 'damaged', quantity: 2, unitPrice: 47.00, observations: 'Daño por humedad' }
+                    ];
+
+                    sampleMovements.forEach((sample, index) => {
+                        setTimeout(() => {
+                            try {
+                                this.addMovement(
+                                    sample.type,
+                                    sample.originId,
+                                    sample.destinationId,
+                                    sample.quantity,
+                                    sample.unitPrice,
+                                    sample.observations
+                                );
+                            } catch (error) {
+                                console.error('Error en movimiento de ejemplo:', error);
+                            }
+                        }, index * 100); // Agregar con pequeño delay
+                    });
+
+                    // Completar transferencias pendientes después de un momento
+                    setTimeout(() => {
+                        const pendingTransfers = this.movements.filter(m => m.type === 'transfer' && m.status === 'pending');
+                        pendingTransfers.forEach(transfer => {
+                            this.confirmTransferReceipt(transfer.id);
+                        });
+                        
+                        this.refreshDashboard();
+                        this.showAlert('Datos de ejemplo cargados exitosamente', 'success');
+                    }, sampleMovements.length * 100 + 500);
+                }
+            }
+
+            exportData() {
+                const data = {
+                    warehouses: this.warehouses,
+                    movements: this.movements,
+                    transfers: this.transfers,
+                    exportDate: new Date().toISOString(),
+                    company: 'Calzados Mirla SAC'
+                };
+
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `calzados_mirla_${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+                this.showAlert('Datos exportados exitosamente', 'success');
+            }
+
+            clearAllData() {
+                if (confirm('¿Está seguro de eliminar todos los datos? Esta acción no se puede deshacer.')) {
+                    if (confirm('Esta acción eliminará permanentemente todos los movimientos y restablecerá los almacenes. ¿Continuar?')) {
+                        localStorage.removeItem('mirla_warehouses');
+                        localStorage.removeItem('mirla_movements');
+                        localStorage.removeItem('mirla_transfers');
+                        
+                        this.initializeWarehouses();
+                        this.movements = [];
+                        this.transfers = [];
+                        this.saveData();
+                        
+                        this.refreshDashboard();
+                        this.populateSelects();
+                        this.showAlert('Todos los datos han sido eliminados', 'warning');
+                    }
+                }
+            }
+
+            // Funciones adicionales de interfaz
+            filterMovements() {
+                this.refreshMovements();
+            }
+
+            viewMovementDetails(movementId) {
+                const movement = this.movements.find(m => m.id === movementId);
+                if (!movement) return;
+
+                const origin = this.warehouses.find(w => w.id === movement.originId);
+                const destination = this.warehouses.find(w => w.id === movement.destinationId);
+
+                alert(`
+                    Detalles del Movimiento ${movement.id}
+                    
+                    Tipo: ${this.getMovementTypeName(movement.type)}
+                    Origen: ${origin?.name || 'Sistema'}
+                    Destino: ${destination?.name || 'N/A'}
+                    Cantidad: ${movement.quantity} pares
+                    Precio Unitario: S/ ${movement.unitPrice.toFixed(2)}
+                    Valor Total: S/ ${movement.totalValue.toFixed(2)}
+                    Estado: ${movement.status === 'completed' ? 'Completado' : 'Pendiente'}
+                    Fecha: ${new Date(movement.date).toLocaleString('es-PE')}
+                    ${movement.observations ? '\nObservaciones: ' + movement.observations : ''}
+                `);
+            }
+        }
+
+        // Inicializar sistema
+        const inventory = new InventorySystem();
+
+        // Funciones globales para los eventos de click
+        function showSection(sectionId) {
+            inventory.showSection(sectionId);
+        }
+
+        function openAddMovementModal(type) {
+            inventory.openAddMovementModal(type);
+        }
+
+        function saveMovement() {
+            inventory.saveMovement();
+        }
+
+        function confirmTransfer() {
+            inventory.confirmTransfer();
+        }
+
+        function filterMovements() {
+            inventory.filterMovements();
+        }
+
+        function generateReport() {
+            inventory.generateReport();
+        }
+
+        function verifyDoubleEntry() {
+            inventory.verifyDoubleEntry();
+        }
+
+        function validateDataIntegrity() {
+            inventory.validateDataIntegrity();
+        }
+
+        function loadSampleData() {
+            inventory.loadSampleData();
+        }
+
+        function exportData() {
+            inventory.exportData();
+        }
+
+        function clearAllData() {
+            inventory.clearAllData();
+        }
+
+        // Responsive sidebar para móviles
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('show');
+        }
+
+        // Atajos de teclado adicionales
+        document.addEventListener('keydown', function(e) {
+            // Ctrl + S para exportar
+            if (e.ctrlKey && e.key === 's') {
+                e.preventDefault();
+                inventory.exportData();
+            }
+            
+            // Ctrl + 1-6 para cambiar secciones
+            if (e.ctrlKey && e.key >= '1' && e.key <= '6') {
+                e.preventDefault();
+                const sections = ['dashboard', 'movements', 'transfers', 'warehouses', 'reports', 'audit'];
+                const index = parseInt(e.key) - 1;
+                if (sections[index]) {
+                    showSection(sections[index]);
+                }
+            }
+            
+            // Escape para cerrar modales
+            if (e.key === 'Escape') {
+                const modals = document.querySelectorAll('.modal.show');
+                modals.forEach(modal => {
+                    bootstrap.Modal.getInstance(modal)?.hide();
+                });
+            }
+        });
+
+        // Auto-guardar cada 5 minutos
+        setInterval(() => {
+            inventory.saveData();
+        }, 5 * 60 * 1000);
+
+        console.log('Sistema de Inventario Calzados Mirla SAC - Inicializado');
+        console.log('Atajos de teclado:');
+        console.log('- Ctrl + 1-6: Cambiar secciones');
+        console.log('- Ctrl + S: Exportar datos');
+        console.log('- Escape: Cerrar modales');
+    </script>
+</body>
+</html>

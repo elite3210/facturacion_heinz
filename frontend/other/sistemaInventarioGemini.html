@@ -1,0 +1,1250 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventario - Calzados Mirla SAC</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <style>
+        /* --- Variables CSS Globales --- */
+:root {
+    --primary-color: #0d6efd;
+    --secondary-color: #6c757d;
+    --light-color: #f8f9fa;
+    --dark-color: #212529;
+    --sidebar-bg: #1e293b;
+    --sidebar-text: #cbd5e1;
+    --sidebar-hover: #334155;
+    --content-bg: #f1f5f9;
+    --card-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+    --primary-gradient: linear-gradient(135deg, #0d6efd, #0558d1);
+}
+
+body {
+    background-color: var(--content-bg);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--dark-color);
+}
+
+/* --- Pantalla de Login --- */
+#login-container {
+    background-color: var(--content-bg);
+}
+.bg-primary-gradient {
+    background: var(--primary-gradient) !important;
+}
+.card-header h3 {
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+}
+
+/* --- Contenedor Principal de la App --- */
+#app-container {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* --- Sidebar de Navegación --- */
+.sidebar {
+    width: 260px;
+    background: var(--sidebar-bg);
+    color: var(--sidebar-text);
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    z-index: 1030;
+    transition: width 0.3s;
+}
+
+.sidebar-header {
+    padding: 1.25rem;
+    font-size: 1.5rem;
+    font-weight: 700;
+    text-align: center;
+    border-bottom: 1px solid var(--sidebar-hover);
+}
+
+.sidebar .nav-link {
+    color: var(--sidebar-text);
+    padding: 0.9rem 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    border-left: 3px solid transparent;
+    transition: all 0.2s ease-in-out;
+}
+
+.sidebar .nav-link i {
+    width: 20px;
+    text-align: center;
+}
+
+.sidebar .nav-link:hover {
+    background: var(--sidebar-hover);
+    color: white;
+}
+
+.sidebar .nav-link.active {
+    background: var(--sidebar-hover);
+    color: white;
+    border-left-color: var(--primary-color);
+    font-weight: 600;
+}
+
+.sidebar-footer {
+    margin-top: auto;
+    padding: 1rem;
+    border-top: 1px solid var(--sidebar-hover);
+}
+
+#user-info {
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+    padding: 0.5rem;
+    background: var(--sidebar-hover);
+    border-radius: 5px;
+    text-align: center;
+}
+
+/* --- Contenido Principal --- */
+.main-content {
+    margin-left: 260px;
+    width: calc(100% - 260px);
+    flex-grow: 1;
+    padding: 1.5rem;
+    transition: margin-left 0.3s;
+}
+
+.main-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #dee2e6;
+    margin-bottom: 1.5rem;
+}
+
+#section-title {
+    font-weight: 300;
+}
+
+/* --- Cards del Dashboard --- */
+.stat-card {
+    border: none;
+    border-radius: 0.75rem;
+    box-shadow: var(--card-shadow);
+    color: white;
+    transition: transform 0.2s, box-shadow 0.2s;
+    overflow: hidden;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 1rem 1.5rem rgba(0,0,0,0.15);
+}
+
+.stat-card .card-body {
+    position: relative;
+    z-index: 2;
+}
+
+.stat-card .card-icon {
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 4rem;
+    color: rgba(255, 255, 255, 0.2);
+    z-index: 1;
+}
+
+.bg-card-1 { background: linear-gradient(135deg, #17a2b8, #128293); }
+.bg-card-2 { background: linear-gradient(135deg, #28a745, #1f8336); }
+.bg-card-3 { background: linear-gradient(135deg, #ffc107, #d39e00); }
+.bg-card-4 { background: linear-gradient(135deg, #dc3545, #b02a37); }
+
+
+/* --- Tablas --- */
+.table-responsive {
+    border-radius: 0.5rem;
+    box-shadow: var(--card-shadow);
+    overflow: hidden;
+}
+
+.table {
+    margin-bottom: 0;
+}
+
+.table thead {
+    background: var(--primary-gradient);
+    color: white;
+}
+
+.table-hover > tbody > tr:hover {
+    background-color: #e9ecef;
+    cursor: pointer;
+}
+
+/* --- Badges --- */
+.badge {
+    font-size: 0.8rem;
+    padding: 0.4em 0.7em;
+}
+.badge-status-Completado { background-color: #28a745; }
+.badge-status-Pendiente { background-color: #ffc107; color: #212529 !important; }
+.badge-status-Anulado { background-color: #6c757d; }
+
+/* --- Modales --- */
+.modal-header .btn-close-white {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+#from-stock-info {
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+/* --- Utilidades y otros --- */
+.d-none {
+    display: none !important;
+}
+
+.cursor-pointer {
+    cursor: pointer;
+}
+    </style>
+</head>
+<body>
+
+    <div id="login-container" class="container-fluid">
+        <div class="row vh-100 justify-content-center align-items-center">
+            <div class="col-md-4">
+                <div class="card shadow-lg border-0 rounded-lg">
+                    <div class="card-header bg-primary-gradient text-white text-center">
+                        <h3 class="fw-light my-4"><i class="fas fa-shoe-prints me-2"></i>Calzados Mirla SAC</h3>
+                    </div>
+                    <div class="card-body p-4">
+                        <form id="login-form">
+                            <div class="form-floating mb-3">
+                                <input class="form-control" id="username" type="text" placeholder="Usuario" required autocomplete="username">
+                                <label for="username"><i class="fas fa-user me-2"></i>Usuario</label>
+                            </div>
+                            <div class="form-floating mb-3">
+                                <input class="form-control" id="password" type="password" placeholder="Contraseña" required autocomplete="current-password">
+                                <label for="password"><i class="fas fa-lock me-2"></i>Contraseña</label>
+                            </div>
+                            <div id="login-error" class="alert alert-danger d-none" role="alert"></div>
+                            <div class="d-grid mt-4 mb-0">
+                                <button class="btn btn-primary btn-lg" type="submit">Ingresar</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="card-footer text-center py-3">
+                        <div class="small">Sistema de Gestión de Inventario v1.0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="app-container" class="d-none">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <i class="fas fa-shoe-prints me-2"></i> Mirla SAC
+            </div>
+            <ul class="nav flex-column">
+                <li class="nav-item"><a class="nav-link active" href="#" data-section="dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                <li class="nav-item"><a class="nav-link" href="#" data-section="movements"><i class="fas fa-dolly"></i> Movimientos</a></li>
+                <li class="nav-item"><a class="nav-link" href="#" data-section="transfers"><i class="fas fa-exchange-alt"></i> Transferencias</a></li>
+                <li class="nav-item"><a class="nav-link" href="#" data-section="reports"><i class="fas fa-chart-pie"></i> Reportes</a></li>
+                <li class="nav-item" id="nav-audit-log"><a class="nav-link" href="#" data-section="audit-log"><i class="fas fa-history"></i> Auditoría</a></li>
+                <li class="nav-item" id="nav-settings"><a class="nav-link" href="#" data-section="settings"><i class="fas fa-cogs"></i> Configuración</a></li>
+            </ul>
+            <div class="sidebar-footer">
+                <div id="user-info"></div>
+                <button id="logout-btn" class="btn btn-danger btn-sm w-100"><i class="fas fa-sign-out-alt"></i> Salir</button>
+            </div>
+        </div>
+
+        <main class="main-content">
+            <header class="main-header">
+                <h2 id="section-title">Dashboard</h2>
+                <div id="autosave-indicator" class="text-muted small"></div>
+            </header>
+            
+            <div id="app-content" class="container-fluid mt-4">
+                </div>
+        </main>
+    </div>
+
+    <div class="modal fade" id="movementModal" tabindex="-1" aria-labelledby="movementModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <form id="movement-form">
+                    <div class="modal-header bg-primary-gradient text-white">
+                        <h5 class="modal-title" id="movementModalLabel">Nuevo Movimiento</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" id="movement-id">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="movement-type" class="form-label">Tipo de Movimiento</label>
+                                <select id="movement-type" class="form-select" required></select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="movement-date" class="form-label">Fecha</label>
+                                <input type="datetime-local" id="movement-date" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3" id="from-warehouse-group">
+                                <label for="from-warehouse" class="form-label">Almacén Origen</label>
+                                <select id="from-warehouse" class="form-select"></select>
+                                <div id="from-stock-info" class="form-text"></div>
+                            </div>
+                            <div class="col-md-6 mb-3" id="to-warehouse-group">
+                                <label for="to-warehouse" class="form-label">Almacén Destino</label>
+                                <select id="to-warehouse" class="form-select"></select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="quantity" class="form-label">Cantidad (Pares)</label>
+                                <input type="number" id="quantity" class="form-control" min="1" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="total-value" class="form-label">Valor Total (S/)</label>
+                                <input type="number" id="total-value" class="form-control" step="0.01" min="0" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                 <label for="unit-price" class="form-label">Precio Unitario (Auto)</label>
+                                <input type="text" id="unit-price" class="form-control" readonly disabled>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="comments" class="form-label">Comentarios</label>
+                            <textarea id="comments" class="form-control" rows="2"></textarea>
+                        </div>
+                        <div id="movement-error" class="alert alert-danger d-none mt-3"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-save me-2"></i>Guardar Movimiento</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+    
+    // ===================================================================================
+    // 1. DATABASE & INITIALIZATION
+    // ===================================================================================
+    const DB = {
+        _DB_KEY: 'mirlaSACInventory',
+
+        get() {
+            return JSON.parse(localStorage.getItem(this._DB_KEY));
+        },
+
+        set(data) {
+            localStorage.setItem(this._DB_KEY, JSON.stringify(data));
+            App.showAutosaveIndicator();
+        },
+
+        init() {
+            if (!this.get()) {
+                console.log("Initializing database with default data...");
+                const initialData = {
+                    users: [
+                        { id: 1, username: "admin", password: "admin123", role: "Administrador", permissions: { warehouses: ["*"] } },
+                        { id: 2, username: "maria.gonzalez", password: "lima123", role: "Encargado", permissions: { warehouses: [2] } },
+                        { id: 3, username: "juan.perez", password: "central123", role: "Encargado", permissions: { warehouses: [1] } },
+                        { id: 4, username: "carlos.mendoza", password: "huancayo123", role: "Encargado", permissions: { warehouses: [3] } },
+                        { id: 5, username: "ana.rodriguez", password: "huaraz123", role: "Encargado", permissions: { warehouses: [4] } },
+                        { id: 6, username: "operador", password: "operador123", role: "Operador", permissions: { warehouses: [1, 2] } },
+                        { id: 7, username: "consulta", password: "consulta123", role: "Solo Consulta", permissions: { warehouses: ["*"] } }
+                    ],
+                    warehouses: [
+                        { id: 1, name: "Almacén Central", type: "Físico", manager: "Juan Pérez", stock: 0, value: 0 },
+                        { id: 2, name: "Tienda Lima", type: "Físico", manager: "María González", stock: 0, value: 0 },
+                        { id: 3, name: "Tienda Huancayo", type: "Físico", manager: "Carlos Mendoza", stock: 0, value: 0 },
+                        { id: 4, name: "Tienda Huaraz", type: "Físico", manager: "Ana Rodríguez", stock: 0, value: 0 },
+                        { id: 5, name: "En Tránsito", type: "Tránsito", manager: "Sistema", stock: 0, value: 0 },
+                        { id: 6, name: "Productos Perdidos", type: "Virtual", manager: "Sistema", stock: 0, value: 0 },
+                        { id: 7, name: "Ventas Realizadas", type: "Virtual", manager: "Sistema", stock: 0, value: 0 },
+                        { id: 8, name: "Productos Dañados", type: "Virtual", manager: "Sistema", stock: 0, value: 0 }
+                    ],
+                    movements: [],
+                    activityLog: [],
+                    config: {
+                        nextMovementId: 1,
+                        nextLogId: 1,
+                        productName: "Calzado Modelo Genérico"
+                    }
+                };
+                this.set(initialData);
+                // Pre-load some data for demonstration
+                this.preloadData();
+            }
+        },
+
+        preloadData() {
+            let db = this.get();
+            const adminUser = db.users.find(u => u.role === 'Administrador');
+            
+            // Initial Balance
+            db = Logic.createMovement(db, {
+                type: 'Ingreso de Saldo Inicial', from: null, to: 1, quantity: 5000, totalValue: 250000, userId: adminUser.id, comments: 'Saldo inicial de producción'
+            });
+            db = Logic.createMovement(db, {
+                type: 'Ingreso de Saldo Inicial', from: null, to: 2, quantity: 1000, totalValue: 55000, userId: adminUser.id, comments: 'Saldo inicial tienda Lima'
+            });
+             db = Logic.createMovement(db, {
+                type: 'Ingreso de Saldo Inicial', from: null, to: 3, quantity: 800, totalValue: 45600, userId: adminUser.id, comments: 'Saldo inicial tienda Huancayo'
+            });
+
+            // Production
+             db = Logic.createMovement(db, {
+                type: 'Producción', from: "Sistema produción", to: 1, quantity: 2000, totalValue: 100000, userId: adminUser.id, comments: 'Producción semanal'
+            });
+
+            // Sale
+             db = Logic.createMovement(db, {
+                type: 'Venta', from: 2, to: 7, quantity: 50, totalValue: 3000, userId: 2, comments: 'Venta a cliente final'
+            });
+
+            this.set(db);
+        },
+
+        clear() {
+            localStorage.removeItem(this._DB_KEY);
+            location.reload();
+        }
+    };
+
+    // ===================================================================================
+    // 2. AUTHENTICATION & PERMISSIONS
+    // ===================================================================================
+    const Auth = {
+        _SESSION_KEY: 'mirlaSACSession',
+
+        getCurrentUser() {
+            return JSON.parse(sessionStorage.getItem(this._SESSION_KEY));
+        },
+
+        login(username, password) {
+            const db = DB.get();
+            const user = db.users.find(u => u.username === username && u.password === password);
+            if (user) {
+                sessionStorage.setItem(this._SESSION_KEY, JSON.stringify(user));
+                Logic.logActivity(`User '${user.username}' logged in.`, user.id);
+                return true;
+            }
+            return false;
+        },
+
+        logout() {
+            const user = this.getCurrentUser();
+            if (user) {
+                Logic.logActivity(`User '${user.username}' logged out.`, user.id);
+            }
+            sessionStorage.removeItem(this._SESSION_KEY);
+            location.reload();
+        },
+
+        isLoggedIn() {
+            return !!this.getCurrentUser();
+        },
+
+        hasPermission(warehouseId) {
+            const user = this.getCurrentUser();
+            if (!user) return false;
+            if (user.permissions.warehouses.includes('*')) return true;
+            return user.permissions.warehouses.includes(warehouseId);
+        },
+
+        can(action) {
+            const user = this.getCurrentUser();
+            if (!user) return false;
+            const role = user.role;
+            switch (action) {
+                case 'manage_settings':
+                case 'view_audit_log':
+                    return role === 'Administrador';
+                case 'confirm_transfer':
+                    return ['Administrador', 'Encargado'].includes(role);
+                case 'create_movement':
+                    return ['Administrador', 'Encargado', 'Operador'].includes(role);
+                case 'view_reports':
+                default:
+                    return true;
+            }
+        }
+    };
+
+    // ===================================================================================
+    // 3. CORE BUSINESS LOGIC
+    // ===================================================================================
+    const Logic = {
+        
+        getWarehouseById(db, id) {
+            return db.warehouses.find(w => w.id === id);
+        },
+
+        // The core of the double-entry system
+        createMovement(db, { type, from, to, quantity, totalValue, userId, comments = '', status = 'Completado', originalMovementId = null }) {
+            quantity = Number(quantity);
+            totalValue = Number(totalValue);
+
+            const fromWarehouse = from ? this.getWarehouseById(db, from) : null;
+            const toWarehouse = to ? this.getWarehouseById(db, to) : null;
+
+            // --- Validation ---
+            if (fromWarehouse && fromWarehouse.stock < quantity) {
+                throw new Error(`Stock insuficiente en ${fromWarehouse.name}. Stock actual: ${fromWarehouse.stock}, se requiere: ${quantity}.`);
+            }
+            if(from && to && from === to){
+                 throw new Error(`El almacén de origen y destino no pueden ser el mismo.`);
+            }
+
+            // --- Update Stock and Value ---
+            let fromPrice = 0;
+            if (fromWarehouse) {
+                fromPrice = fromWarehouse.stock > 0 ? fromWarehouse.value / fromWarehouse.stock : 0;
+                fromWarehouse.stock -= quantity;
+                // If the movement is a sale, the value decreases by the cost, not the sale price
+                if(type === 'Venta'){
+                   fromWarehouse.value -= (quantity * fromPrice);
+                } else {
+                   fromWarehouse.value -= (quantity * fromPrice);
+                }
+            }
+
+            if (toWarehouse) {
+                const incomingValue = type === 'Venta' ? (quantity * fromPrice) : totalValue;
+                toWarehouse.stock += quantity;
+                toWarehouse.value += incomingValue;
+            }
+
+            // --- Create Movement Record ---
+            const movement = {
+                id: db.config.nextMovementId++,
+                timestamp: new Date().toISOString(),
+                type,
+                fromWarehouseId: from,
+                toWarehouseId: to,
+                quantity,
+                totalValue,
+                unitPrice: quantity > 0 ? totalValue / quantity : 0,
+                userId,
+                comments,
+                status,
+                originalMovementId,
+            };
+            db.movements.push(movement);
+
+            Logic.logActivity(`Movement #${movement.id} (${type}) created: ${quantity} units from ${fromWarehouse?.name || 'Origen'} to ${toWarehouse?.name || 'Destino'}.`, userId);
+            
+            return db;
+        },
+        
+        confirmTransfer(movementId, userId) {
+            let db = DB.get();
+            const originalMovement = db.movements.find(m => m.id === movementId && m.status === 'Pendiente');
+            if (!originalMovement) throw new Error("Transferencia no encontrada o ya completada.");
+            
+            // This is the key change for transfers. The movement is FROM 'En Tránsito' TO the final destination.
+            const transitWarehouseId = 5; // ID of 'En Tránsito' warehouse
+            const destinationWarehouseId = originalMovement.originalMovementId; // We stored the final destination here
+
+            const transitWarehouse = this.getWarehouseById(db, transitWarehouseId);
+            
+            // The cost is carried from the transit warehouse
+            const transitValueForItems = (transitWarehouse.value / transitWarehouse.stock) * originalMovement.quantity;
+            
+            originalMovement.status = 'Completado';
+
+            // Create the second leg of the transfer
+            const confirmationMovement = {
+                type: 'Confirmación de Transferencia',
+                from: transitWarehouseId, // From 'En Tránsito'
+                to: destinationWarehouseId, // To final destination
+                quantity: originalMovement.quantity,
+                totalValue: transitValueForItems, 
+                userId,
+                comments: `Confirmación de transferencia #${originalMovement.id}`,
+                status: 'Completado',
+                originalMovementId: originalMovement.id
+            };
+
+            db = this.createMovement(db, confirmationMovement);
+
+            DB.set(db);
+            this.logActivity(`Transfer #${originalMovement.id} confirmed by user ID ${userId}.`, userId);
+        },
+
+        logActivity(details, userId) {
+            const db = DB.get();
+            const logEntry = {
+                id: db.config.nextLogId++,
+                timestamp: new Date().toISOString(),
+                userId,
+                username: db.users.find(u => u.id === userId)?.username || 'System',
+                action: details
+            };
+            db.activityLog.unshift(logEntry);
+            DB.set(db);
+        },
+
+        calculateSystemTotals(db) {
+            const physicalWarehouses = db.warehouses.filter(w => ['Físico', 'Tránsito'].includes(w.type));
+            const totalStock = physicalWarehouses.reduce((sum, w) => sum + w.stock, 0);
+            const totalValue = physicalWarehouses.reduce((sum, w) => sum + w.value, 0);
+            return {
+                totalStock,
+                totalValue,
+                averagePrice: totalStock > 0 ? totalValue / totalStock : 0,
+                totalMovements: db.movements.length,
+            };
+        }
+    };
+
+    // ===================================================================================
+    // 4. UI & RENDERING
+    // ===================================================================================
+    const UI = {
+        
+        init() {
+            if (Auth.isLoggedIn()) {
+                document.getElementById('login-container').classList.add('d-none');
+                document.getElementById('app-container').classList.remove('d-none');
+                this.setupApp();
+            } else {
+                document.getElementById('login-container').classList.remove('d-none');
+                document.getElementById('app-container').classList.add('d-none');
+            }
+        },
+
+        setupApp() {
+            this.renderUserInfo();
+            this.renderSection('dashboard');
+            this.adjustNavForPermissions();
+        },
+
+        renderUserInfo() {
+            const user = Auth.getCurrentUser();
+            document.getElementById('user-info').innerHTML = `
+                <strong>${user.username}</strong><br>
+                <small>${user.role}</small>
+            `;
+        },
+        
+        adjustNavForPermissions() {
+            document.getElementById('nav-audit-log').style.display = Auth.can('view_audit_log') ? 'block' : 'none';
+            document.getElementById('nav-settings').style.display = Auth.can('manage_settings') ? 'block' : 'none';
+        },
+
+        renderSection(sectionId) {
+            document.querySelectorAll('.sidebar .nav-link').forEach(link => link.classList.remove('active'));
+            document.querySelector(`.sidebar .nav-link[data-section="${sectionId}"]`).classList.add('active');
+            
+            const content = document.getElementById('app-content');
+            const title = document.getElementById('section-title');
+            content.innerHTML = '<div class="text-center mt-5"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>';
+
+            // Lazy load content
+            setTimeout(() => {
+                switch (sectionId) {
+                    case 'dashboard':
+                        title.textContent = 'Dashboard';
+                        this.renderDashboard(content);
+                        break;
+                    case 'movements':
+                        title.textContent = 'Historial de Movimientos';
+                        this.renderMovements(content);
+                        break;
+                     case 'transfers':
+                        title.textContent = 'Gestión de Transferencias';
+                        this.renderTransfers(content);
+                        break;
+                    case 'reports':
+                        title.textContent = 'Reportes';
+                        this.renderReports(content);
+                        break;
+                    case 'audit-log':
+                        title.textContent = 'Registro de Auditoría';
+                        this.renderAuditLog(content);
+                        break;
+                    case 'settings':
+                         title.textContent = 'Configuración del Sistema';
+                        this.renderSettings(content);
+                        break;
+                }
+            }, 200);
+        },
+
+        renderDashboard(container) {
+            const db = DB.get();
+            const totals = Logic.calculateSystemTotals(db);
+            const physicalWarehouses = db.warehouses.filter(w => w.type === 'Físico' || w.type === 'Tránsito');
+            
+            container.innerHTML = `
+                <div class="row g-4">
+                    <div class="col-xl-3 col-md-6">
+                        <div class="card stat-card bg-card-1">
+                            <div class="card-body">
+                                <h5 class="card-title">Stock Total (Físico + Tránsito)</h5>
+                                <p class="card-text fs-2 fw-bold">${totals.totalStock.toLocaleString('es-PE')} <span class="fs-6 fw-normal">pares</span></p>
+                            </div>
+                             <div class="card-icon"><i class="fas fa-boxes"></i></div>
+                        </div>
+                    </div>
+                    <div class="col-xl-3 col-md-6">
+                        <div class="card stat-card bg-card-2">
+                            <div class="card-body">
+                                <h5 class="card-title">Valor Total del Inventario</h5>
+                                <p class="card-text fs-2 fw-bold">S/ ${totals.totalValue.toLocaleString('es-PE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
+                            </div>
+                            <div class="card-icon"><i class="fas fa-dollar-sign"></i></div>
+                        </div>
+                    </div>
+                    <div class="col-xl-3 col-md-6">
+                        <div class="card stat-card bg-card-3">
+                            <div class="card-body">
+                                <h5 class="card-title">Precio Promedio Ponderado</h5>
+                                <p class="card-text fs-2 fw-bold">S/ ${totals.averagePrice.toLocaleString('es-PE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
+                            </div>
+                            <div class="card-icon"><i class="fas fa-balance-scale"></i></div>
+                        </div>
+                    </div>
+                     <div class="col-xl-3 col-md-6">
+                        <div class="card stat-card bg-card-4">
+                            <div class="card-body">
+                                <h5 class="card-title">Movimientos Totales</h5>
+                                <p class="card-text fs-2 fw-bold">${totals.totalMovements.toLocaleString('es-PE')}</p>
+                            </div>
+                             <div class="card-icon"><i class="fas fa-dolly"></i></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="card shadow-sm">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5>Resumen de Stock por Almacén</h5>
+                                ${Auth.can('create_movement') ? '<button id="btn-new-movement" class="btn btn-primary btn-sm"><i class="fas fa-plus me-2"></i>Nuevo Movimiento</button>' : ''}
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle">
+                                        <thead class="thead-light">
+                                            <tr>
+                                                <th>Almacén</th><th>Tipo</th><th>Encargado</th><th class="text-end">Stock (Pares)</th><th class="text-end">Valor (S/)</th><th class="text-end">Precio Prom.</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${physicalWarehouses.map(w => `
+                                                <tr>
+                                                    <td><i class="fas fa-warehouse me-2 text-muted"></i>${w.name}</td>
+                                                    <td><span class="badge bg-secondary">${w.type}</span></td>
+                                                    <td>${w.manager}</td>
+                                                    <td class="text-end">${w.stock.toLocaleString('es-PE')}</td>
+                                                    <td class="text-end">S/ ${w.value.toLocaleString('es-PE', {minimumFractionDigits: 2})}</td>
+                                                    <td class="text-end">S/ ${(w.stock > 0 ? w.value / w.stock : 0).toFixed(2)}</td>
+                                                </tr>
+                                            `).join('')}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        },
+        
+        renderMovements(container){
+            const db = DB.get();
+            const movements = [...db.movements].reverse(); // Show latest first
+            
+            container.innerHTML = `
+                 <div class="card shadow-sm">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5>Historial Completo</h5>
+                        ${Auth.can('create_movement') ? '<button id="btn-new-movement" class="btn btn-primary btn-sm"><i class="fas fa-plus me-2"></i>Nuevo Movimiento</button>' : ''}
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                             <table class="table table-hover align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th><th>Fecha</th><th>Tipo</th><th>Origen</th><th>Destino</th><th class="text-end">Cantidad</th><th class="text-end">Valor Total</th><th>Usuario</th><th>Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${movements.map(m => {
+                                        const from = m.fromWarehouseId ? Logic.getWarehouseById(db, m.fromWarehouseId)?.name : 'N/A';
+                                        const to = m.toWarehouseId ? Logic.getWarehouseById(db, m.toWarehouseId)?.name : 'N/A';
+                                        const user = db.users.find(u => u.id === m.userId)?.username || 'N/A';
+                                        return `
+                                            <tr>
+                                                <td>#${m.id}</td>
+                                                <td>${new Date(m.timestamp).toLocaleString('es-PE')}</td>
+                                                <td>${m.type}</td>
+                                                <td>${from}</td>
+                                                <td>${to}</td>
+                                                <td class="text-end">${m.quantity.toLocaleString('es-PE')}</td>
+                                                <td class="text-end">S/ ${m.totalValue.toLocaleString('es-PE', {minimumFractionDigits: 2})}</td>
+                                                <td>${user}</td>
+                                                <td><span class="badge badge-status-${m.status}">${m.status}</span></td>
+                                            </tr>
+                                        `
+                                    }).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            `;
+        },
+        
+        renderTransfers(container){
+            const db = DB.get();
+            const user = Auth.getCurrentUser();
+            const pendingTransfers = db.movements.filter(m => m.status === 'Pendiente' && m.type === 'Transferencia');
+
+            container.innerHTML = `
+                <div class="card shadow-sm">
+                    <div class="card-header">
+                        <h5>Transferencias Pendientes de Confirmación</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>ID Mov.</th><th>Fecha</th><th>Origen</th><th>Destino Final</th><th class="text-end">Cantidad</th><th>Iniciado Por</th><th>Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${pendingTransfers.length === 0 ? '<tr><td colspan="7" class="text-center p-4">No hay transferencias pendientes.</td></tr>' : ''}
+                                    ${pendingTransfers.map(m => {
+                                        const from = Logic.getWarehouseById(db, m.fromWarehouseId)?.name;
+                                        // The final destination is stored in originalMovementId for transfers
+                                        const to = Logic.getWarehouseById(db, m.originalMovementId)?.name; 
+                                        const initiator = db.users.find(u => u.id === m.userId)?.username;
+                                        // Permission check against the final destination warehouse
+                                        const canConfirm = Auth.can('confirm_transfer') && Auth.hasPermission(m.originalMovementId);
+                                        
+                                        return `
+                                            <tr>
+                                                <td>#${m.id}</td>
+                                                <td>${new Date(m.timestamp).toLocaleString('es-PE')}</td>
+                                                <td>${from}</td>
+                                                <td>${to}</td>
+                                                <td class="text-end">${m.quantity.toLocaleString('es-PE')}</td>
+                                                <td>${initiator}</td>
+                                                <td>
+                                                    ${canConfirm ? `<button class="btn btn-success btn-sm btn-confirm-transfer" data-movement-id="${m.id}"><i class="fas fa-check-circle me-1"></i>Confirmar Recepción</button>` : `<span class="text-muted">Pendiente de ${to}</span>`}
+                                                </td>
+                                            </tr>
+                                        `
+                                    }).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            `;
+        },
+        
+        renderReports(container) {
+            const db = DB.get();
+            const allWarehouses = db.warehouses;
+            
+            // Principle of Double Entry check
+            let totalStockAll = 0;
+            let totalValueAll = 0;
+            db.warehouses.forEach(w => {
+                 totalStockAll += w.stock;
+                 totalValueAll += w.value;
+            });
+            const initialStock = db.movements.filter(m => m.type === 'Ingreso de Saldo Inicial' || m.type === 'Producción').reduce((sum, m) => sum + m.quantity, 0);
+            const isBalanced = totalStockAll === initialStock;
+
+            container.innerHTML = `
+                <div class="row g-4">
+                    <div class="col-lg-8">
+                        <div class="card shadow-sm">
+                             <div class="card-header"><h5>Resumen por Almacén</h5></div>
+                             <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table align-middle">
+                                         <thead><tr><th>Almacén</th><th>Tipo</th><th class="text-end">Stock</th><th class="text-end">Valor Total (S/)</th></tr></thead>
+                                         <tbody>
+                                         ${allWarehouses.map(w => `
+                                            <tr>
+                                                <td>${w.name}</td>
+                                                <td><span class="badge bg-secondary">${w.type}</span></td>
+                                                <td class="text-end">${w.stock.toLocaleString('es-PE')}</td>
+                                                <td class="text-end">${w.value.toLocaleString('es-PE', {minimumFractionDigits: 2})}</td>
+                                            </tr>
+                                         `).join('')}
+                                         </tbody>
+                                    </table>
+                                </div>
+                             </div>
+                        </div>
+                    </div>
+                     <div class="col-lg-4">
+                        <div class="card shadow-sm">
+                             <div class="card-header"><h5>Verificación Contable</h5></div>
+                             <div class="card-body">
+                                <h6 class="card-title">Principio de Partida Doble</h6>
+                                <p>Este chequeo verifica que el stock total (incluyendo virtuales) sea igual a todo el stock que ha entrado al sistema. Si es así, el sistema está balanceado.</p>
+                                <ul class="list-group">
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        Stock Total en Sistema (Físicos + Virtuales)
+                                        <span class="badge bg-primary rounded-pill">${totalStockAll.toLocaleString('es-PE')}</span>
+                                    </li>
+                                     <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        Stock Total Ingresado (Producción + Inicial)
+                                        <span class="badge bg-primary rounded-pill">${initialStock.toLocaleString('es-PE')}</span>
+                                    </li>
+                                </ul>
+                                <div class="alert ${isBalanced ? 'alert-success' : 'alert-danger'} mt-3">
+                                     ${isBalanced ? '<i class="fas fa-check-circle me-2"></i>Sistema balanceado.' : '<i class="fas fa-exclamation-triangle me-2"></i>¡Error de balance!'}
+                                </div>
+                             </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        },
+
+        renderAuditLog(container) {
+            const db = DB.get();
+            const logs = [...db.activityLog]; // Already reversed on creation
+
+            container.innerHTML = `
+                <div class="card shadow-sm">
+                    <div class="card-header"><h5>Registro Detallado de Actividades</h5></div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr><th>ID Log</th><th>Fecha y Hora</th><th>Usuario</th><th>Acción</th></tr>
+                                </thead>
+                                <tbody>
+                                    ${logs.map(log => `
+                                        <tr>
+                                            <td>${log.id}</td>
+                                            <td>${new Date(log.timestamp).toLocaleString('es-PE')}</td>
+                                            <td>${log.username}</td>
+                                            <td>${log.action}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            `;
+        },
+        
+        renderSettings(container) {
+             container.innerHTML = `
+                <div class="card shadow-sm">
+                    <div class="card-header"><h5>Opciones de Administrador</h5></div>
+                    <div class="card-body">
+                        <p>Estas acciones son irreversibles y deben usarse con precaución.</p>
+                        <div class="d-flex gap-2">
+                             <button id="btn-export-json" class="btn btn-info"><i class="fas fa-file-export me-2"></i>Exportar Datos (JSON)</button>
+                             <button id="btn-clear-data" class="btn btn-danger"><i class="fas fa-trash me-2"></i>Limpiar toda la Base de Datos</button>
+                        </div>
+                    </div>
+                </div>
+             `;
+        },
+        
+        openMovementModal(movement = null) {
+            const form = document.getElementById('movement-form');
+            form.reset();
+            document.getElementById('movement-error').classList.add('d-none');
+            
+            const modal = new bootstrap.Modal(document.getElementById('movementModal'));
+            const modalTitle = document.getElementById('movementModalLabel');
+            
+            modalTitle.textContent = 'Nuevo Movimiento';
+            this.populateMovementForm();
+
+            document.getElementById('movement-date').value = new Date().toISOString().slice(0, 16);
+
+            modal.show();
+        },
+
+        populateMovementForm() {
+            const user = Auth.getCurrentUser();
+            const db = DB.get();
+            const movementTypeEl = document.getElementById('movement-type');
+            const fromWarehouseEl = document.getElementById('from-warehouse');
+            const toWarehouseEl = document.getElementById('to-warehouse');
+            
+            // Movement types based on roles
+            let movementTypes = {
+                'Ingreso de Saldo Inicial': { from: false, to: true, toTypes: ['Físico']},
+                'Producción': { from: false, to: true, toIds: [1]}, // Only to Central
+                'Transferencia': { from: true, to: true, fromTypes: ['Físico'], toTypes: ['Físico']},
+                'Venta': { from: true, to: true, fromTypes: ['Físico'], toIds: [7]},
+                'Devolución': { from: true, to: true, fromIds: [7], toTypes: ['Físico']},
+                'Pérdida': { from: true, to: true, fromTypes: ['Físico'], toIds: [6]},
+                'Merma por deterioro': { from: true, to: true, fromTypes: ['Físico'], toIds: [8]}
+            };
+
+            movementTypeEl.innerHTML = '<option value="">-- Seleccione un tipo --</option>';
+            for(const type in movementTypes) {
+                // Admins/Managers can do all
+                if(Auth.can('create_movement')){
+                     movementTypeEl.innerHTML += `<option value="${type}">${type}</option>`;
+                }
+            }
+
+            const updateWarehouses = () => {
+                const selectedType = movementTypeEl.value;
+                const config = movementTypes[selectedType];
+                
+                document.getElementById('from-warehouse-group').style.display = config?.from ? 'block' : 'none';
+                document.getElementById('to-warehouse-group').style.display = config?.to ? 'block' : 'none';
+                document.getElementById('from-stock-info').textContent = '';
+
+                if(!config) return;
+
+                const filterWarehouses = (el, type, ids, types) => {
+                    el.innerHTML = '<option value="">-- Seleccione --</option>';
+                    let filtered = db.warehouses;
+                    if(ids) filtered = filtered.filter(w => ids.includes(w.id));
+                    if(types) filtered = filtered.filter(w => types.includes(w.type));
+                    
+                    filtered.forEach(w => {
+                        // For 'from' dropdown, user must have permission.
+                        // For 'to' dropdown, allow selection even without direct permission (e.g., transfers).
+                        if (type === 'from' && Auth.hasPermission(w.id)) {
+                             el.innerHTML += `<option value="${w.id}">${w.name} (${w.stock} pares)</option>`;
+                        } else if (type === 'to') {
+                             el.innerHTML += `<option value="${w.id}">${w.name} (${w.stock} pares)</option>`;
+                        }
+                    });
+                }
+
+                if(config.from) filterWarehouses(fromWarehouseEl, 'from', config.fromIds, config.fromTypes);
+                if(config.to) filterWarehouses(toWarehouseEl, 'to', config.toIds, config.toTypes);
+                
+                // Auto-select if only one option
+                if(toWarehouseEl.options.length === 2) toWarehouseEl.selectedIndex = 1;
+            };
+
+            movementTypeEl.addEventListener('change', updateWarehouses);
+            fromWarehouseEl.addEventListener('change', () => {
+                 const selectedId = fromWarehouseEl.value;
+                 if(!selectedId) {
+                     document.getElementById('from-stock-info').textContent = '';
+                     return;
+                 }
+                 const warehouse = Logic.getWarehouseById(db, parseInt(selectedId));
+                 document.getElementById('from-stock-info').textContent = `Stock disponible: ${warehouse.stock} pares. Valor: S/ ${warehouse.value.toFixed(2)}`;
+            });
+            
+             // Auto calculate unit price
+            const quantityEl = document.getElementById('quantity');
+            const totalValueEl = document.getElementById('total-value');
+            const unitPriceEl = document.getElementById('unit-price');
+
+            const calculatePrice = () => {
+                const quantity = parseFloat(quantityEl.value);
+                const totalValue = parseFloat(totalValueEl.value);
+                if (quantity > 0 && totalValue >= 0) {
+                    unitPriceEl.value = `S/ ${(totalValue / quantity).toFixed(2)}`;
+                } else {
+                    unitPriceEl.value = '';
+                }
+            };
+
+            quantityEl.addEventListener('input', calculatePrice);
+            totalValueEl.addEventListener('input', calculatePrice);
+
+        },
+
+        showAlert(message, type = 'danger') {
+            const errorDiv = document.getElementById('movement-error');
+            errorDiv.textContent = message;
+            errorDiv.className = `alert alert-${type}`; // Remove d-none and set color
+        },
+        
+        showAutosaveIndicator() {
+            const indicator = document.getElementById('autosave-indicator');
+            indicator.innerHTML = `<i class="fas fa-check-circle text-success"></i> Guardado ${new Date().toLocaleTimeString()}`;
+            setTimeout(() => indicator.innerHTML = '', 3000);
+        }
+    };
+    
+    // ===================================================================================
+    // 5. EVENT LISTENERS & APP START
+    // ===================================================================================
+    const App = {
+        init() {
+            DB.init();
+            UI.init();
+            this.addEventListeners();
+            this.setupAutoSave();
+            this.setupKeyboardShortcuts();
+        },
+
+        addEventListeners() {
+            // Login Form
+            document.getElementById('login-form')?.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+                if (Auth.login(username, password)) {
+                    UI.init();
+                } else {
+                    const errorDiv = document.getElementById('login-error');
+                    errorDiv.textContent = 'Usuario o contraseña incorrectos.';
+                    errorDiv.classList.remove('d-none');
+                }
+            });
+
+            // Logout Button
+            // -- CORRECTION HERE --
+            // We use an arrow function to preserve the 'this' context of the Auth object.
+            document.getElementById('logout-btn')?.addEventListener('click', () => {
+                Auth.logout();
+            });
+
+            // Sidebar Navigation
+            document.querySelectorAll('.sidebar .nav-link').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    UI.renderSection(e.currentTarget.dataset.section);
+                });
+            });
+
+            // Dynamic event listeners for buttons inside content area
+            document.getElementById('app-content').addEventListener('click', e => {
+                if (e.target.id === 'btn-new-movement' || e.target.closest('#btn-new-movement')) {
+                    UI.openMovementModal();
+                }
+                 if (e.target.id === 'btn-clear-data') {
+                    if(confirm('¿ESTÁ SEGURO? Esta acción borrará TODOS los datos de la aplicación de forma permanente.')) {
+                        DB.clear();
+                    }
+                }
+                if (e.target.id === 'btn-export-json') {
+                    const data = DB.get();
+                    const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `calzados_mirla_sac_backup_${new Date().toISOString().split('T')[0]}.json`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                }
+                if(e.target.classList.contains('btn-confirm-transfer')) {
+                    const movementId = parseInt(e.target.dataset.movementId);
+                    if(confirm(`¿Confirma la recepción de los productos para la transferencia #${movementId}? Esta acción es irreversible.`)){
+                       try {
+                           Logic.confirmTransfer(movementId, Auth.getCurrentUser().id);
+                           UI.renderSection('transfers'); // Refresh view
+                       } catch(error) {
+                           alert(`Error: ${error.message}`);
+                       }
+                    }
+                }
+            });
+
+            // Movement Form
+            document.getElementById('movement-form').addEventListener('submit', e => {
+                e.preventDefault();
+                const formData = {
+                    type: document.getElementById('movement-type').value,
+                    from: document.getElementById('from-warehouse').value ? parseInt(document.getElementById('from-warehouse').value) : null,
+                    to: document.getElementById('to-warehouse').value ? parseInt(document.getElementById('to-warehouse').value) : null,
+                    quantity: document.getElementById('quantity').value,
+                    totalValue: document.getElementById('total-value').value,
+                    comments: document.getElementById('comments').value,
+                    userId: Auth.getCurrentUser().id
+                };
+
+                if (formData.type === 'Transferencia') {
+                    formData.status = 'Pendiente';
+                    const finalDestinationId = formData.to;
+                    formData.to = 5; // The movement's immediate destination is "En Tránsito"
+                    formData.originalMovementId = finalDestinationId; // Store the final destination for the confirmation step
+                    
+                    let db = DB.get();
+                    const fromWarehouse = Logic.getWarehouseById(db, formData.from);
+                    const fromPrice = fromWarehouse.stock > 0 ? fromWarehouse.value / fromWarehouse.stock : 0;
+                    formData.totalValue = fromPrice * formData.quantity;
+                }
+
+                try {
+                    let db = DB.get();
+                    db = Logic.createMovement(db, formData);
+                    DB.set(db);
+                    
+                    bootstrap.Modal.getInstance(document.getElementById('movementModal')).hide();
+                    UI.renderSection(document.querySelector('.sidebar .nav-link.active').dataset.section);
+
+                } catch (error) {
+                    UI.showAlert(error.message);
+                }
+            });
+        },
+        
+        setupAutoSave() {
+            // The DB.set() already saves on every change, this is a conceptual timer
+            setInterval(() => {
+                // In a real app, this would push to a server
+                console.log("Auto-save cycle (data is already saved in localStorage).");
+            }, 5 * 60 * 1000); // 5 minutes
+        },
+
+        setupKeyboardShortcuts() {
+            document.addEventListener('keydown', e => {
+                // Ctrl+S to export
+                if (e.ctrlKey && e.key === 's') {
+                    e.preventDefault();
+                    if(Auth.isLoggedIn() && Auth.can('manage_settings')){
+                        document.getElementById('btn-export-json')?.click();
+                    }
+                }
+                // Escape to close modal
+                if (e.key === 'Escape') {
+                    const modalEl = document.getElementById('movementModal');
+                    if(modalEl.classList.contains('show')) {
+                        const modal = bootstrap.Modal.getInstance(modalEl);
+                        modal.hide();
+                    }
+                }
+            });
+        },
+        
+        showAutosaveIndicator: UI.showAutosaveIndicator // Expose for DB module
+    };
+
+    // Start the application
+    App.init();
+});
+    </script>
+
+</body>
+</html>

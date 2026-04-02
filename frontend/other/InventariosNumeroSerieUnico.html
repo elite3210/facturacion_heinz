@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gestión de Inventario</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .navbar-brand {
+            font-weight: bold;
+        }
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .scanner-input {
+            font-size: 1.2rem;
+            border: 2px solid #007bff;
+        }
+        .product-card {
+            transition: transform 0.2s;
+        }
+        .product-card:hover {
+            transform: translateY(-2px);
+        }
+        .status-badge {
+            font-size: 0.8rem;
+        }
+        .history-item {
+            border-left: 3px solid #007bff;
+            padding-left: 15px;
+            margin-bottom: 10px;
+        }
+        .scan-area {
+            background: #f8f9fa;
+            border: 2px dashed #dee2e6;
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .scan-area.active {
+            border-color: #007bff;
+            background: #e3f2fd;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="#"><i class="fas fa-boxes"></i> Sistema de Inventario</a>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text me-3" id="currentLocation">Ubicación: Almacén Principal</span>
+                <div class="dropdown">
+                    <button class="btn btn-outline-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-map-marker-alt"></i> Cambiar Ubicación
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item location-item" href="#" data-location="warehouse">Almacén Principal</a></li>
+                        <li><a class="dropdown-item location-item" href="#" data-location="store_001">Tienda Centro</a></li>
+                        <li><a class="dropdown-item location-item" href="#" data-location="store_002">Tienda Norte</a></li>
+                        <li><a class="dropdown-item location-item" href="#" data-location="store_003">Tienda Sur</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Tabs -->
+        <ul class="nav nav-tabs" id="mainTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="scanner-tab" data-bs-toggle="tab" data-bs-target="#scanner" type="button">
+                    <i class="fas fa-qrcode"></i> Escáner
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="products-tab" data-bs-toggle="tab" data-bs-target="#products" type="button">
+                    <i class="fas fa-box"></i> Productos
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="inventory-tab" data-bs-toggle="tab" data-bs-target="#inventory" type="button">
+                    <i class="fas fa-warehouse"></i> Inventario
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="sales-tab" data-bs-toggle="tab" data-bs-target="#sales" type="button">
+                    <i class="fas fa-shopping-cart"></i> Ventas
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content mt-3" id="mainTabContent">
+            <!-- Scanner Tab -->
+            <div class="tab-pane fade show active" id="scanner" role="tabpanel">
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5><i class="fas fa-qrcode"></i> Escáner de Códigos de Barras</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="scan-area" id="scanArea">
+                                    <i class="fas fa-qrcode fa-3x text-muted mb-3"></i>
+                                    <h5>Escanear Código de Barras</h5>
+                                    <p class="text-muted">Haga clic aquí y escanee o ingrese el código manualmente</p>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="barcodeInput" class="form-label">Código de Barras / Número de Serie</label>
+                                    <input type="text" class="form-control scanner-input" id="barcodeInput" placeholder="Escanee o ingrese el código...">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="operationType" class="form-label">Tipo de Operación</label>
+                                    <select class="form-select" id="operationType">
+                                        <option value="receive">Recibir Inventario</option>
+                                        <option value="transfer">Transferir entre Almacenes</option>
+                                        <option value="sale">Venta</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="mb-3" id="transferOptions" style="display: none;">
+                                    <label for="transferTo" class="form-label">Transferir a:</label>
+                                    <select class="form-select" id="transferTo">
+                                        <option value="warehouse">Almacén Principal</option>
+                                        <option value="store_001">Tienda Centro</option>
+                                        <option value="store_002">Tienda Norte</option>
+                                        <option value="store_003">Tienda Sur</option>
+                                    </select>
+                                </div>
+                                
+                                <button type="button" class="btn btn-primary btn-lg w-100" id="processBtn">
+                                    <i class="fas fa-check"></i> Procesar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6><i class="fas fa-info-circle"></i> Información del Producto</h6>
+                            </div>
+                            <div class="card-body" id="productInfo">
+                                <p class="text-muted text-center">Escanee un código para ver la información</p>
+                            </div>
+                        </div>
+                        
+                        <div class="card mt-3">
+                            <div class="card-header">
+                                <h6><i class="fas fa-history"></i> Historial Reciente</h6>
+                            </div>
+                            <div class="card-body" id="recentHistory">
+                                <p class="text-muted text-center">No hay movimientos recientes</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Products Tab -->
+            <div class="tab-pane fade" id="products" role="tabpanel">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5><i class="fas fa-box"></i> Gestión de Productos</h5>
+                        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#productModal">
+                            <i class="fas fa-plus"></i> Nuevo Producto
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="row" id="productsList">
+                            <!-- Products will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Inventory Tab -->
+            <div class="tab-pane fade" id="inventory" role="tabpanel">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-warehouse"></i> Inventario por Ubicación</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Número de Serie</th>
+                                        <th>Producto</th>
+                                        <th>Ubicación</th>
+                                        <th>Estado</th>
+                                        <th>Fecha</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="inventoryTable">
+                                    <!-- Inventory will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sales Tab -->
+            <div class="tab-pane fade" id="sales" role="tabpanel">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-shopping-cart"></i> Historial de Ventas</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Número de Serie</th>
+                                        <th>Producto</th>
+                                        <th>Precio</th>
+                                        <th>Ubicación</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="salesTable">
+                                    <!-- Sales will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Modal -->
+    <div class="modal fade" id="productModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Nuevo Producto</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="productForm">
+                        <div class="mb-3">
+                            <label for="productCode" class="form-label">Código del Producto</label>
+                            <input type="text" class="form-control" id="productCode" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="productName" class="form-label">Nombre del Producto</label>
+                            <input type="text" class="form-control" id="productName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="productPrice" class="form-label">Precio</label>
+                            <input type="number" class="form-control" id="productPrice" step="0.01" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="productBarcode" class="form-label">Código de Barras</label>
+                            <input type="text" class="form-control" id="productBarcode">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="saveProduct">Guardar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- History Modal -->
+    <div class="modal fade" id="historyModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Historial de Movimientos</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="historyModalBody">
+                    <!-- History will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // ==================== MODELS ====================
+        class Product {
+            constructor(code, name, price, barcode = null) {
+                this.id = Date.now() + Math.random();
+                this.code = code;
+                this.name = name;
+                this.price = parseFloat(price);
+                this.barcode = barcode || code;
+                this.createdAt = new Date();
+            }
+        }
+
+        class SerialNumber {
+            constructor(serialNumber, productId, barcode = null) {
+                this.id = Date.now() + Math.random();
+                this.serialNumber = serialNumber;
+                this.productId = productId;
+                this.barcode = barcode || serialNumber;
+                this.status = 'available'; // available, sold, transferred
+                this.currentLocation = 'warehouse';
+                this.createdAt = new Date();
+            }
+        }
+
+        class StockMove {
+            constructor(serialNumberId, fromLocation, toLocation, moveType, reference = null) {
+                this.id = Date.now() + Math.random();
+                this.serialNumberId = serialNumberId;
+                this.fromLocation = fromLocation;
+                this.toLocation = toLocation;
+                this.moveType = moveType; // 'in', 'transfer', 'sale'
+                this.moveDate = new Date();
+                this.reference = reference;
+                this.userId = 'current_user';
+            }
+        }
+
+        class Sale {
+            constructor(serialNumberId, amount, customerInfo = null) {
+                this.id = Date.now() + Math.random();
+                this.serialNumberId = serialNumberId;
+                this.saleDate = new Date();
+                this.amount = parseFloat(amount);
+                this.customerInfo = customerInfo;
+            }
+        }
+
+        // ==================== MODELS MANAGER ====================
+        class DataManager {
+            constructor() {
+                this.initializeData();
+            }
+
+            initializeData() {
+                if (!localStorage.getItem('products')) {
+                    const sampleProducts = [
+                        new Product('CAL001', 'Zapato Formal Negro', 150.00, 'CAL001'),
+                        new Product('CAL002', 'Zapato Deportivo Blanco', 120.00, 'CAL002'),
+                        new Product('CAL003', 'Sandalia de Cuero', 80.00, 'CAL003'),
+                        new Product('CAL004', 'Bota de Seguridad', 200.00, 'CAL004')
+                    ];
+                    localStorage.setItem('products', JSON.stringify(sampleProducts));
+
+                    // Sample serial numbers
+                    const sampleSerials = [
+                        new SerialNumber('SN001001', sampleProducts[0].id),
+                        new SerialNumber('SN001002', sampleProducts[0].id),
+                        new SerialNumber('SN002001', sampleProducts[1].id),
+                        new SerialNumber('SN003001', sampleProducts[2].id),
+                        new SerialNumber('SN004001', sampleProducts[3].id)
+                    ];
+                    localStorage.setItem('serialNumbers', JSON.stringify(sampleSerials));
+                }
+
+                if (!localStorage.getItem('stockMoves')) {
+                    localStorage.setItem('stockMoves', JSON.stringify([]));
+                }
+
+                if (!localStorage.getItem('sales')) {
+                    localStorage.setItem('sales', JSON.stringify([]));
+                }
+            }
+            //obtener todos los productos de LS
+            getProducts() {
+                return JSON.parse(localStorage.getItem('products') || '[]');
+            }
+            //agregar a todos los productos de LS
+            saveProduct(product) {
+                const products = this.getProducts();
+                products.push(product);
+                localStorage.setItem('products', JSON.stringify(products));
+            }
+            //obtener todos los serialNumber de LS
+            getSerialNumbers() {
+                return JSON.parse(localStorage.getItem('serialNumbers') || '[]');
+            }
+            //agregar a todos los serialNumber de LS
+            saveSerialNumber(serial) {
+                const serials = this.getSerialNumbers();
+                serials.push(serial);
+                localStorage.setItem('serialNumbers', JSON.stringify(serials));
+            }
+
+            updateSerialNumber(serialId, updates) {
+                const serials = this.getSerialNumbers();
+                const index = serials.findIndex(s => s.id === serialId);
+                if (index !== -1) {
+                    Object.assign(serials[index], updates);
+                    localStorage.setItem('serialNumbers', JSON.stringify(serials));
+                }
+            }
+
+            getStockMoves() {
+                return JSON.parse(localStorage.getItem('stockMoves') || '[]');
+            }
+
+            saveStockMove(move) {
+                const moves = this.getStockMoves();
+                moves.push(move);
+                localStorage.setItem('stockMoves', JSON.stringify(moves));
+            }
+
+            getSales() {
+                return JSON.parse(localStorage.getItem('sales') || '[]');
+            }
+
+            saveSale(sale) {
+                const sales = this.getSales();
+                sales.push(sale);
+                localStorage.setItem('sales', JSON.stringify(sales));
+            }
+
+            findSerialByBarcode(barcode) {
+                const serials = this.getSerialNumbers();
+                return serials.find(s => s.barcode === barcode || s.serialNumber === barcode);
+            }
+
+            findProductByBarcode(barcode) {
+                const products = this.getProducts();
+                return products.find(p => p.barcode === barcode || p.code === barcode);
+            }
+
+            findProductById(id) {
+                const products = this.getProducts();
+                return products.find(p => p.id === id);
+            }
+        }
+
+        // ==================== CONTROLLER ====================
+        class InventoryController {
+            constructor() {
+                this.dataManager = new DataManager();
+                this.currentLocation = 'warehouse';
+                this.view = new InventoryView(this);
+                this.initializeApp();
+            }
+
+            initializeApp() {
+                this.view.initialize();
+                this.setupEventListeners();
+                this.loadInitialData();
+            }
+
+            setupEventListeners() {
+                // Scanner events
+                document.getElementById('barcodeInput').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        this.processScan();
+                    }
+                });
+
+                document.getElementById('processBtn').addEventListener('click', () => {
+                    this.processScan();
+                });
+
+                document.getElementById('operationType').addEventListener('change', (e) => {
+                    this.view.toggleTransferOptions(e.target.value === 'transfer');
+                });
+
+                // Location change
+                document.querySelectorAll('.location-item').forEach(item => {
+                    item.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        this.changeLocation(e.target.dataset.location);
+                    });
+                });
+
+                // Product form
+                document.getElementById('saveProduct').addEventListener('click', () => {
+                    this.saveProduct();
+                });
+
+                // Tab changes
+                document.querySelectorAll('[data-bs-toggle="tab"]').forEach(tab => {
+                    tab.addEventListener('shown.bs.tab', (e) => {
+                        this.onTabChange(e.target.id);
+                    });
+                });
+            }
+
+            loadInitialData() {
+                this.view.loadProducts();
+                this.view.loadInventory();
+                this.view.loadSales();
+            }
+
+            changeLocation(location) {
+                this.currentLocation = location;
+                this.view.updateCurrentLocation(location);
+                this.view.loadInventory(); // Reload inventory for new location
+            }
+
+            processScan() {
+                const barcode = document.getElementById('barcodeInput').value.trim();
+                const operationType = document.getElementById('operationType').value;
+                
+                if (!barcode) {
+                    this.view.showAlert('Por favor ingrese un código de barras', 'warning');
+                    return;
+                }
+
+                const result = this.processBarcodeScan(barcode, operationType);
+                this.view.displayScanResult(result);
+                
+                if (result.success) {
+                    document.getElementById('barcodeInput').value = '';
+                    this.view.loadInventory();
+                    this.view.loadSales();
+                }
+            }
+
+            processBarcodeScan(barcode, operationType) {
+                // First, try to find existing serial number
+                let serial = this.dataManager.findSerialByBarcode(barcode);
+                let product = null;
+
+                if (serial) {
+                    product = this.dataManager.findProductById(serial.productId);
+                } else {
+                    // Try to find product by barcode
+                    product = this.dataManager.findProductByBarcode(barcode);
+                }
+
+                if (!product) {
+                    return {
+                        success: false,
+                        error: 'Producto no encontrado',
+                        barcode: barcode
+                    };
+                }
+
+                switch (operationType) {
+                    case 'receive':
+                        return this.processReceive(barcode, product, serial);
+                    case 'transfer':
+                        return this.processTransfer(barcode, product, serial);
+                    case 'sale':
+                        return this.processSale(barcode, product, serial);
+                    default:
+                        return { success: false, error: 'Tipo de operación no válido' };
+                }
+            }
+
+            processReceive(barcode, product, serial) {
+                if (serial) {
+                    return {
+                        success: false,
+                        error: 'Este número de serie ya existe en el sistema'
+                    };
+                }
+
+                // Create new serial number
+                const newSerial = new SerialNumber(barcode, product.id, barcode);
+                newSerial.currentLocation = this.currentLocation;
+                
+                this.dataManager.saveSerialNumber(newSerial);
+
+                // Create stock move
+                const move = new StockMove(newSerial.id, 'supplier', this.currentLocation, 'in');
+                this.dataManager.saveStockMove(move);
+
+                return {
+                    success: true,
+                    operation: 'receive',
+                    product: product,
+                    serial: newSerial,
+                    message: 'Producto recibido exitosamente'
+                };
+            }
+
+            processTransfer(barcode, product, serial) {
+                if (!serial) {
+                    return {
+                        success: false,
+                        error: 'Número de serie no encontrado'
+                    };
+                }
+
+                if (serial.currentLocation !== this.currentLocation) {
+                    return {
+                        success: false,
+                        error: `El producto no está en ${this.getLocationName(this.currentLocation)}`
+                    };
+                }
+
+                if (serial.status === 'sold') {
+                    return {
+                        success: false,
+                        error: 'Este producto ya fue vendido'
+                    };
+                }
+
+                const transferTo = document.getElementById('transferTo').value;
+                
+                if (transferTo === this.currentLocation) {
+                    return {
+                        success: false,
+                        error: 'No se puede transferir a la misma ubicación'
+                    };
+                }
+
+                // Update serial location
+                this.dataManager.updateSerialNumber(serial.id, {
+                    currentLocation: transferTo
+                });
+
+                // Create stock move
+                const move = new StockMove(serial.id, this.currentLocation, transferTo, 'transfer');
+                this.dataManager.saveStockMove(move);
+
+                return {
+                    success: true,
+                    operation: 'transfer',
+                    product: product,
+                    serial: serial,
+                    transferTo: transferTo,
+                    message: `Producto transferido a ${this.getLocationName(transferTo)}`
+                };
+            }
+
+            processSale(barcode, product, serial) {
+                if (!serial) {
+                    return {
+                        success: false,
+                        error: 'Número de serie no encontrado'
+                    };
+                }
+
+                if (serial.currentLocation !== this.currentLocation) {
+                    return {
+                        success: false,
+                        error: `El producto no está en ${this.getLocationName(this.currentLocation)}`
+                    };
+                }
+
+                if (serial.status === 'sold') {
+                    return {
+                        success: false,
+                        error: 'Este producto ya fue vendido'
+                    };
+                }
+
+                // Only allow sales from stores
+                if (this.currentLocation === 'warehouse') {
+                    return {
+                        success: false,
+                        error: 'Las ventas solo se pueden realizar desde las tiendas'
+                    };
+                }
+
+                // Create sale
+                const sale = new Sale(serial.id, product.price);
+                this.dataManager.saveSale(sale);
+
+                // Update serial status
+                this.dataManager.updateSerialNumber(serial.id, {
+                    status: 'sold'
+                });
+
+                // Create stock move
+                const move = new StockMove(serial.id, this.currentLocation, 'customer', 'sale');
+                this.dataManager.saveStockMove(move);
+
+                return {
+                    success: true,
+                    operation: 'sale',
+                    product: product,
+                    serial: serial,
+                    amount: product.price,
+                    message: `Venta realizada por $${product.price.toFixed(2)}`
+                };
+            }
+
+            saveProduct() {
+                const code = document.getElementById('productCode').value.trim();
+                const name = document.getElementById('productName').value.trim();
+                const price = document.getElementById('productPrice').value.trim();
+                const barcode = document.getElementById('productBarcode').value.trim();
+
+                if (!code || !name || !price) {
+                    this.view.showAlert('Por favor complete todos los campos requeridos', 'warning');
+                    return;
+                }
+
+                const product = new Product(code, name, price, barcode);
+                this.dataManager.saveProduct(product);
+
+                this.view.showAlert('Producto guardado exitosamente', 'success');
+                this.view.loadProducts();
+                
+                // Reset form
+                document.getElementById('productForm').reset();
+                bootstrap.Modal.getInstance(document.getElementById('productModal')).hide();
+            }
+
+            getLocationName(location) {
+                const locations = {
+                    'warehouse': 'Almacén Principal',
+                    'store_001': 'Tienda Centro',
+                    'store_002': 'Tienda Norte',
+                    'store_003': 'Tienda Sur'
+                };
+                return locations[location] || location;
+            }
+
+            onTabChange(tabId) {
+                switch (tabId) {
+                    case 'products-tab':
+                        this.view.loadProducts();
+                        break;
+                    case 'inventory-tab':
+                        this.view.loadInventory();
+                        break;
+                    case 'sales-tab':
+                        this.view.loadSales();
+                        break;
+                }
+            }
+
+            showSerialHistory(serialNumber) {
+                const moves = this.dataManager.getStockMoves()
+                    .filter(move => {
+                        const serial = this.dataManager.getSerialNumbers()
+                            .find(s => s.id === move.serialNumberId);
+                        return serial && serial.serialNumber === serialNumber;
+                    })
+                    .sort((a, b) => new Date(b.moveDate) - new Date(a.moveDate));
+
+                this.view.showHistoryModal(serialNumber, moves);
+            }
+        }
+
+        // ==================== VIEW ====================
+        class InventoryView {
+            constructor(controller) {
+                this.controller = controller;
+            }
+
+            initialize() {
+                this.setupScanArea();
+            }
+
+            setupScanArea() {
+                const scanArea = document.getElementById('scanArea');
+                const barcodeInput = document.getElementById('barcodeInput');
+
+                scanArea.addEventListener('click', () => {
+                    barcodeInput.focus();
+                    scanArea.classList.add('active');
+                });
+
+                barcodeInput.addEventListener('focus', () => {
+                    scanArea.classList.add('active');
+                });
+
+                barcodeInput.addEventListener('blur', () => {
+                    scanArea.classList.remove('active');
+                });
+            }
+
+            updateCurrentLocation(location) {
+                const locationNames = {
+                    'warehouse': 'Almacén Principal',
+                    'store_001': 'Tienda Centro',
+                    'store_002': 'Tienda Norte',
+                    'store_003': 'Tienda Sur'
+                };
+                document.getElementById('currentLocation').textContent = 
+                    `Ubicación: ${locationNames[location]}`;
+            }
+
+            toggleTransferOptions(show) {
+                document.getElementById('transferOptions').style.display = show ? 'block' : 'none';
+            }
+
+            displayScanResult(result) {
+                const productInfo = document.getElementById('productInfo');
+                
+                if (result.success) {
+                    productInfo.innerHTML = `
+                        <div class="alert alert-success">
+                            <strong><i class="fas fa-check-circle"></i> ${result.message}</strong>
+                        </div>
+                        <div class="product-details">
+                            <h6><strong>${result.product.name}</strong></h6>
+                            <p class="mb-1"><strong>Código:</strong> ${result.product.code}</p>
+                            <p class="mb-1"><strong>Precio:</strong> $${result.product.price.toFixed(2)}</p>
+                            <p class="mb-1"><strong>N° Serie:</strong> ${result.serial.serialNumber}</p>
+                            ${result.operation === 'sale' ? `<p class="mb-1"><strong>Total:</strong> ${result.amount.toFixed(2)}</p>` : ''}
+                        </div>
+                    `;
+                    this.showAlert(result.message, 'success');
+                    this.addToRecentHistory(result);
+                } else {
+                    productInfo.innerHTML = `
+                        <div class="alert alert-danger">
+                            <strong><i class="fas fa-exclamation-triangle"></i> Error</strong><br>
+                            ${result.error}
+                        </div>
+                    `;
+                    this.showAlert(result.error, 'danger');
+                }
+            }
+
+            addToRecentHistory(result) {
+                const recentHistory = document.getElementById('recentHistory');
+                const timestamp = new Date().toLocaleString();
+                const operationIcons = {
+                    'receive': 'fas fa-arrow-down text-success',
+                    'transfer': 'fas fa-exchange-alt text-info',
+                    'sale': 'fas fa-shopping-cart text-warning'
+                };
+
+                const historyItem = document.createElement('div');
+                historyItem.className = 'history-item';
+                historyItem.innerHTML = `
+                    <div class="d-flex align-items-center mb-1">
+                        <i class="${operationIcons[result.operation]} me-2"></i>
+                        <small><strong>${result.product.name}</strong></small>
+                    </div>
+                    <small class="text-muted">${result.serial.serialNumber} - ${timestamp}</small>
+                `;
+
+                if (recentHistory.children.length === 0 || recentHistory.firstChild.textContent.includes('No hay movimientos')) {
+                    recentHistory.innerHTML = '';
+                }
+
+                recentHistory.insertBefore(historyItem, recentHistory.firstChild);
+
+                // Keep only last 5 items
+                while (recentHistory.children.length > 5) {
+                    recentHistory.removeChild(recentHistory.lastChild);
+                }
+            }
+
+            loadProducts() {
+                const products = this.controller.dataManager.getProducts();
+                const productsList = document.getElementById('productsList');
+
+                if (products.length === 0) {
+                    productsList.innerHTML = '<div class="col-12"><p class="text-center text-muted">No hay productos registrados</p></div>';
+                    return;
+                }
+
+                productsList.innerHTML = products.map(product => `
+                    <div class="col-md-6 col-lg-4 mb-3">
+                        <div class="card product-card h-100">
+                            <div class="card-body">
+                                <h6 class="card-title">${product.name}</h6>
+                                <p class="card-text">
+                                    <strong>Código:</strong> ${product.code}<br>
+                                    <strong>Precio:</strong> ${product.price.toFixed(2)}<br>
+                                    <strong>Código de Barras:</strong> ${product.barcode}
+                                </p>
+                                <small class="text-muted">Creado: ${new Date(product.createdAt).toLocaleDateString()}</small>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            loadInventory() {
+                const serials = this.controller.dataManager.getSerialNumbers();
+                const products = this.controller.dataManager.getProducts();
+                const inventoryTable = document.getElementById('inventoryTable');
+
+                // Filter by current location if not viewing all
+                const filteredSerials = serials.filter(serial => 
+                    serial.currentLocation === this.controller.currentLocation || 
+                    this.controller.currentLocation === 'all'
+                );
+
+                if (filteredSerials.length === 0) {
+                    inventoryTable.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No hay productos en esta ubicación</td></tr>';
+                    return;
+                }
+
+                inventoryTable.innerHTML = filteredSerials.map(serial => {
+                    const product = products.find(p => p.id === serial.productId);
+                    const statusColors = {
+                        'available': 'success',
+                        'sold': 'danger',
+                        'transferred': 'info'
+                    };
+
+                    return `
+                        <tr>
+                            <td><code>${serial.serialNumber}</code></td>
+                            <td>${product ? product.name : 'Producto no encontrado'}</td>
+                            <td>${this.controller.getLocationName(serial.currentLocation)}</td>
+                            <td>
+                                <span class="badge bg-${statusColors[serial.status]} status-badge">
+                                    ${serial.status.toUpperCase()}
+                                </span>
+                            </td>
+                            <td>${new Date(serial.createdAt).toLocaleDateString()}</td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-info" onclick="app.showSerialHistory('${serial.serialNumber}')">
+                                    <i class="fas fa-history"></i> Historial
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            loadSales() {
+                const sales = this.controller.dataManager.getSales();
+                const serials = this.controller.dataManager.getSerialNumbers();
+                const products = this.controller.dataManager.getProducts();
+                const salesTable = document.getElementById('salesTable');
+
+                if (sales.length === 0) {
+                    salesTable.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No hay ventas registradas</td></tr>';
+                    return;
+                }
+
+                // Sort sales by date (newest first)
+                const sortedSales = sales.sort((a, b) => new Date(b.saleDate) - new Date(a.saleDate));
+
+                salesTable.innerHTML = sortedSales.map(sale => {
+                    const serial = serials.find(s => s.id === sale.serialNumberId);
+                    const product = serial ? products.find(p => p.id === serial.productId) : null;
+
+                    return `
+                        <tr>
+                            <td>${new Date(sale.saleDate).toLocaleDateString()}</td>
+                            <td><code>${serial ? serial.serialNumber : 'N/A'}</code></td>
+                            <td>${product ? product.name : 'Producto no encontrado'}</td>
+                            <td><strong>${sale.amount.toFixed(2)}</strong></td>
+                            <td>${serial ? this.controller.getLocationName(serial.currentLocation) : 'N/A'}</td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            showHistoryModal(serialNumber, moves) {
+                const historyModalBody = document.getElementById('historyModalBody');
+                const modal = new bootstrap.Modal(document.getElementById('historyModal'));
+
+                if (moves.length === 0) {
+                    historyModalBody.innerHTML = '<p class="text-muted text-center">No hay movimientos registrados para este número de serie</p>';
+                } else {
+                    const moveTypeNames = {
+                        'in': 'Entrada de Inventario',
+                        'transfer': 'Transferencia',
+                        'sale': 'Venta'
+                    };
+
+                    const moveTypeIcons = {
+                        'in': 'fas fa-arrow-down text-success',
+                        'transfer': 'fas fa-exchange-alt text-info',
+                        'sale': 'fas fa-shopping-cart text-warning'
+                    };
+
+                    historyModalBody.innerHTML = `
+                        <h6>Historial de Movimientos - Número de Serie: <code>${serialNumber}</code></h6>
+                        <div class="timeline mt-3">
+                            ${moves.map(move => `
+                                <div class="history-item mb-3">
+                                    <div class="d-flex align-items-center">
+                                        <i class="${moveTypeIcons[move.moveType]} me-3"></i>
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-1">${moveTypeNames[move.moveType]}</h6>
+                                            <p class="mb-1">
+                                                <strong>Desde:</strong> ${this.controller.getLocationName(move.fromLocation)} 
+                                                <i class="fas fa-arrow-right mx-2"></i>
+                                                <strong>Hacia:</strong> ${this.controller.getLocationName(move.toLocation)}
+                                            </p>
+                                            <small class="text-muted">
+                                                <i class="fas fa-clock"></i> ${new Date(move.moveDate).toLocaleString()}
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                }
+
+                modal.show();
+            }
+
+            showAlert(message, type) {
+                // Remove existing alerts
+                const existingAlerts = document.querySelectorAll('.custom-alert');
+                existingAlerts.forEach(alert => alert.remove());
+
+                const alertDiv = document.createElement('div');
+                alertDiv.className = `alert alert-${type} alert-dismissible fade show custom-alert`;
+                alertDiv.style.position = 'fixed';
+                alertDiv.style.top = '20px';
+                alertDiv.style.right = '20px';
+                alertDiv.style.zIndex = '9999';
+                alertDiv.style.minWidth = '300px';
+                alertDiv.innerHTML = `
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+
+                document.body.appendChild(alertDiv);
+
+                // Auto remove after 5 seconds
+                setTimeout(() => {
+                    if (alertDiv.parentNode) {
+                        alertDiv.remove();
+                    }
+                }, 5000);
+            }
+        }
+
+        // ==================== APP INITIALIZATION ====================
+        let app;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            app = new InventoryController();
+            
+            // Global functions for onclick events
+            window.app = app;
+        });
+
+        // Service Worker for offline functionality (optional)
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js').then(function(registration) {
+                    console.log('ServiceWorker registration successful');
+                }, function(err) {
+                    console.log('ServiceWorker registration failed');
+                });
+            });
+        }
+    </script>
+</body>
+</html>

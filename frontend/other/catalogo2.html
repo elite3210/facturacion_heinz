@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Catálogo Hogar Elegante</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            overflow: hidden;
+            height: 100vh;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+        }
+
+        .catalog-container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            backdrop-filter: blur(10px);
+        }
+
+        .page {
+            flex: 1;
+            display: none;
+            padding: 20px;
+            animation: fadeIn 0.8s ease-in-out;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            margin: 10px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+
+        .page.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Página de portada */
+        .cover-page {
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            background: linear-gradient(45deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.05));
+        }
+
+        .logo {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+        }
+
+        .company-title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #fff, #f0f0f0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 30px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+        }
+
+        .contact-info {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .contact-info h3 {
+            color: white;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .contact-item span {
+            margin-right: 10px;
+            font-size: 1.2rem;
+        }
+
+        /* Páginas de productos */
+        .products-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            flex: 1;
+            padding: 10px 0;
+        }
+
+        .product-card {
+            background: rgba(255, 255, 255, 0.25);
+            border-radius: 15px;
+            padding: 15px;
+            text-align: center;
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .product-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            transition: left 0.5s;
+        }
+
+        .product-card:hover::before {
+            left: 100%;
+        }
+
+        .product-icon {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            display: block;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+        }
+
+        .product-name {
+            font-weight: bold;
+            color: white;
+            margin-bottom: 8px;
+            font-size: 1rem;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+        }
+
+        .product-description {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.8rem;
+            margin-bottom: 10px;
+            line-height: 1.3;
+        }
+
+        .product-price {
+            font-weight: bold;
+            color: #ffeb3b;
+            font-size: 1.1rem;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Página de cierre */
+        .closing-page {
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .closing-title {
+            font-size: 2rem;
+            color: white;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .closing-message {
+            font-size: 1.1rem;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+
+        /* Navegación */
+        .navigation {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px 25px;
+            border-radius: 50px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+        }
+
+        .nav-button {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .nav-button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .nav-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .page-indicator {
+            color: white;
+            font-weight: bold;
+            font-size: 0.9rem;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+            background: rgba(255, 255, 255, 0.1);
+            padding: 8px 15px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        /* Animaciones */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideInLeft {
+            from { transform: translateX(-100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .slide-left {
+            animation: slideInLeft 0.5s ease-out;
+        }
+
+        .slide-right {
+            animation: slideInRight 0.5s ease-out;
+        }
+
+        /* Responsive para escritorio */
+        @media (min-width: 768px) {
+            .catalog-container {
+                max-width: 400px;
+                margin: 0 auto;
+                border-radius: 20px;
+                overflow: hidden;
+                margin-top: 20px;
+                height: calc(100vh - 40px);
+            }
+
+            .products-grid {
+                gap: 20px;
+            }
+
+            .product-card {
+                padding: 20px;
+            }
+
+            .logo {
+                font-size: 5rem;
+            }
+
+            .company-title {
+                font-size: 3rem;
+            }
+        }
+
+        /* Efectos de carga */
+        .product-card {
+            animation: bounceIn 0.6s ease-out;
+            animation-fill-mode: both;
+        }
+
+        .product-card:nth-child(1) { animation-delay: 0.1s; }
+        .product-card:nth-child(2) { animation-delay: 0.2s; }
+        .product-card:nth-child(3) { animation-delay: 0.3s; }
+        .product-card:nth-child(4) { animation-delay: 0.4s; }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0.3); opacity: 0; }
+            50% { transform: scale(1.05); opacity: 0.8; }
+            70% { transform: scale(0.9); opacity: 0.9; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Mejoras táctiles */
+        .nav-button, .product-card {
+            -webkit-tap-highlight-color: transparent;
+        }
+    </style>
+</head>
+<body>
+    <div class="catalog-container">
+        <!-- Página 1: Portada -->
+        <div class="page cover-page active" data-page="1">
+            <div class="logo">🏠</div>
+            <h1 class="company-title">HOGAR ELEGANTE</h1>
+            <p class="subtitle">CATÁLOGO</p>
+            <div class="contact-info">
+                <h3>Información de Contacto</h3>
+                <div class="contact-item">
+                    <span>📞</span>
+                    <span>+51 987 654 321</span>
+                </div>
+                <div class="contact-item">
+                    <span>📧</span>
+                    <span>info@hogarelegante.pe</span>
+                </div>
+                <div class="contact-item">
+                    <span>📍</span>
+                    <span>Av. Principal 123, Lima, Perú</span>
+                </div>
+                <div class="contact-item">
+                    <span>🌐</span>
+                    <span>www.hogarelegante.pe</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Páginas 2-6: Productos -->
+        <div class="page" data-page="2">
+            <div class="products-grid" id="products-page-1"></div>
+        </div>
+
+        <div class="page" data-page="3">
+            <div class="products-grid" id="products-page-2"></div>
+        </div>
+
+        <div class="page" data-page="4">
+            <div class="products-grid" id="products-page-3"></div>
+        </div>
+
+        <div class="page" data-page="5">
+            <div class="products-grid" id="products-page-4"></div>
+        </div>
+
+        <div class="page" data-page="6">
+            <div class="products-grid" id="products-page-5"></div>
+        </div>
+
+        <!-- Página 7: Cierre -->
+        <div class="page closing-page" data-page="7">
+            <div class="closing-title">¡Gracias por su Interés!</div>
+            <div class="closing-message">
+                En Hogar Elegante estamos comprometidos con brindarle los mejores productos para su hogar. 
+                Contáctenos para más información sobre nuestros productos y servicios.
+            </div>
+            <div class="contact-info">
+                <h3>Contáctanos Ahora</h3>
+                <div class="contact-item">
+                    <span>📞</span>
+                    <span>+51 987 654 321</span>
+                </div>
+                <div class="contact-item">
+                    <span>📧</span>
+                    <span>ventas@hogarelegante.pe</span>
+                </div>
+                <div class="contact-item">
+                    <span>💬</span>
+                    <span>WhatsApp: +51 987 654 321</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navegación -->
+    <div class="navigation">
+        <button class="nav-button" id="prevBtn" onclick="previousPage()">← Anterior</button>
+        <div class="page-indicator" id="pageIndicator">Página 1 de 7</div>
+        <button class="nav-button" id="nextBtn" onclick="nextPage()">Siguiente →</button>
+    </div>
+
+    <script>
+        // Datos del catálogo en formato JSON
+        const catalogData = {
+            "empresa": "Hogar Elegante",
+            "productos": [
+                // Página 1 - Muebles
+                {
+                    "icono": "🛋️",
+                    "nombre": "Sofá Modular Premium",
+                    "descripcion": "Sofá modular de 3 piezas, tapizado en tela premium, estructura de madera maciza. Perfecto para salas modernas.",
+                    "precio": "S/ 2,899",
+                    "linkImagen": "/images/sofa-modular.jpg"
+                },
+                {
+                    "icono": "🪑",
+                    "nombre": "Silla Ergonómica Office",
+                    "descripcion": "Silla de oficina con soporte lumbar, ajustable en altura, brazos acolchados y base giratoria de 360°.",
+                    "precio": "S/ 599",
+                    "linkImagen": "/images/silla-office.jpg"
+                },
+                {
+                    "icono": "🛏️",
+                    "nombre": "Cama King Size Luxury",
+                    "descripcion": "Cama matrimonial king size con cabecera tapizada, incluye colchón ortopédico de resortes ensacados.",
+                    "precio": "S/ 3,499",
+                    "linkImagen": "/images/cama-king.jpg"
+                },
+                {
+                    "icono": "🗄️",
+                    "nombre": "Closet Organizador",
+                    "descripcion": "Closet de 6 puertas con espejos, compartimentos internos, cajones y barra para colgar ropa.",
+                    "precio": "S/ 1,899",
+                    "linkImagen": "/images/closet-organizador.jpg"
+                },
+                // Página 2 - Textiles
+                {
+                    "icono": "🛏️",
+                    "nombre": "Juego de Sábanas Premium",
+                    "descripcion": "Set completo de sábanas 100% algodón egipcio, incluye fundas de almohada y edredón suave.",
+                    "precio": "S/ 299",
+                    "linkImagen": "/images/sabanas-premium.jpg"
+                },
+                {
+                    "icono": "🏺",
+                    "nombre": "Cortinas Blackout",
+                    "descripcion": "Cortinas bloqueadoras de luz, perfectas para dormitorios. Incluye sistema de instalación fácil.",
+                    "precio": "S/ 189",
+                    "linkImagen": "/images/cortinas-blackout.jpg"
+                },
+                {
+                    "icono": "🧸",
+                    "nombre": "Alfombra Persa Moderna",
+                    "descripcion": "Alfombra de diseño persa contemporáneo, 2x3 metros, materiales antialérgicos y lavable.",
+                    "precio": "S/ 799",
+                    "linkImagen": "/images/alfombra-persa.jpg"
+                },
+                {
+                    "icono": "🛋️",
+                    "nombre": "Cojines Decorativos Set",
+                    "descripcion": "Set de 4 cojines decorativos con diferentes texturas y colores, fundas removibles y lavables.",
+                    "precio": "S/ 149",
+                    "linkImagen": "/images/cojines-set.jpg"
+                },
+                // Página 3 - Electrodomésticos
+                {
+                    "icono": "❄️",
+                    "nombre": "Refrigeradora French Door",
+                    "descripcion": "Refrigeradora de 500L con tecnología inverter, dispensador de agua, compartimento flex zone.",
+                    "precio": "S/ 4,299",
+                    "linkImagen": "/images/refrigeradora-french.jpg"
+                },
+                {
+                    "icono": "🔥",
+                    "nombre": "Cocina a Gas Premium",
+                    "descripcion": "Cocina de 6 hornillas con horno grande, encendido automático, quemadores de diferentes potencias.",
+                    "precio": "S/ 2,199",
+                    "linkImagen": "/images/cocina-gas.jpg"
+                },
+                {
+                    "icono": "🌪️",
+                    "nombre": "Lavadora Automática",
+                    "descripcion": "Lavadora de 18kg con 12 programas de lavado, tecnología inverter y función de autolavado.",
+                    "precio": "S/ 1,899",
+                    "linkImagen": "/images/lavadora-automatica.jpg"
+                },
+                {
+                    "icono": "☕",
+                    "nombre": "Cafetera Espresso",
+                    "descripcion": "Máquina de café espresso automática con espumador de leche, depósito de 2L y molinillo integrado.",
+                    "precio": "S/ 899",
+                    "linkImagen": "/images/cafetera-espresso.jpg"
+                },
+                // Página 4 - Decoración
+                {
+                    "icono": "🖼️",
+                    "nombre": "Cuadros Modernos Set",
+                    "descripcion": "Set de 3 cuadros con diseños abstractos modernos, marcos de aluminio, perfectos para sala.",
+                    "precio": "S/ 399",
+                    "linkImagen": "/images/cuadros-modernos.jpg"
+                },
+                {
+                    "icono": "🕯️",
+                    "nombre": "Lámpara de Mesa LED",
+                    "descripcion": "Lámpara de mesa con luz LED regulable, diseño minimalista, control táctil y puerto USB.",
+                    "precio": "S/ 249",
+                    "linkImagen": "/images/lampara-mesa.jpg"
+                },
+                {
+                    "icono": "🪴",
+                    "nombre": "Maceta Decorativa Grande",
+                    "descripcion": "Maceta de cerámica con diseño geométrico, ideal para plantas grandes, incluye plato recolector.",
+                    "precio": "S/ 179",
+                    "linkImagen": "/images/maceta-decorativa.jpg"
+                },
+                {
+                    "icono": "🕰️",
+                    "nombre": "Reloj de Pared Vintage",
+                    "descripcion": "Reloj de pared con números romanos, diseño vintage, silencioso, perfecto para cualquier ambiente.",
+                    "precio": "S/ 129",
+                    "linkImagen": "/images/reloj-pared.jpg"
+                },
+                // Página 5 - Organización
+                {
+                    "icono": "📚",
+                    "nombre": "Estantería Modular",
+                    "descripcion": "Sistema de estanterías modulares de 5 niveles, estructura metálica resistente, fácil armado.",
+                    "precio": "S/ 449",
+                    "linkImagen": "/images/estanteria-modular.jpg"
+                },
+                {
+                    "icono": "🧺",
+                    "nombre": "Cestas Organizadoras",
+                    "descripción": "Set de 3 cestas de mimbre con diferentes tamaños, perfectas para organizar ropa y accesorios.",
+                    "precio": "S/ 189",
+                    "linkImagen": "/images/cestas-organizadoras.jpg"
+                },
+                {
+                    "icono": "🗃️",
+                    "nombre": "Archivador Oficina",
+                    "descripcion": "Archivador rodante de 3 cajones con cerradura, rieles telescópicos y sistema antivuelco.",
+                    "precio": "S/ 329",
+                    "linkImagen": "/images/archivador-oficina.jpg"
+                },
+                {
+                    "icono": "👔",
+                    "nombre": "Organizador de Zapatos",
+                    "descripcion": "Mueble organizador para 20 pares de zapatos, con puertas y ventilación, diseño compacto.",
+                    "precio": "S/ 279",
+                    "linkImagen": "/images/organizador-zapatos.jpg"
+                }
+            ]
+        };
+
+        // Variables globales
+        let currentPage = 1;
+        const totalPages = 7;
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let isSwiping = false;
+
+        // Audio context para efectos de sonido
+        let audioContext;
+        
+        function initAudio() {
+            try {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            } catch (e) {
+                console.log('Audio no disponible');
+            }
+        }
+
+        function playPageTurnSound() {
+            if (!audioContext) return;
+            
+            try {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(400, audioContext.currentTime + 0.1);
+                
+                gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.3);
+            } catch (e) {
+                console.log('Error reproduciendo sonido');
+            }
+        }
+
+        // Cargar productos en las páginas
+        function loadProducts() {
+            const productos = catalogData.productos;
+            let productIndex = 0;
+
+            for (let page = 1; page <= 5; page++) {
+                const container = document.getElementById(`products-page-${page}`);
+                container.innerHTML = '';
+
+                for (let i = 0; i < 4; i++) {
+                    if (productIndex < productos.length) {
+                        const producto = productos[productIndex];
+                        const productCard = document.createElement('div');
+                        productCard.className = 'product-card';
+                        productCard.innerHTML = `
+                            <div class="product-icon">${producto.icono}</div>
+                            <div class="product-name">${producto.nombre}</div>
+                            <div class="product-description">${producto.descripcion}</div>
+                            <div class="product-price">${producto.precio}</div>
+                        `;
+                        container.appendChild(productCard);
+                        productIndex++;
+                    }
+                }
+            }
+        }
+
+        // Mostrar página específica
+        function showPage(pageNum, direction = null) {
+            const pages = document.querySelectorAll('.page');
+            const targetPage = document.querySelector(`[data-page="${pageNum}"]`);
+            
+            pages.forEach(page => {
+                page.classList.remove('active', 'slide-left', 'slide-right');
+            });
+            
+            if (targetPage) {
+                targetPage.classList.add('active');
+                if (direction === 'next') {
+                    targetPage.classList.add('slide-left');
+                } else if (direction === 'prev') {
+                    targetPage.classList.add('slide-right');
+                }
+            }
+            
+            updateNavigation();
+            playPageTurnSound();
+        }
+
+        // Actualizar estado de navegación
+        function updateNavigation() {
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const pageIndicator = document.getElementById('pageIndicator');
+            
+            prevBtn.disabled = currentPage === 1;
+            nextBtn.disabled = currentPage === totalPages;
+            pageIndicator.textContent = `Página ${currentPage} de ${totalPages}`;
+        }
+
+        // Funciones de navegación
+        function nextPage() {
+            if (currentPage < totalPages) {
+                currentPage++;
+                showPage(currentPage, 'next');
+            }
+        }
+
+        function previousPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                showPage(currentPage, 'prev');
+            }
+        }
+
+        // Navegación con teclado
+        function handleKeydown(event) {
+            switch(event.key) {
+                case 'ArrowRight':
+                case ' ':
+                    event.preventDefault();
+                    nextPage();
+                    break;
+                case 'ArrowLeft':
+                    event.preventDefault();
+                    previousPage();
+                    break;
+            }
+        }
+
+        // Detección de gestos táctiles
+        function handleTouchStart(event) {
+            touchStartX = event.touches[0].clientX;
+            touchStartY = event.touches[0].clientY;
+            isSwiping = false;
+        }
+
+        function handleTouchMove(event) {
+            if (!touchStartX || !touchStartY) return;
+            
+            const touchEndX = event.touches[0].clientX;
+            const touchEndY = event.touches[0].clientY;
+            
+            const deltaX = touchStartX - touchEndX;
+            const deltaY = touchStartY - touchEndY;
+            
+            // Detectar si es swipe horizontal o scroll vertical
+            if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 30) {
+                isSwiping = true;
+                event.preventDefault(); // Prevenir scroll durante swipe
+            }
+        }
+
+        function handleTouchEnd(event) {
+            if (!touchStartX || !touchStartY || !isSwiping) {
+                touchStartX = 0;
+                touchStartY = 0;
+                isSwiping = false;
+                return;
+            }
+            
+            const touchEndX = event.changedTouches[0].clientX;
+            const deltaX = touchStartX - touchEndX;
+            
+            // Swipe hacia la izquierda = siguiente página
+            if (deltaX > 50) {
+                nextPage();
+            }
+            // Swipe hacia la derecha = página anterior
+            else if (deltaX < -50) {
+                previousPage();
+            }
+            
+            touchStartX = 0;
+            touchStartY = 0;
+            isSwiping = false;
+        }
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', function() {
+            // Cargar productos
+            loadProducts();
+            
+            // Inicializar audio
+            initAudio();
+            
+            // Event listeners
+            document.addEventListener('keydown', handleKeydown);
+            document.addEventListener('touchstart', handleTouchStart, { passive: false });
+            document.addEventListener('touchmove', handleTouchMove, { passive: false });
+            document.addEventListener('touchend', handleTouchEnd, { passive: false });
+            
+            // Inicializar navegación
+            updateNavigation();
+            
+            // Activar audio al primer toque (requisito de navegadores)
+            document.addEventListener('touchstart', function initAudioContext() {
+                if (audioContext && audioContext.state === 'suspended') {
+                    audioContext.resume();
+                }
+                document.removeEventListener('touchstart', initAudioContext);
+            }, { once: true });
+            
+            // Prevenir zoom y comportamientos no deseados
+            document.addEventListener('gesturestart', function(e) {
+                e.preventDefault();
+            });
+            
+            document.addEventListener('gesturechange', function(e) {
+                e.preventDefault();
+            });
+            
+            document.addEventListener('gestureend', function(e) {
+                e.preventDefault();
+            });
+        });
+
+        // Exponer funciones globalmente para los botones
+        window.nextPage = nextPage;
+        window.previousPage = previousPage;
+    </script>
+</body>
+</html>

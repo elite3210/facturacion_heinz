@@ -1,0 +1,1280 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema Contable Perú - PCGE</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.0/font/bootstrap-icons.min.css" rel="stylesheet">
+    <style>
+        .sidebar {
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 250px;
+            background: #2c3e50;
+            overflow-y: auto;
+            transition: all 0.3s;
+        }
+        .sidebar.collapsed {
+            width: 60px;
+        }
+        .main-content {
+            margin-left: 250px;
+            transition: all 0.3s;
+        }
+        .main-content.expanded {
+            margin-left: 60px;
+        }
+        .nav-link {
+            color: #ecf0f1 !important;
+            padding: 15px 20px;
+            border-bottom: 1px solid #34495e;
+        }
+        .nav-link:hover {
+            background: #34495e;
+            color: #3498db !important;
+        }
+        .nav-link.active {
+            background: #3498db;
+            color: white !important;
+        }
+        .brand {
+            color: #ecf0f1;
+            font-weight: bold;
+            text-align: center;
+            padding: 20px;
+            border-bottom: 2px solid #34495e;
+        }
+        .section {
+            display: none;
+        }
+        .section.active {
+            display: block;
+        }
+        .table-responsive {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .btn-toggle {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            z-index: 1050;
+            background: #2c3e50;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .cuenta-padre {
+            font-weight: bold;
+            background-color: #f8f9fa;
+        }
+        .cuenta-divisionaria {
+            padding-left: 20px;
+            font-size: 0.9em;
+        }
+        .form-floating {
+            margin-bottom: 15px;
+        }
+        .financial-card {
+            border: none;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .financial-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 8px 8px 0 0;
+        }
+    </style>
+</head>
+<body>
+    <button class="btn-toggle" onclick="toggleSidebar()">
+        <i class="bi bi-list"></i>
+    </button>
+
+    <!-- Sidebar -->
+    <nav class="sidebar" id="sidebar">
+        <div class="brand">
+            <h5>Sistema Contable</h5>
+            <small>PCGE - Perú</small>
+        </div>
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link active" href="#" onclick="showSection('dashboard')">
+                    <i class="bi bi-speedometer2"></i> Dashboard
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" onclick="showSection('asiento')">
+                    <i class="bi bi-journal-plus"></i> Realizar Asiento
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" onclick="showSection('plan-cuentas')">
+                    <i class="bi bi-list-ul"></i> Plan de Cuentas
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" onclick="showSection('libro-diario')">
+                    <i class="bi bi-journal"></i> Libro Diario
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" onclick="showSection('libro-mayor')">
+                    <i class="bi bi-book"></i> Libro Mayor
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" onclick="showSection('registro-ventas')">
+                    <i class="bi bi-cart-plus"></i> Registro Ventas
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" onclick="showSection('registro-compras')">
+                    <i class="bi bi-bag-plus"></i> Registro Compras
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" onclick="showSection('balance-comprobacion')">
+                    <i class="bi bi-calculator"></i> Balance Comprobación
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" onclick="showSection('balance-general')">
+                    <i class="bi bi-pie-chart"></i> Balance General
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" onclick="showSection('estado-resultados')">
+                    <i class="bi bi-graph-up"></i> Estado Resultados
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+        <div class="container-fluid p-4">
+            
+            <!-- Dashboard -->
+            <div id="dashboard" class="section active">
+                <h2><i class="bi bi-speedometer2"></i> Dashboard Contable</h2>
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title">Total Asientos</h5>
+                                <h3 class="text-primary" id="totalAsientos">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title">Ventas Registradas</h5>
+                                <h3 class="text-success" id="totalVentas">S/ 0.00</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title">Compras Registradas</h5>
+                                <h3 class="text-warning" id="totalCompras">S/ 0.00</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title">Utilidad Neta</h5>
+                                <h3 class="text-info" id="utilidadNeta">S/ 0.00</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Realizar Asiento -->
+            <div id="asiento" class="section">
+                <h2><i class="bi bi-journal-plus"></i> Realizar Asiento Contable</h2>
+                <form id="asientoForm">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-floating">
+                                <input type="date" class="form-control" id="fechaAsiento" required>
+                                <label for="fechaAsiento">Fecha</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-floating">
+                                <select class="form-control" id="libroAuxiliar">
+                                    <option value="DIARIO">Libro Diario</option>
+                                    <option value="VENTAS">Registro de Ventas</option>
+                                    <option value="COMPRAS">Registro de Compras</option>
+                                    <option value="CAJA">Libro de Caja</option>
+                                    <option value="BANCOS">Libro de Bancos</option>
+                                </select>
+                                <label for="libroAuxiliar">Libro Auxiliar</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-floating">
+                                <input type="text" class="form-control" id="numeroAsiento" readonly>
+                                <label for="numeroAsiento">N° Asiento</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-floating">
+                        <textarea class="form-control" id="descripcionAsiento" style="height: 80px" required></textarea>
+                        <label for="descripcionAsiento">Descripción del Asiento</label>
+                    </div>
+
+                    <h4>Detalle del Asiento</h4>
+                    <div id="detalleAsiento">
+                        <div class="row detalle-item">
+                            <div class="col-md-4">
+                                <div class="form-floating">
+                                    <select class="form-control cuenta-select" required>
+                                        <option value="">Seleccione cuenta...</option>
+                                    </select>
+                                    <label>Cuenta</label>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-floating">
+                                    <input type="number" step="0.01" class="form-control debe-input">
+                                    <label>Debe</label>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-floating">
+                                    <input type="number" step="0.01" class="form-control haber-input">
+                                    <label>Haber</label>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="button" class="btn btn-success" onclick="addDetalleItem()">
+                                    <i class="bi bi-plus"></i>
+                                </button>
+                                <button type="button" class="btn btn-danger" onclick="removeDetalleItem(this)">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <strong>Total Debe: S/ <span id="totalDebe">0.00</span></strong>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Total Haber: S/ <span id="totalHaber">0.00</span></strong>
+                        </div>
+                    </div>
+
+                    <div class="mt-3">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save"></i> Guardar Asiento
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="limpiarAsiento()">
+                            <i class="bi bi-arrow-clockwise"></i> Limpiar
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Plan de Cuentas -->
+            <div id="plan-cuentas" class="section">
+                <h2><i class="bi bi-list-ul"></i> Plan de Cuentas PCGE</h2>
+                <div class="table-responsive">
+                    <table class="table table-striped" id="planCuentasTable">
+                        <thead>
+                            <tr>
+                                <th>Código</th>
+                                <th>Descripción</th>
+                                <th>Tipo</th>
+                                <th>Naturaleza</th>
+                            </tr>
+                        </thead>
+                        <tbody id="planCuentasBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Libro Diario -->
+            <div id="libro-diario" class="section">
+                <h2><i class="bi bi-journal"></i> Libro Diario</h2>
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>N° Asiento</th>
+                                <th>Descripción</th>
+                                <th>Cuenta</th>
+                                <th>Debe</th>
+                                <th>Haber</th>
+                                <th>Libro</th>
+                            </tr>
+                        </thead>
+                        <tbody id="libroDiarioBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Libro Mayor -->
+            <div id="libro-mayor" class="section">
+                <h2><i class="bi bi-book"></i> Libro Mayor</h2>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-floating">
+                            <select class="form-control" id="cuentaMayor">
+                                <option value="">Seleccione cuenta...</option>
+                            </select>
+                            <label>Seleccionar Cuenta</label>
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        <button class="btn btn-primary" onclick="mostrarMayor()">
+                            <i class="bi bi-search"></i> Ver Mayor
+                        </button>
+                    </div>
+                </div>
+                <div id="mayorContent"></div>
+            </div>
+
+            <!-- Registro de Ventas -->
+            <div id="registro-ventas" class="section">
+                <h2><i class="bi bi-cart-plus"></i> Registro de Ventas</h2>
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Tipo Doc.</th>
+                                <th>Serie-Número</th>
+                                <th>Cliente</th>
+                                <th>Base Imponible</th>
+                                <th>IGV</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="registroVentasBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Registro de Compras -->
+            <div id="registro-compras" class="section">
+                <h2><i class="bi bi-bag-plus"></i> Registro de Compras</h2>
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Tipo Doc.</th>
+                                <th>Serie-Número</th>
+                                <th>Proveedor</th>
+                                <th>Base Imponible</th>
+                                <th>IGV</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="registroComprasBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Balance de Comprobación -->
+            <div id="balance-comprobacion" class="section">
+                <h2><i class="bi bi-calculator"></i> Balance de Comprobación</h2>
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <div class="form-floating">
+                            <select class="form-control" id="nivelBalance">
+                                <option value="2">2 Dígitos (Cuentas)</option>
+                                <option value="3">3 Dígitos (Divisionarias)</option>
+                            </select>
+                            <label>Nivel de Detalle</label>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-primary" onclick="generarBalanceComprobacion()">
+                            <i class="bi bi-calculator"></i> Generar Balance
+                        </button>
+                    </div>
+                </div>
+                <div id="balanceComprobacionContent"></div>
+            </div>
+
+            <!-- Balance General -->
+            <div id="balance-general" class="section">
+                <h2><i class="bi bi-pie-chart"></i> Balance General</h2>
+                <button class="btn btn-primary mb-3" onclick="generarBalanceGeneral()">
+                    <i class="bi bi-file-earmark-text"></i> Generar Balance General
+                </button>
+                <div id="balanceGeneralContent"></div>
+            </div>
+
+            <!-- Estado de Resultados -->
+            <div id="estado-resultados" class="section">
+                <h2><i class="bi bi-graph-up"></i> Estado de Resultados</h2>
+                <button class="btn btn-primary mb-3" onclick="generarEstadoResultados()">
+                    <i class="bi bi-file-earmark-bar-graph"></i> Generar Estado de Resultados
+                </button>
+                <div id="estadoResultadosContent"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Base de datos en localStorage
+        const DB = {
+            get: (key) => JSON.parse(localStorage.getItem(key)) || [],
+            set: (key, data) => localStorage.setItem(key, JSON.stringify(data)),
+            add: (key, item) => {
+                const data = DB.get(key);
+                data.push(item);
+                DB.set(key, data);
+            }
+        };
+
+        // Plan de Cuentas PCGE
+        const PLAN_CUENTAS = [
+            // Cuentas de 2 dígitos (Padres)
+            {codigo: '10', nombre: 'CAJA Y BANCOS', tipo: 'ACTIVO', naturaleza: 'DEUDORA', nivel: 2, padre: null},
+            {codigo: '12', nombre: 'CUENTAS POR COBRAR COMERCIALES - TERCEROS', tipo: 'ACTIVO', naturaleza: 'DEUDORA', nivel: 2, padre: null},
+            {codigo: '20', nombre: 'MERCADERÍAS', tipo: 'ACTIVO', naturaleza: 'DEUDORA', nivel: 2, padre: null},
+            {codigo: '25', nombre: 'MATERIALES AUXILIARES, SUMINISTROS Y REPUESTOS', tipo: 'ACTIVO', naturaleza: 'DEUDORA', nivel: 2, padre: null},
+            {codigo: '33', nombre: 'INMUEBLES, MAQUINARIA Y EQUIPO', tipo: 'ACTIVO', naturaleza: 'DEUDORA', nivel: 2, padre: null},
+            {codigo: '39', nombre: 'DEPRECIACIÓN, AMORTIZACIÓN Y AGOTAMIENTO ACUMULADOS', tipo: 'ACTIVO', naturaleza: 'ACREEDORA', nivel: 2, padre: null},
+            {codigo: '40', nombre: 'TRIBUTOS, CONTRAPRESTACIONES Y APORTES AL SISTEMA DE PENSIONES Y DE SALUD POR PAGAR', tipo: 'PASIVO', naturaleza: 'ACREEDORA', nivel: 2, padre: null},
+            {codigo: '42', nombre: 'CUENTAS POR PAGAR COMERCIALES - TERCEROS', tipo: 'PASIVO', naturaleza: 'ACREEDORA', nivel: 2, padre: null},
+            {codigo: '50', nombre: 'CAPITAL', tipo: 'PATRIMONIO', naturaleza: 'ACREEDORA', nivel: 2, padre: null},
+            {codigo: '60', nombre: 'COMPRAS', tipo: 'GASTO', naturaleza: 'DEUDORA', nivel: 2, padre: null},
+            {codigo: '63', nombre: 'GASTOS POR SERVICIOS PRESTADOS POR TERCEROS', tipo: 'GASTO', naturaleza: 'DEUDORA', nivel: 2, padre: null},
+            {codigo: '65', nombre: 'OTROS GASTOS DE GESTIÓN', tipo: 'GASTO', naturaleza: 'DEUDORA', nivel: 2, padre: null},
+            {codigo: '68', nombre: 'VALUACIÓN Y DETERIORO DE ACTIVOS Y PROVISIONES', tipo: 'GASTO', naturaleza: 'DEUDORA', nivel: 2, padre: null},
+            {codigo: '69', nombre: 'COSTO DE VENTAS', tipo: 'GASTO', naturaleza: 'DEUDORA', nivel: 2, padre: null},
+            {codigo: '70', nombre: 'VENTAS', tipo: 'INGRESO', naturaleza: 'ACREEDORA', nivel: 2, padre: null},
+            {codigo: '77', nombre: 'INGRESOS FINANCIEROS', tipo: 'INGRESO', naturaleza: 'ACREEDORA', nivel: 2, padre: null},
+            
+            // Divisionarias de 3 dígitos (Hijos)
+            {codigo: '101', nombre: 'Caja', tipo: 'ACTIVO', naturaleza: 'DEUDORA', nivel: 3, padre: '10'},
+            {codigo: '104', nombre: 'Cuentas corrientes en instituciones financieras', tipo: 'ACTIVO', naturaleza: 'DEUDORA', nivel: 3, padre: '10'},
+            {codigo: '121', nombre: 'Facturas, boletas y otros comprobantes por cobrar', tipo: 'ACTIVO', naturaleza: 'DEUDORA', nivel: 3, padre: '12'},
+            {codigo: '201', nombre: 'Mercaderías manufacturadas', tipo: 'ACTIVO', naturaleza: 'DEUDORA', nivel: 3, padre: '20'},
+            {codigo: '251', nombre: 'Materiales auxiliares', tipo: 'ACTIVO', naturaleza: 'DEUDORA', nivel: 3, padre: '25'},
+            {codigo: '334', nombre: 'Equipo de transporte', tipo: 'ACTIVO', naturaleza: 'DEUDORA', nivel: 3, padre: '33'},
+            {codigo: '391', nombre: 'Depreciación acumulada', tipo: 'ACTIVO', naturaleza: 'ACREEDORA', nivel: 3, padre: '39'},
+            {codigo: '401', nombre: 'Gobierno central', tipo: 'PASIVO', naturaleza: 'ACREEDORA', nivel: 3, padre: '40'},
+            {codigo: '421', nombre: 'Facturas, boletas y otros comprobantes por pagar', tipo: 'PASIVO', naturaleza: 'ACREEDORA', nivel: 3, padre: '42'},
+            {codigo: '501', nombre: 'Capital social', tipo: 'PATRIMONIO', naturaleza: 'ACREEDORA', nivel: 3, padre: '50'},
+            {codigo: '601', nombre: 'Mercaderías', tipo: 'GASTO', naturaleza: 'DEUDORA', nivel: 3, padre: '60'},
+            {codigo: '632', nombre: 'Honorarios, comisiones y corretajes', tipo: 'GASTO', naturaleza: 'DEUDORA', nivel: 3, padre: '63'},
+            {codigo: '636', nombre: 'Servicios básicos', tipo: 'GASTO', naturaleza: 'DEUDORA', nivel: 3, padre: '63'},
+            {codigo: '659', nombre: 'Otros gastos de gestión', tipo: 'GASTO', naturaleza: 'DEUDORA', nivel: 3, padre: '65'},
+            {codigo: '681', nombre: 'Depreciación', tipo: 'GASTO', naturaleza: 'DEUDORA', nivel: 3, padre: '68'},
+            {codigo: '691', nombre: 'Mercaderías', tipo: 'GASTO', naturaleza: 'DEUDORA', nivel: 3, padre: '69'},
+            {codigo: '701', nombre: 'Mercaderías', tipo: 'INGRESO', naturaleza: 'ACREEDORA', nivel: 3, padre: '70'},
+            {codigo: '772', nombre: 'Rendimientos ganados', tipo: 'INGRESO', naturaleza: 'ACREEDORA', nivel: 3, padre: '77'}
+        ];
+
+        // Inicializar datos
+        function initializeData() {
+            if (!localStorage.getItem('planCuentas')) {
+                DB.set('planCuentas', PLAN_CUENTAS);
+            }
+            if (!localStorage.getItem('asientos')) {
+                DB.set('asientos', []);
+            }
+            if (!localStorage.getItem('registroVentas')) {
+                DB.set('registroVentas', []);
+            }
+            if (!localStorage.getItem('registroCompras')) {
+                DB.set('registroCompras', []);
+            }
+        }
+
+        // Toggle sidebar
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+            sidebar.classList.toggle('collapsed');
+            mainContent.classList.toggle('expanded');
+        }
+
+        // Show section
+        function showSection(sectionId) {
+            // Hide all sections
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Remove active class from all nav links
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            
+            // Show selected section
+            document.getElementById(sectionId).classList.add('active');
+            
+            // Add active class to clicked nav link
+            event.target.classList.add('active');
+            
+            // Load section data
+            loadSectionData(sectionId);
+        }
+
+        // Load section data
+        function loadSectionData(sectionId) {
+            switch(sectionId) {
+                case 'dashboard':
+                    updateDashboard();
+                    break;
+                case 'asiento':
+                    loadCuentasSelect();
+                    setNextAsientoNumber();
+                    break;
+                case 'plan-cuentas':
+                    loadPlanCuentas();
+                    break;
+                case 'libro-diario':
+                    loadLibroDiario();
+                    break;
+                case 'libro-mayor':
+                    loadCuentasMayor();
+                    break;
+                case 'registro-ventas':
+                    loadRegistroVentas();
+                    break;
+                case 'registro-compras':
+                    loadRegistroCompras();
+                    break;
+            }
+        }
+
+        // Update dashboard
+        function updateDashboard() {
+            const asientos = DB.get('asientos');
+            const ventas = DB.get('registroVentas');
+            const compras = DB.get('registroCompras');
+            
+            document.getElementById('totalAsientos').textContent = asientos.length;
+            
+            const totalVentas = ventas.reduce((sum, venta) => sum + parseFloat(venta.total || 0), 0);
+            document.getElementById('totalVentas').textContent = 'S/ ' + totalVentas.toFixed(2);
+            
+            const totalCompras = compras.reduce((sum, compra) => sum + parseFloat(compra.total || 0), 0);
+            document.getElementById('totalCompras').textContent = 'S/ ' + totalCompras.toFixed(2);
+            
+            // Calcular utilidad básica
+            const utilidad = totalVentas - totalCompras;
+            document.getElementById('utilidadNeta').textContent = 'S/ ' + utilidad.toFixed(2);
+        }
+
+        // Load cuentas for select
+        function loadCuentasSelect() {
+            const planCuentas = DB.get('planCuentas');
+            const selects = document.querySelectorAll('.cuenta-select');
+            
+            selects.forEach(select => {
+                select.innerHTML = '<option value="">Seleccione cuenta...</option>';
+                
+                planCuentas
+                    .filter(cuenta => cuenta.nivel === 3) // Solo divisionarias
+                    .forEach(cuenta => {
+                        const option = document.createElement('option');
+                        option.value = cuenta.codigo;
+                        option.textContent = `${cuenta.codigo} - ${cuenta.nombre}`;
+                        select.appendChild(option);
+                    });
+            });
+        }
+
+        // Set next asiento number
+        function setNextAsientoNumber() {
+            const asientos = DB.get('asientos');
+            const nextNumber = String(asientos.length + 1).padStart(4, '0');
+            document.getElementById('numeroAsiento').value = nextNumber;
+        }
+
+        // Add detail item
+        function addDetalleItem() {
+            const detalleContainer = document.getElementById('detalleAsiento');
+            const newItem = detalleContainer.children[0].cloneNode(true);
+            
+            // Clear values
+            newItem.querySelectorAll('input, select').forEach(input => {
+                if (input.type !== 'button') {
+                    input.value = '';
+                }
+            });
+            
+            detalleContainer.appendChild(newItem);
+            loadCuentasSelect();
+            setupCalculations();
+        }
+
+        // Remove detail item
+        function removeDetalleItem(button) {
+            const detalleContainer = document.getElementById('detalleAsiento');
+            if (detalleContainer.children.length > 1) {
+                button.closest('.detalle-item').remove();
+                calculateTotals();
+            }
+        }
+
+        // Setup calculations
+        function setupCalculations() {
+            document.querySelectorAll('.debe-input, .haber-input').forEach(input => {
+                input.addEventListener('input', calculateTotals);
+            });
+        }
+
+        // Calculate totals
+        function calculateTotals() {
+            let totalDebe = 0;
+            let totalHaber = 0;
+            
+            document.querySelectorAll('.debe-input').forEach(input => {
+                totalDebe += parseFloat(input.value) || 0;
+            });
+            
+            document.querySelectorAll('.haber-input').forEach(input => {
+                totalHaber += parseFloat(input.value) || 0;
+            });
+            
+            document.getElementById('totalDebe').textContent = totalDebe.toFixed(2);
+            document.getElementById('totalHaber').textContent = totalHaber.toFixed(2);
+        }
+
+        // Load plan cuentas
+        function loadPlanCuentas() {
+            const planCuentas = DB.get('planCuentas');
+            const tbody = document.getElementById('planCuentasBody');
+            tbody.innerHTML = '';
+            
+            // Organizar por padres e hijos
+            const cuentasPadre = planCuentas.filter(c => c.nivel === 2);
+            
+            cuentasPadre.forEach(padre => {
+                // Agregar cuenta padre
+                const rowPadre = document.createElement('tr');
+                rowPadre.className = 'cuenta-padre';
+                rowPadre.innerHTML = `
+                    <td><strong>${padre.codigo}</strong></td>
+                    <td><strong>${padre.nombre}</strong></td>
+                    <td><span class="badge bg-primary">${padre.tipo}</span></td>
+                    <td><span class="badge bg-secondary">${padre.naturaleza}</span></td>
+                `;
+                tbody.appendChild(rowPadre);
+                
+                // Agregar cuentas divisionarias
+                const divisionarias = planCuentas.filter(c => c.padre === padre.codigo);
+                divisionarias.forEach(div => {
+                    const rowDiv = document.createElement('tr');
+                    rowDiv.className = 'cuenta-divisionaria';
+                    rowDiv.innerHTML = `
+                        <td>${div.codigo}</td>
+                        <td>${div.nombre}</td>
+                        <td><span class="badge bg-info">${div.tipo}</span></td>
+                        <td><span class="badge bg-dark">${div.naturaleza}</span></td>
+                    `;
+                    tbody.appendChild(rowDiv);
+                });
+            });
+        }
+
+        // Save asiento
+        document.getElementById('asientoForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const fecha = document.getElementById('fechaAsiento').value;
+            const numero = document.getElementById('numeroAsiento').value;
+            const descripcion = document.getElementById('descripcionAsiento').value;
+            const libro = document.getElementById('libroAuxiliar').value;
+            
+            const totalDebe = parseFloat(document.getElementById('totalDebe').textContent);
+            const totalHaber = parseFloat(document.getElementById('totalHaber').textContent);
+            
+            if (Math.abs(totalDebe - totalHaber) > 0.01) {
+                alert('El asiento no está balanceado. Debe = Haber');
+                return;
+            }
+            
+            const detalles = [];
+            document.querySelectorAll('.detalle-item').forEach(item => {
+                const cuenta = item.querySelector('.cuenta-select').value;
+                const debe = parseFloat(item.querySelector('.debe-input').value) || 0;
+                const haber = parseFloat(item.querySelector('.haber-input').value) || 0;
+                
+                if (cuenta && (debe > 0 || haber > 0)) {
+                    const planCuentas = DB.get('planCuentas');
+                    const cuentaInfo = planCuentas.find(c => c.codigo === cuenta);
+                    
+                    detalles.push({
+                        cuenta: cuenta,
+                        nombreCuenta: cuentaInfo ? cuentaInfo.nombre : '',
+                        debe: debe,
+                        haber: haber
+                    });
+                }
+            });
+            
+            if (detalles.length < 2) {
+                alert('Debe tener al menos 2 movimientos');
+                return;
+            }
+            
+            const asiento = {
+                id: Date.now(),
+                fecha: fecha,
+                numero: numero,
+                descripcion: descripcion,
+                libro: libro,
+                detalles: detalles,
+                totalDebe: totalDebe,
+                totalHaber: totalHaber
+            };
+            
+            DB.add('asientos', asiento);
+            alert('Asiento guardado correctamente');
+            limpiarAsiento();
+            setNextAsientoNumber();
+        });
+
+        // Clear asiento form
+        function limpiarAsiento() {
+            document.getElementById('asientoForm').reset();
+            document.getElementById('fechaAsiento').value = new Date().toISOString().split('T')[0];
+            
+            // Keep only first detail item
+            const detalleContainer = document.getElementById('detalleAsiento');
+            while (detalleContainer.children.length > 1) {
+                detalleContainer.removeChild(detalleContainer.lastChild);
+            }
+            
+            // Clear first item
+            detalleContainer.children[0].querySelectorAll('input, select').forEach(input => {
+                if (input.type !== 'button') {
+                    input.value = '';
+                }
+            });
+            
+            calculateTotals();
+        }
+
+        // Load libro diario
+        function loadLibroDiario() {
+            const asientos = DB.get('asientos');
+            const tbody = document.getElementById('libroDiarioBody');
+            tbody.innerHTML = '';
+            
+            asientos.forEach(asiento => {
+                asiento.detalles.forEach((detalle, index) => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${index === 0 ? asiento.fecha : ''}</td>
+                        <td>${index === 0 ? asiento.numero : ''}</td>
+                        <td>${index === 0 ? asiento.descripcion : ''}</td>
+                        <td>${detalle.cuenta} - ${detalle.nombreCuenta}</td>
+                        <td class="text-end">${detalle.debe > 0 ? detalle.debe.toFixed(2) : ''}</td>
+                        <td class="text-end">${detalle.haber > 0 ? detalle.haber.toFixed(2) : ''}</td>
+                        <td>${index === 0 ? asiento.libro : ''}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+                
+                // Add separator row
+                const separatorRow = document.createElement('tr');
+                separatorRow.innerHTML = '<td colspan="7"><hr></td>';
+                tbody.appendChild(separatorRow);
+            });
+        }
+
+        // Load cuentas for mayor
+        function loadCuentasMayor() {
+            const planCuentas = DB.get('planCuentas');
+            const select = document.getElementById('cuentaMayor');
+            select.innerHTML = '<option value="">Seleccione cuenta...</option>';
+            
+            planCuentas.forEach(cuenta => {
+                const option = document.createElement('option');
+                option.value = cuenta.codigo;
+                option.textContent = `${cuenta.codigo} - ${cuenta.nombre}`;
+                select.appendChild(option);
+            });
+        }
+
+        // Show mayor
+        function mostrarMayor() {
+            const codigoCuenta = document.getElementById('cuentaMayor').value;
+            if (!codigoCuenta) {
+                alert('Seleccione una cuenta');
+                return;
+            }
+            
+            const asientos = DB.get('asientos');
+            const planCuentas = DB.get('planCuentas');
+            const cuenta = planCuentas.find(c => c.codigo === codigoCuenta);
+            
+            const movimientos = [];
+            let saldo = 0;
+            
+            asientos.forEach(asiento => {
+                asiento.detalles.forEach(detalle => {
+                    if (detalle.cuenta === codigoCuenta || detalle.cuenta.startsWith(codigoCuenta)) {
+                        const debe = detalle.debe || 0;
+                        const haber = detalle.haber || 0;
+                        
+                        if (cuenta.naturaleza === 'DEUDORA') {
+                            saldo += debe - haber;
+                        } else {
+                            saldo += haber - debe;
+                        }
+                        
+                        movimientos.push({
+                            fecha: asiento.fecha,
+                            descripcion: asiento.descripcion,
+                            debe: debe,
+                            haber: haber,
+                            saldo: saldo
+                        });
+                    }
+                });
+            });
+            
+            let html = `
+                <div class="card financial-card mt-3">
+                    <div class="financial-header">
+                        <h5>LIBRO MAYOR - CUENTA ${codigoCuenta}</h5>
+                        <p class="mb-0">${cuenta.nombre}</p>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Descripción</th>
+                                        <th class="text-end">Debe</th>
+                                        <th class="text-end">Haber</th>
+                                        <th class="text-end">Saldo</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+            `;
+            
+            movimientos.forEach(mov => {
+                html += `
+                    <tr>
+                        <td>${mov.fecha}</td>
+                        <td>${mov.descripcion}</td>
+                        <td class="text-end">${mov.debe > 0 ? mov.debe.toFixed(2) : ''}</td>
+                        <td class="text-end">${mov.haber > 0 ? mov.haber.toFixed(2) : ''}</td>
+                        <td class="text-end"><strong>${mov.saldo.toFixed(2)}</strong></td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                                </tbody>
+                                <tfoot>
+                                    <tr class="table-dark">
+                                        <td colspan="4"><strong>SALDO FINAL</strong></td>
+                                        <td class="text-end"><strong>S/ ${saldo.toFixed(2)}</strong></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('mayorContent').innerHTML = html;
+        }
+
+        // Generate balance de comprobacion
+        function generarBalanceComprobacion() {
+            const nivel = parseInt(document.getElementById('nivelBalance').value);
+            const planCuentas = DB.get('planCuentas');
+            const asientos = DB.get('asientos');
+            
+            const saldos = {};
+            
+            // Calcular saldos
+            asientos.forEach(asiento => {
+                asiento.detalles.forEach(detalle => {
+                    let codigo = detalle.cuenta;
+                    if (nivel === 2) {
+                        codigo = codigo.substring(0, 2);
+                    }
+                    
+                    if (!saldos[codigo]) {
+                        saldos[codigo] = {debe: 0, haber: 0};
+                    }
+                    
+                    saldos[codigo].debe += detalle.debe || 0;
+                    saldos[codigo].haber += detalle.haber || 0;
+                });
+            });
+            
+            let html = `
+                <div class="card financial-card">
+                    <div class="financial-header">
+                        <h5>BALANCE DE COMPROBACIÓN</h5>
+                        <p class="mb-0">Al ${new Date().toLocaleDateString()}</p>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Código</th>
+                                        <th>Cuenta</th>
+                                        <th class="text-end">Debe</th>
+                                        <th class="text-end">Haber</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+            `;
+            
+            let totalDebe = 0;
+            let totalHaber = 0;
+            
+            Object.keys(saldos).sort().forEach(codigo => {
+                const cuenta = planCuentas.find(c => c.codigo === codigo);
+                if (cuenta) {
+                    const debe = saldos[codigo].debe;
+                    const haber = saldos[codigo].haber;
+                    
+                    totalDebe += debe;
+                    totalHaber += haber;
+                    
+                    html += `
+                        <tr>
+                            <td>${codigo}</td>
+                            <td>${cuenta.nombre}</td>
+                            <td class="text-end">${debe.toFixed(2)}</td>
+                            <td class="text-end">${haber.toFixed(2)}</td>
+                        </tr>
+                    `;
+                }
+            });
+            
+            html += `
+                                </tbody>
+                                <tfoot>
+                                    <tr class="table-dark">
+                                        <td colspan="2"><strong>TOTALES</strong></td>
+                                        <td class="text-end"><strong>${totalDebe.toFixed(2)}</strong></td>
+                                        <td class="text-end"><strong>${totalHaber.toFixed(2)}</strong></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('balanceComprobacionContent').innerHTML = html;
+        }
+
+        // Generate balance general
+        function generarBalanceGeneral() {
+            const planCuentas = DB.get('planCuentas');
+            const asientos = DB.get('asientos');
+            
+            // Calcular saldos por tipo de cuenta
+            const saldos = {
+                ACTIVO: {},
+                PASIVO: {},
+                PATRIMONIO: {}
+            };
+            
+            asientos.forEach(asiento => {
+                asiento.detalles.forEach(detalle => {
+                    const codigo = detalle.cuenta.substring(0, 2);
+                    const cuenta = planCuentas.find(c => c.codigo === codigo);
+                    
+                    if (cuenta && ['ACTIVO', 'PASIVO', 'PATRIMONIO'].includes(cuenta.tipo)) {
+                        if (!saldos[cuenta.tipo][codigo]) {
+                            saldos[cuenta.tipo][codigo] = {
+                                nombre: cuenta.nombre,
+                                debe: 0,
+                                haber: 0,
+                                saldo: 0
+                            };
+                        }
+                        
+                        saldos[cuenta.tipo][codigo].debe += detalle.debe || 0;
+                        saldos[cuenta.tipo][codigo].haber += detalle.haber || 0;
+                        
+                        if (cuenta.naturaleza === 'DEUDORA') {
+                            saldos[cuenta.tipo][codigo].saldo = saldos[cuenta.tipo][codigo].debe - saldos[cuenta.tipo][codigo].haber;
+                        } else {
+                            saldos[cuenta.tipo][codigo].saldo = saldos[cuenta.tipo][codigo].haber - saldos[cuenta.tipo][codigo].debe;
+                        }
+                    }
+                });
+            });
+            
+            // Calcular utilidad del ejercicio
+            let utilidad = 0;
+            asientos.forEach(asiento => {
+                asiento.detalles.forEach(detalle => {
+                    const codigo = detalle.cuenta.substring(0, 2);
+                    const cuenta = planCuentas.find(c => c.codigo === codigo);
+                    
+                    if (cuenta && cuenta.tipo === 'INGRESO') {
+                        utilidad += (detalle.haber || 0) - (detalle.debe || 0);
+                    } else if (cuenta && cuenta.tipo === 'GASTO') {
+                        utilidad -= (detalle.debe || 0) - (detalle.haber || 0);
+                    }
+                });
+            });
+            
+            let html = `
+                <div class="card financial-card">
+                    <div class="financial-header">
+                        <h5>BALANCE GENERAL</h5>
+                        <p class="mb-0">Al ${new Date().toLocaleDateString()}</p>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6><strong>ACTIVOS</strong></h6>
+                                <table class="table table-sm">
+            `;
+            
+            let totalActivos = 0;
+            Object.keys(saldos.ACTIVO).forEach(codigo => {
+                const cuenta = saldos.ACTIVO[codigo];
+                if (cuenta.saldo !== 0) {
+                    totalActivos += cuenta.saldo;
+                    html += `
+                        <tr>
+                            <td>${cuenta.nombre}</td>
+                            <td class="text-end">S/ ${cuenta.saldo.toFixed(2)}</td>
+                        </tr>
+                    `;
+                }
+            });
+            
+            html += `
+                                    <tr class="table-dark">
+                                        <td><strong>TOTAL ACTIVOS</strong></td>
+                                        <td class="text-end"><strong>S/ ${totalActivos.toFixed(2)}</strong></td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="col-md-6">
+                                <h6><strong>PASIVOS</strong></h6>
+                                <table class="table table-sm">
+            `;
+            
+            let totalPasivos = 0;
+            Object.keys(saldos.PASIVO).forEach(codigo => {
+                const cuenta = saldos.PASIVO[codigo];
+                if (cuenta.saldo !== 0) {
+                    totalPasivos += cuenta.saldo;
+                    html += `
+                        <tr>
+                            <td>${cuenta.nombre}</td>
+                            <td class="text-end">S/ ${cuenta.saldo.toFixed(2)}</td>
+                        </tr>
+                    `;
+                }
+            });
+            
+            html += `
+                                    <tr class="table-dark">
+                                        <td><strong>TOTAL PASIVOS</strong></td>
+                                        <td class="text-end"><strong>S/ ${totalPasivos.toFixed(2)}</strong></td>
+                                    </tr>
+                                </table>
+                                
+                                <h6><strong>PATRIMONIO</strong></h6>
+                                <table class="table table-sm">
+            `;
+            
+            let totalPatrimonio = 0;
+            Object.keys(saldos.PATRIMONIO).forEach(codigo => {
+                const cuenta = saldos.PATRIMONIO[codigo];
+                if (cuenta.saldo !== 0) {
+                    totalPatrimonio += cuenta.saldo;
+                    html += `
+                        <tr>
+                            <td>${cuenta.nombre}</td>
+                            <td class="text-end">S/ ${cuenta.saldo.toFixed(2)}</td>
+                        </tr>
+                    `;
+                }
+            });
+            
+            if (utilidad !== 0) {
+                totalPatrimonio += utilidad;
+                html += `
+                    <tr>
+                        <td>Utilidad del Ejercicio</td>
+                        <td class="text-end">S/ ${utilidad.toFixed(2)}</td>
+                    </tr>
+                `;
+            }
+            
+            html += `
+                                    <tr class="table-dark">
+                                        <td><strong>TOTAL PATRIMONIO</strong></td>
+                                        <td class="text-end"><strong>S/ ${totalPatrimonio.toFixed(2)}</strong></td>
+                                    </tr>
+                                    <tr class="table-info">
+                                        <td><strong>TOTAL PAS. + PAT.</strong></td>
+                                        <td class="text-end"><strong>S/ ${(totalPasivos + totalPatrimonio).toFixed(2)}</strong></td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('balanceGeneralContent').innerHTML = html;
+        }
+
+        // Generate estado de resultados
+        function generarEstadoResultados() {
+            const planCuentas = DB.get('planCuentas');
+            const asientos = DB.get('asientos');
+            
+            const ingresos = {};
+            const gastos = {};
+            
+            asientos.forEach(asiento => {
+                asiento.detalles.forEach(detalle => {
+                    const codigo = detalle.cuenta.substring(0, 2);
+                    const cuenta = planCuentas.find(c => c.codigo === codigo);
+                    
+                    if (cuenta && cuenta.tipo === 'INGRESO') {
+                        if (!ingresos[codigo]) {
+                            ingresos[codigo] = {
+                                nombre: cuenta.nombre,
+                                importe: 0
+                            };
+                        }
+                        ingresos[codigo].importe += (detalle.haber || 0) - (detalle.debe || 0);
+                    } else if (cuenta && cuenta.tipo === 'GASTO') {
+                        if (!gastos[codigo]) {
+                            gastos[codigo] = {
+                                nombre: cuenta.nombre,
+                                importe: 0
+                            };
+                        }
+                        gastos[codigo].importe += (detalle.debe || 0) - (detalle.haber || 0);
+                    }
+                });
+            });
+            
+            const totalIngresos = Object.values(ingresos).reduce((sum, ing) => sum + ing.importe, 0);
+            const totalGastos = Object.values(gastos).reduce((sum, gas) => sum + gas.importe, 0);
+            const utilidad = totalIngresos - totalGastos;
+            
+            let html = `
+                <div class="card financial-card">
+                    <div class="financial-header">
+                        <h5>ESTADO DE RESULTADOS</h5>
+                        <p class="mb-0">Del 01 de Enero al ${new Date().toLocaleDateString()}</p>
+                    </div>
+                    <div class="card-body">
+                        <h6><strong>INGRESOS</strong></h6>
+                        <table class="table table-sm">
+            `;
+            
+            Object.keys(ingresos).forEach(codigo => {
+                const ingreso = ingresos[codigo];
+                if (ingreso.importe > 0) {
+                    html += `
+                        <tr>
+                            <td>${ingreso.nombre}</td>
+                            <td class="text-end">S/ ${ingreso.importe.toFixed(2)}</td>
+                        </tr>
+                    `;
+                }
+            });
+            
+            html += `
+                            <tr class="table-success">
+                                <td><strong>TOTAL INGRESOS</strong></td>
+                                <td class="text-end"><strong>S/ ${totalIngresos.toFixed(2)}</strong></td>
+                            </tr>
+                        </table>
+                        
+                        <h6><strong>GASTOS</strong></h6>
+                        <table class="table table-sm">
+            `;
+            
+            Object.keys(gastos).forEach(codigo => {
+                const gasto = gastos[codigo];
+                if (gasto.importe > 0) {
+                    html += `
+                        <tr>
+                            <td>${gasto.nombre}</td>
+                            <td class="text-end">S/ ${gasto.importe.toFixed(2)}</td>
+                        </tr>
+                    `;
+                }
+            });
+            
+            html += `
+                            <tr class="table-warning">
+                                <td><strong>TOTAL GASTOS</strong></td>
+                                <td class="text-end"><strong>S/ ${totalGastos.toFixed(2)}</strong></td>
+                            </tr>
+                        </table>
+                        
+                        <table class="table">
+                            <tr class="table-primary">
+                                <td><strong>UTILIDAD NETA</strong></td>
+                                <td class="text-end"><strong>S/ ${utilidad.toFixed(2)}</strong></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('estadoResultadosContent').innerHTML = html;
+        }
+
+        // Load registro de ventas
+        function loadRegistroVentas() {
+            // Implementation for sales register
+        }
+
+        // Load registro de compras
+        function loadRegistroCompras() {
+            // Implementation for purchases register
+        }
+
+        // Initialize application
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeData();
+            document.getElementById('fechaAsiento').value = new Date().toISOString().split('T')[0];
+            setupCalculations();
+            updateDashboard();
+        });
+    </script>
+</body>
+</html>

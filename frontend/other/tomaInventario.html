@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventario Rápido - Calzados</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            padding: 20px;
+        }
+
+        .form-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid #e9ecef;
+            margin-bottom: 20px;
+        }
+
+        .form-title {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1.5fr;
+            gap: 10px;
+            margin-bottom: 15px;
+            align-items: end;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 500;
+            font-size: 0.85rem;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .btn-add {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .export-section {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            padding: 0 20px 20px 20px;
+        }
+
+        .btn-export {
+            flex: 1;
+            padding: 12px;
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-export:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(231, 76, 60, 0.3);
+        }
+
+        .btn-add:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(46, 204, 113, 0.3);
+        }
+
+        .btn-add:active {
+            transform: translateY(-1px);
+        }
+
+        .inventory-section {
+            background: white;
+            border-radius: 15px;
+            border: 2px solid #e9ecef;
+            overflow: hidden;
+            flex: 1;
+        }
+
+        .inventory-header {
+            background: #34495e;
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .inventory-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+        }
+
+        .total-items {
+            background: #e74c3c;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .inventory-list {
+            max-height: 60vh;
+            overflow-y: auto;
+            padding: 0;
+        }
+
+        .spreadsheet-header {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1.2fr auto;
+            background: #34495e;
+            color: white;
+            padding: 8px 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid #2c3e50;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .inventory-item {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1.2fr auto;
+            border-bottom: 1px solid #e9ecef;
+            padding: 4px 12px;
+            margin: 0;
+            background: white;
+            transition: background-color 0.2s ease;
+            font-size: 0.75rem;
+            line-height: 1.2;
+            min-height: 32px;
+            align-items: center;
+        }
+
+        .inventory-item:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .inventory-item:hover {
+            background: #e3f2fd;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .item-category {
+            font-weight: 500;
+            color: #2c3e50;
+            font-size: 0.75rem;
+            padding-right: 8px;
+        }
+
+        .item-quantity {
+            text-align: center;
+            font-weight: 500;
+            color: #27ae60;
+            font-size: 0.75rem;
+        }
+
+        .item-price {
+            text-align: right;
+            font-weight: 500;
+            color: #e74c3c;
+            font-size: 0.75rem;
+            padding-right: 8px;
+        }
+
+        .btn-delete {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.65rem;
+            transition: all 0.2s ease;
+            min-width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-delete:hover {
+            background: #c0392b;
+            transform: scale(1.05);
+        }
+
+        .summary {
+            background: linear-gradient(135deg, #8e44ad, #9b59b6);
+            color: white;
+            padding: 20px 30px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            text-align: center;
+        }
+
+        .summary-item h3 {
+            font-size: 2rem;
+            margin-bottom: 5px;
+        }
+
+        .summary-item p {
+            opacity: 0.9;
+            font-size: 0.9rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            .header {
+                padding: 20px 15px;
+            }
+            
+            .header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .main-content {
+                padding: 15px;
+            }
+            
+            .form-row {
+                grid-template-columns: 1.5fr 0.8fr 1fr;
+                gap: 8px;
+            }
+            
+            .inventory-item {
+                grid-template-columns: 1.5fr 0.8fr 1fr auto;
+                padding: 3px 8px;
+                min-height: 28px;
+                font-size: 0.7rem;
+            }
+            
+            .spreadsheet-header {
+                grid-template-columns: 1.5fr 0.8fr 1fr auto;
+                padding: 6px 8px;
+                font-size: 0.7rem;
+            }
+            
+            .item-category {
+                font-size: 0.7rem;
+            }
+            
+            .item-quantity, .item-price {
+                font-size: 0.7rem;
+            }
+            
+            .btn-delete {
+                min-width: 20px;
+                height: 20px;
+                font-size: 0.6rem;
+            }
+            
+            .summary {
+                grid-template-columns: 1fr;
+                gap: 10px;
+                padding: 15px;
+            }
+            
+            .summary-item h3 {
+                font-size: 1.5rem;
+            }
+        }
+
+        /* Animaciones */
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .inventory-item {
+            animation: slideIn 0.3s ease;
+        }
+
+        /* Scrollbar personalizada */
+        .inventory-list::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .inventory-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .inventory-list::-webkit-scrollbar-thumb {
+            background: #3498db;
+            border-radius: 10px;
+        }
+
+        .inventory-list::-webkit-scrollbar-thumb:hover {
+            background: #2980b9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📦 Inventario Rápido</h1>
+            <p>Gestión eficiente de calzados</p>
+        </div>
+
+        <div class="main-content">
+            <div class="form-section">
+                <h2 class="form-title">➕ Agregar Producto</h2>
+                <form id="inventoryForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="category">Categoría:</label>
+                            <select id="category" required>
+                                <option value="">Seleccionar...</option>
+                                <option value="Deportivos">Deportivos</option>
+                                <option value="Formales">Formales</option>
+                                <option value="Casuales">Casuales</option>
+                                <option value="Botas">Botas</option>
+                                <option value="Sandalias">Sandalias</option>
+                                <option value="Mujer">Mujer</option>
+                                <option value="Hombre">Hombre</option>
+                                <option value="Infantiles">Infantiles</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="quantity">Cantidad:</label>
+                            <input type="number" id="quantity" min="1" required placeholder="0">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="price">Precio (S/):</label>
+                            <input type="number" id="price" min="0" step="0.01" required placeholder="0.00">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-add">
+                        🚀 Agregar
+                    </button>
+                </form>
+            </div>
+
+            <div class="inventory-section">
+                <div class="inventory-header">
+                    <h2 class="inventory-title">📋 Lista de Productos</h2>
+                    <div class="total-items" id="totalItems">0 productos</div>
+                </div>
+
+                <div class="inventory-list" id="inventoryList">
+                    <div class="empty-state">
+                        <div style="font-size: 3rem; margin-bottom: 15px;">👟</div>
+                        <h3>No hay productos registrados</h3>
+                        <p>Comienza agregando tu primer producto al inventario</p>
+                    </div>
+                </div>
+
+                <div class="summary" id="summary" style="display: none;">
+                    <div class="summary-item">
+                        <h3 id="totalProducts">0</h3>
+                        <p>Total Productos</p>
+                    </div>
+                    <div class="summary-item">
+                        <h3 id="totalQuantity">0</h3>
+                        <p>Total Unidades</p>
+                    </div>
+                    <div class="summary-item">
+                        <h3 id="totalValue">S/ 0.00</h3>
+                        <p>Valor Total</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="export-section">
+                <button class="btn-export" onclick="app.exportToExcel()">
+                    📊 Exportar a Excel
+                </button>
+                <button class="btn-export" onclick="app.clearAll()" style="background: linear-gradient(135deg, #f39c12, #e67e22);">
+                    🗑️ Limpiar Todo
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script>
+        class InventoryApp {
+            constructor() {
+                this.inventory = [];
+                this.initializeElements();
+                this.bindEvents();
+                this.loadFromStorage();
+            }
+
+            initializeElements() {
+                this.form = document.getElementById('inventoryForm');
+                this.categorySelect = document.getElementById('category');
+                this.quantityInput = document.getElementById('quantity');
+                this.priceInput = document.getElementById('price');
+                this.inventoryList = document.getElementById('inventoryList');
+                this.totalItems = document.getElementById('totalItems');
+                this.summary = document.getElementById('summary');
+                this.totalProducts = document.getElementById('totalProducts');
+                this.totalQuantity = document.getElementById('totalQuantity');
+                this.totalValue = document.getElementById('totalValue');
+            }
+
+            bindEvents() {
+                this.form.addEventListener('submit', (e) => this.handleSubmit(e));
+                
+                // Permitir Enter para enviar desde cualquier campo
+                [this.categorySelect, this.quantityInput, this.priceInput].forEach(input => {
+                    input.addEventListener('keypress', (e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            this.handleSubmit(e);
+                        }
+                    });
+                });
+            }
+
+            handleSubmit(e) {
+                e.preventDefault();
+                
+                const category = this.categorySelect.value.trim();
+                const quantity = parseInt(this.quantityInput.value);
+                const price = parseFloat(this.priceInput.value);
+
+                if (!category || !quantity || !price) {
+                    alert('Por favor, completa todos los campos');
+                    return;
+                }
+
+                this.addItem(category, quantity, price);
+                this.clearForm();
+                this.categorySelect.focus(); // Enfocar en categoría para captura rápida
+            }
+
+            addItem(category, quantity, price) {
+                const item = {
+                    id: Date.now(),
+                    category,
+                    quantity,
+                    price,
+                    total: quantity * price,
+                    timestamp: new Date().toLocaleString()
+                };
+
+                this.inventory.push(item);
+                this.updateDisplay();
+                this.saveToStorage();
+                
+                // Mostrar feedback visual
+                this.showSuccessMessage();
+            }
+
+            showSuccessMessage() {
+                const btn = document.querySelector('.btn-add');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '✅ ¡Agregado!';
+                btn.style.background = 'linear-gradient(135deg, #27ae60, #2ecc71)';
+                
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                }, 1000);
+            }
+
+            deleteItem(id) {
+                this.inventory = this.inventory.filter(item => item.id !== id);
+                this.updateDisplay();
+                this.saveToStorage();
+            }
+
+            clearForm() {
+                // Solo limpiar cantidad y precio, conservar categoría
+                this.quantityInput.value = '';
+                this.priceInput.value = '';
+            }
+
+            updateDisplay() {
+                if (this.inventory.length === 0) {
+                    this.inventoryList.innerHTML = `
+                        <div class="empty-state">
+                            <div style="font-size: 3rem; margin-bottom: 15px;">👟</div>
+                            <h3>No hay productos registrados</h3>
+                            <p>Comienza agregando tu primer producto al inventario</p>
+                        </div>
+                    `;
+                    this.summary.style.display = 'none';
+                } else {
+                    this.inventoryList.innerHTML = `
+                        <div class="spreadsheet-header">
+                            <div>Categoría</div>
+                            <div style="text-align: center;">Cant.</div>
+                            <div style="text-align: right;">Precio / Total</div>
+                            <div style="text-align: center;">Del</div>
+                        </div>
+                        ${this.inventory
+                            .sort((a, b) => b.id - a.id) // Mostrar los más recientes primero
+                            .map(item => `
+                                <div class="inventory-item">
+                                    <div class="item-category">${item.category}</div>
+                                    <div class="item-quantity">${item.quantity}</div>
+                                    <div class="item-price">S/ ${item.price.toFixed(2)}<br><small>S/ ${item.total.toFixed(2)}</small></div>
+                                    <button class="btn-delete" onclick="app.deleteItem(${item.id})" title="Eliminar">🗑</button>
+                                </div>
+                            `).join('')}
+                    `;
+                    
+                    this.summary.style.display = 'grid';
+                }
+
+                this.updateSummary();
+            }
+
+            updateSummary() {
+                const totalProducts = this.inventory.length;
+                const totalQty = this.inventory.reduce((sum, item) => sum + item.quantity, 0);
+                const totalVal = this.inventory.reduce((sum, item) => sum + item.total, 0);
+
+                this.totalItems.textContent = `${totalProducts} producto${totalProducts !== 1 ? 's' : ''}`;
+                this.totalProducts.textContent = totalProducts;
+                this.totalQuantity.textContent = totalQty;
+                this.totalValue.textContent = `S/ ${totalVal.toFixed(2)}`;
+            }
+
+            saveToStorage() {
+                localStorage.setItem('shoeInventory', JSON.stringify(this.inventory));
+            }
+
+            loadFromStorage() {
+                const saved = localStorage.getItem('shoeInventory');
+                if (saved) {
+                    this.inventory = JSON.parse(saved);
+                    this.updateDisplay();
+                }
+            }
+
+            // Método para exportar a Excel
+            exportToExcel() {
+                if (this.inventory.length === 0) {
+                    alert('No hay productos para exportar');
+                    return;
+                }
+
+                // Crear los datos para Excel
+                const excelData = [
+                    ['INVENTARIO DE CALZADOS'],
+                    ['Fecha de Exportación:', new Date().toLocaleString()],
+                    [''],
+                    ['Categoría', 'Cantidad', 'Precio Unitario (S/)', 'Precio Total (S/)']
+                ];
+
+                // Agregar los productos
+                this.inventory.forEach(item => {
+                    excelData.push([
+                        item.category,
+                        item.quantity,
+                        item.price.toFixed(2),
+                        item.total.toFixed(2)
+                    ]);
+                });
+
+                // Agregar totales
+                const totalQuantity = this.inventory.reduce((sum, item) => sum + item.quantity, 0);
+                const totalValue = this.inventory.reduce((sum, item) => sum + item.total, 0);
+                
+                excelData.push(['']);
+                excelData.push(['RESUMEN']);
+                excelData.push(['Total de Productos:', this.inventory.length]);
+                excelData.push(['Total de Unidades:', totalQuantity]);
+                excelData.push(['Valor Total (S/):', totalValue.toFixed(2)]);
+
+                // Crear archivo Excel
+                const ws = XLSX.utils.aoa_to_sheet(excelData);
+                
+                // Ajustar ancho de columnas
+                const colWidths = [
+                    { wch: 20 }, // Categoría
+                    { wch: 10 }, // Cantidad
+                    { wch: 15 }, // Precio Unitario
+                    { wch: 15 }  // Precio Total
+                ];
+                ws['!cols'] = colWidths;
+
+                // Crear libro de trabajo
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, 'Inventario');
+
+                // Descargar archivo
+                const fecha = new Date().toISOString().split('T')[0];
+                XLSX.writeFile(wb, `Inventario_Calzados_${fecha}.xlsx`);
+                
+                // Mostrar confirmación
+                alert('✅ Archivo Excel descargado exitosamente');
+            }
+
+            // Método para limpiar todo el inventario
+            clearAll() {
+                if (this.inventory.length === 0) {
+                    alert('No hay productos para eliminar');
+                    return;
+                }
+
+                if (confirm('¿Estás seguro de que quieres eliminar todos los productos del inventario?')) {
+                    this.inventory = [];
+                    this.updateDisplay();
+                    this.saveToStorage();
+                    alert('✅ Inventario limpiado correctamente');
+                }
+            }
+        }
+
+        // Inicializar la aplicación
+        const app = new InventoryApp();
+
+        // Hacer disponible globalmente para botón de eliminar
+        window.app = app;
+
+        // Atajos de teclado para mayor eficiencia
+        document.addEventListener('keydown', (e) => {
+            // Ctrl+E para exportar a Excel
+            if (e.ctrlKey && e.key === 'e') {
+                e.preventDefault();
+                app.exportToExcel();
+            }
+            
+            // Ctrl+N para nuevo (enfocar en categoría)
+            if (e.ctrlKey && e.key === 'n') {
+                e.preventDefault();
+                app.categorySelect.focus();
+            }
+
+            // Ctrl+L para limpiar todo
+            if (e.ctrlKey && e.key === 'l') {
+                e.preventDefault();
+                app.clearAll();
+            }
+        });
+    </script>
+</body>
+</html>

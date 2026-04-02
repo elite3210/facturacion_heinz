@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema Contable Perú - PCGE</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .sidebar {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .nav-link {
+            color: white !important;
+            transition: all 0.3s;
+        }
+        .nav-link:hover, .nav-link.active {
+            background-color: rgba(255,255,255,0.2);
+            border-radius: 5px;
+        }
+        .card-custom {
+            border: none;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+        .card-custom:hover {
+            transform: translateY(-2px);
+        }
+        .btn-custom {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border: none;
+            color: white;
+        }
+        .btn-custom:hover {
+            background: linear-gradient(45deg, #764ba2, #667eea);
+            color: white;
+        }
+        .table-responsive {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .page-content {
+            display: none;
+        }
+        .page-content.active {
+            display: block;
+        }
+        .cuenta-item {
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .cuenta-item:hover {
+            background-color: #f8f9fa;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 px-0 sidebar">
+                <div class="p-3">
+                    <h4 class="text-white mb-4">
+                        <i class="fas fa-calculator"></i> SisContPE
+                    </h4>
+                    <nav class="nav flex-column">
+                        <a class="nav-link active" href="#" onclick="showPage('dashboard')">
+                            <i class="fas fa-tachometer-alt me-2"></i> Dashboard
+                        </a>
+                        <a class="nav-link" href="#" onclick="showPage('asientos')">
+                            <i class="fas fa-plus-circle me-2"></i> Nuevo Asiento
+                        </a>
+                        <a class="nav-link" href="#" onclick="showPage('catalogo')">
+                            <i class="fas fa-book me-2"></i> Plan de Cuentas
+                        </a>
+                        <a class="nav-link" href="#" onclick="showPage('diario')">
+                            <i class="fas fa-journal-whills me-2"></i> Libro Diario
+                        </a>
+                        <a class="nav-link" href="#" onclick="showPage('mayor')">
+                            <i class="fas fa-ledger me-2"></i> Libro Mayor
+                        </a>
+                        <a class="nav-link" href="#" onclick="showPage('ventas')">
+                            <i class="fas fa-cash-register me-2"></i> Registro Ventas
+                        </a>
+                        <a class="nav-link" href="#" onclick="showPage('compras')">
+                            <i class="fas fa-shopping-cart me-2"></i> Registro Compras
+                        </a>
+                        <a class="nav-link" href="#" onclick="showPage('balance')">
+                            <i class="fas fa-balance-scale me-2"></i> Balance General
+                        </a>
+                        <a class="nav-link" href="#" onclick="showPage('resultados')">
+                            <i class="fas fa-chart-line me-2"></i> Estado Resultados
+                        </a>
+                    </nav>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-md-9 col-lg-10">
+                <!-- Dashboard -->
+                <div id="dashboard" class="page-content active">
+                    <div class="container-fluid p-4">
+                        <h2 class="mb-4">Dashboard Contable</h2>
+                        <div class="row">
+                            <div class="col-md-3 mb-4">
+                                <div class="card card-custom bg-primary text-white">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between">
+                                            <div>
+                                                <h4 id="totalAsientos">0</h4>
+                                                <p class="mb-0">Asientos Registrados</p>
+                                            </div>
+                                            <i class="fas fa-file-alt fa-2x"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-4">
+                                <div class="card card-custom bg-success text-white">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between">
+                                            <div>
+                                                <h4 id="totalVentas">S/ 0.00</h4>
+                                                <p class="mb-0">Total Ventas</p>
+                                            </div>
+                                            <i class="fas fa-money-bill fa-2x"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-4">
+                                <div class="card card-custom bg-warning text-white">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between">
+                                            <div>
+                                                <h4 id="totalCompras">S/ 0.00</h4>
+                                                <p class="mb-0">Total Compras</p>
+                                            </div>
+                                            <i class="fas fa-shopping-cart fa-2x"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-4">
+                                <div class="card card-custom bg-info text-white">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between">
+                                            <div>
+                                                <h4 id="utilidadNeta">S/ 0.00</h4>
+                                                <p class="mb-0">Utilidad Neta</p>
+                                            </div>
+                                            <i class="fas fa-chart-line fa-2x"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card card-custom">
+                                    <div class="card-header">
+                                        <h5>Últimos Asientos</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="ultimosAsientos">
+                                            <p class="text-muted">No hay asientos registrados</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card card-custom">
+                                    <div class="card-header">
+                                        <h5>Resumen Financiero</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="resumenFinanciero">
+                                            <p><strong>Total Activos:</strong> <span id="totalActivos">S/ 0.00</span></p>
+                                            <p><strong>Total Pasivos:</strong> <span id="totalPasivos">S/ 0.00</span></p>
+                                            <p><strong>Patrimonio:</strong> <span id="totalPatrimonio">S/ 0.00</span></p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Nuevo Asiento -->
+                <div id="asientos" class="page-content">
+                    <div class="container-fluid p-4">
+                        <h2 class="mb-4">Nuevo Asiento Contable</h2>
+                        <div class="card card-custom">
+                            <div class="card-body">
+                                <form id="formAsiento">
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label">Fecha</label>
+                                            <input type="date" class="form-control" id="fechaAsiento" required>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">Número de Asiento</label>
+                                            <input type="text" class="form-control" id="numeroAsiento" readonly>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-12">
+                                            <label class="form-label">Glosa</label>
+                                            <textarea class="form-control" id="glosalAsiento" rows="2" placeholder="Descripción del asiento contable"></textarea>
+                                        </div>
+                                    </div>
+                                    
+                                    <h5>Detalle del Asiento</h5>
+                                    <div class="table-responsive">
+                                        <table class="table table-striped">
+                                            <thead>
+                                                <tr>
+                                                    <th>Cuenta</th>
+                                                    <th>Descripción</th>
+                                                    <th>Debe</th>
+                                                    <th>Haber</th>
+                                                    <th>Acción</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="detalleAsiento">
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    
+                                    <button type="button" class="btn btn-outline-primary" onclick="agregarLinea()">
+                                        <i class="fas fa-plus"></i> Agregar Línea
+                                    </button>
+                                    
+                                    <div class="row mt-3">
+                                        <div class="col-md-6">
+                                            <p><strong>Total Debe: </strong><span id="totalDebe">S/ 0.00</span></p>
+                                            <p><strong>Total Haber: </strong><span id="totalHaber">S/ 0.00</span></p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <p><strong>Diferencia: </strong><span id="diferencia">S/ 0.00</span></p>
+                                            <div id="estadoBalance" class="alert alert-info">
+                                                Asiento no balanceado
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <button type="submit" class="btn btn-custom">
+                                        <i class="fas fa-save"></i> Guardar Asiento
+                                    </button>
+                                    <button type="button" class="btn btn-secondary" onclick="limpiarAsiento()">
+                                        <i class="fas fa-broom"></i> Limpiar
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Plan de Cuentas -->
+                <div id="catalogo" class="page-content">
+                    <div class="container-fluid p-4">
+                        <h2 class="mb-4">Plan de Cuentas PCGE</h2>
+                        <div class="card card-custom">
+                            <div class="card-body">
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <input type="text" class="form-control" id="buscarCuenta" placeholder="Buscar cuenta...">
+                                    </div>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Código</th>
+                                                <th>Descripción</th>
+                                                <th>Tipo</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="listaCuentas">
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Libro Diario -->
+                <div id="diario" class="page-content">
+                    <div class="container-fluid p-4">
+                        <h2 class="mb-4">Libro Diario</h2>
+                        <div class="card card-custom">
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Fecha</th>
+                                                <th>Asiento</th>
+                                                <th>Cuenta</th>
+                                                <th>Descripción</th>
+                                                <th>Debe</th>
+                                                <th>Haber</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="libroDiario">
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Libro Mayor -->
+                <div id="mayor" class="page-content">
+                    <div class="container-fluid p-4">
+                        <h2 class="mb-4">Libro Mayor</h2>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <select class="form-select" id="cuentaMayor">
+                                    <option value="">Seleccionar cuenta...</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="card card-custom">
+                            <div class="card-body">
+                                <div id="mayorContent">
+                                    <p class="text-muted">Seleccione una cuenta para ver su mayor</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Registro de Ventas -->
+                <div id="ventas" class="page-content">
+                    <div class="container-fluid p-4">
+                        <h2 class="mb-4">Registro de Ventas</h2>
+                        <div class="card card-custom">
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Fecha</th>
+                                                <th>Documento</th>
+                                                <th>Cliente</th>
+                                                <th>Base Imponible</th>
+                                                <th>IGV</th>
+                                                <th>Total</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="registroVentas">
+                                        </tbody>
+                                        <tfoot>
+                                            <tr class="table-primary">
+                                                <th colspan="3">TOTALES</th>
+                                                <th id="totalBaseVentas">S/ 0.00</th>
+                                                <th id="totalIgvVentas">S/ 0.00</th>
+                                                <th id="totalGeneralVentas">S/ 0.00</th>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Registro de Compras -->
+                <div id="compras" class="page-content">
+                    <div class="container-fluid p-4">
+                        <h2 class="mb-4">Registro de Compras</h2>
+                        <div class="card card-custom">
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Fecha</th>
+                                                <th>Documento</th>
+                                                <th>Proveedor</th>
+                                                <th>Base Imponible</th>
+                                                <th>IGV</th>
+                                                <th>Total</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="registroCompras">
+                                        </tbody>
+                                        <tfoot>
+                                            <tr class="table-warning">
+                                                <th colspan="3">TOTALES</th>
+                                                <th id="totalBaseCompras">S/ 0.00</th>
+                                                <th id="totalIgvCompras">S/ 0.00</th>
+                                                <th id="totalGeneralCompras">S/ 0.00</th>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Balance General -->
+                <div id="balance" class="page-content">
+                    <div class="container-fluid p-4">
+                        <h2 class="mb-4">Balance General</h2>
+                        <div class="card card-custom">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h4>ACTIVOS</h4>
+                                        <div id="activosBalance">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h4>PASIVOS Y PATRIMONIO</h4>
+                                        <div id="pasivosBalance">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Estado de Resultados -->
+                <div id="resultados" class="page-content">
+                    <div class="container-fluid p-4">
+                        <h2 class="mb-4">Estado de Resultados</h2>
+                        <div class="card card-custom">
+                            <div class="card-body">
+                                <div id="estadoResultados">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Datos en memoria (simula localStorage)
+        let asientosContables = [];
+        let registroVentasData = [];
+        let registroComprasData = [];
+        let contadorAsientos = 1;
+
+        // Plan de Cuentas PCGE Perú
+        const planCuentas = {
+            '10': { codigo: '10', descripcion: 'CAJA Y BANCOS', tipo: 'Activo' },
+            '12': { codigo: '12', descripcion: 'CUENTAS POR COBRAR COMERCIALES - TERCEROS', tipo: 'Activo' },
+            '20': { codigo: '20', descripcion: 'MERCADERÍAS', tipo: 'Activo' },
+            '25': { codigo: '25', descripcion: 'MATERIALES AUXILIARES, SUMINISTROS Y REPUESTOS', tipo: 'Activo' },
+            '33': { codigo: '33', descripcion: 'INMUEBLES, MAQUINARIA Y EQUIPO', tipo: 'Activo' },
+            '39': { codigo: '39', descripcion: 'DEPRECIACIÓN, AMORTIZACIÓN Y AGOTAMIENTO ACUMULADOS', tipo: 'Activo Contra' },
+            '40': { codigo: '40', descripcion: 'TRIBUTOS, CONTRAPRESTACIONES Y APORTES POR PAGAR', tipo: 'Pasivo' },
+            '42': { codigo: '42', descripcion: 'CUENTAS POR PAGAR COMERCIALES - TERCEROS', tipo: 'Pasivo' },
+            '50': { codigo: '50', descripcion: 'CAPITAL', tipo: 'Patrimonio' },
+            '59': { codigo: '59', descripcion: 'RESULTADOS ACUMULADOS', tipo: 'Patrimonio' },
+            '60': { codigo: '60', descripcion: 'COMPRAS', tipo: 'Gasto' },
+            '61': { codigo: '61', descripcion: 'VARIACIÓN DE EXISTENCIAS', tipo: 'Gasto' },
+            '63': { codigo: '63', descripcion: 'GASTOS POR SERVICIOS PRESTADOS POR TERCEROS', tipo: 'Gasto' },
+            '65': { codigo: '65', descripcion: 'OTROS GASTOS DE GESTIÓN', tipo: 'Gasto' },
+            '68': { codigo: '68', descripcion: 'VALUACIÓN Y DETERIORO DE ACTIVOS Y PROVISIONES', tipo: 'Gasto' },
+            '69': { codigo: '69', descripcion: 'COSTO DE VENTAS', tipo: 'Gasto' },
+            '70': { codigo: '70', descripcion: 'VENTAS', tipo: 'Ingreso' },
+            '77': { codigo: '77', descripcion: 'INGRESOS FINANCIEROS', tipo: 'Ingreso' },
+            '79': { codigo: '79', descripcion: 'CARGAS IMPUTABLES A CUENTAS DE COSTOS Y GASTOS', tipo: 'Transferencia' },
+            '94': { codigo: '94', descripcion: 'GASTOS ADMINISTRATIVOS', tipo: 'Gasto Función' },
+            '95': { codigo: '95', descripcion: 'GASTOS DE VENTAS', tipo: 'Gasto Función' }
+        };
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', function() {
+            cargarPlanCuentas();
+            establecerFechaActual();
+            actualizarNumeroAsiento();
+            actualizarDashboard();
+            agregarLinea(); // Agregar primera línea
+        });
+
+        function showPage(pageId) {
+            // Ocultar todas las páginas
+            document.querySelectorAll('.page-content').forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            // Remover clase active de todos los nav-links
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            
+            // Mostrar página seleccionada
+            document.getElementById(pageId).classList.add('active');
+            
+            // Activar nav-link correspondiente
+            event.target.classList.add('active');
+            
+            // Cargar datos específicos según la página
+            switch(pageId) {
+                case 'diario':
+                    mostrarLibroDiario();
+                    break;
+                case 'mayor':
+                    cargarCuentasMayor();
+                    break;
+                case 'ventas':
+                    mostrarRegistroVentas();
+                    break;
+                case 'compras':
+                    mostrarRegistroCompras();
+                    break;
+                case 'balance':
+                    mostrarBalanceGeneral();
+                    break;
+                case 'resultados':
+                    mostrarEstadoResultados();
+                    break;
+                case 'dashboard':
+                    actualizarDashboard();
+                    break;
+            }
+        }
+
+        function cargarPlanCuentas() {
+            const tbody = document.getElementById('listaCuentas');
+            const selectCuenta = document.getElementById('cuentaMayor');
+            
+            tbody.innerHTML = '';
+            selectCuenta.innerHTML = '<option value="">Seleccionar cuenta...</option>';
+            
+            Object.values(planCuentas).forEach(cuenta => {
+                // Agregar a la tabla del catálogo
+                const row = document.createElement('tr');
+                row.className = 'cuenta-item';
+                row.innerHTML = `
+                    <td>${cuenta.codigo}</td>
+                    <td>${cuenta.descripcion}</td>
+                    <td><span class="badge bg-secondary">${cuenta.tipo}</span></td>
+                `;
+                tbody.appendChild(row);
+                
+                // Agregar al select del mayor
+                const option = document.createElement('option');
+                option.value = cuenta.codigo;
+                option.textContent = `${cuenta.codigo} - ${cuenta.descripcion}`;
+                selectCuenta.appendChild(option);
+            });
+        }
+
+        function establecerFechaActual() {
+            const fechaInput = document.getElementById('fechaAsiento');
+            const hoy = new Date().toISOString().split('T')[0];
+            fechaInput.value = hoy;
+        }
+
+        function actualizarNumeroAsiento() {
+            document.getElementById('numeroAsiento').value = String(contadorAsientos).padStart(4, '0');
+        }
+
+        function agregarLinea() {
+            const tbody = document.getElementById('detalleAsiento');
+            const row = document.createElement('tr');
+            
+            row.innerHTML = `
+                <td>
+                    <select class="form-select cuenta-select" onchange="actualizarDescripcion(this)">
+                        <option value="">Seleccionar...</option>
+                        ${Object.values(planCuentas).map(cuenta => 
+                            `<option value="${cuenta.codigo}">${cuenta.codigo} - ${cuenta.descripcion}</option>`
+                        ).join('')}
+                    </select>
+                </td>
+                <td><input type="text" class="form-control descripcion-input" readonly></td>
+                <td><input type="number" class="form-control debe-input" step="0.01" onchange="calcularTotales()"></td>
+                <td><input type="number" class="form-control haber-input" step="0.01" onchange="calcularTotales()"></td>
+                <td><button type="button" class="btn btn-danger btn-sm" onclick="eliminarLinea(this)"><i class="fas fa-trash"></i></button></td>
+            `;
+            
+            tbody.appendChild(row);
+        }
+
+        function eliminarLinea(button) {
+            button.closest('tr').remove();
+            calcularTotales();
+        }
+
+        function actualizarDescripcion(select) {
+            const cuenta = planCuentas[select.value];
+            const descripcionInput = select.closest('tr').querySelector('.descripcion-input');
+            descripcionInput.value = cuenta ? cuenta.descripcion : '';
+        }
+
+        function calcularTotales() {
+            const debeInputs = document.querySelectorAll('.debe-input');
+            const haberInputs = document.querySelectorAll('.haber-input');
+            
+            let totalDebe = 0;
+            let totalHaber = 0;
+            
+            debeInputs.forEach(input => {
+                totalDebe += parseFloat(input.value) || 0;
+            });
+            
+            haberInputs.forEach(input => {
+                totalHaber += parseFloat(input.value) || 0;
+            });
+            
+            document.getElementById('totalDebe').textContent = `S/ ${totalDebe.toFixed(2)}`;
+            document.getElementById('totalHaber').textContent = `S/ ${totalHaber.toFixed(2)}`;
+            
+            const diferencia = Math.abs(totalDebe - totalHaber);
+            document.getElementById('diferencia').textContent = `S/ ${diferencia.toFixed(2)}`;
+            
+            const estadoBalance = document.getElementById('estadoBalance');
+            if (diferencia < 0.01 && totalDebe > 0) {
+                estadoBalance.className = 'alert alert-success';
+                estadoBalance.textContent = 'Asiento balanceado ✓';
+            } else {
+                estadoBalance.className = 'alert alert-danger';
+                estadoBalance.textContent = 'Asiento no balanceado';
+            }
+        }
+
+        function limpiarAsiento() {
+            document.getElementById('formAsiento').reset();
+            document.getElementById('detalleAsiento').innerHTML = '';
+            establecerFechaActual();
+            actualizarNumeroAsiento();
+            agregarLinea();
+            calcularTotales();
+        }
+
+        // Event listener para el formulario de asiento
+        document.getElementById('formAsiento').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const fecha = document.getElementById('fechaAsiento').value;
+            const numero = document.getElementById('numeroAsiento').value;
+            const glosa = document.getElementById('glosalAsiento').value;
+            
+            const detalles = [];
+            const rows = document.querySelectorAll('#detalleAsiento tr');
+            
+            rows.forEach(row => {
+                const cuenta = row.querySelector('.cuenta-select').value;
+                const descripcion = row.querySelector('.descripcion-input').value;
+                const debe = parseFloat(row.querySelector('.debe-input').value) || 0;
+                const haber = parseFloat(row.querySelector('.haber-input').value) || 0;
+                
+                if (cuenta && (debe > 0 || haber > 0)) {
+                    detalles.push({ cuenta, descripcion, debe, haber });
+                }
+            });
+            
+            if (detalles.length < 2) {
+                alert('El asiento debe tener al menos 2 líneas');
+                return;
+            }
+            
+            const totalDebe = detalles.reduce((sum, d) => sum + d.debe, 0);
+            const totalHaber = detalles.reduce((sum, d) => sum + d.haber, 0);
+            
+            if (Math.abs(totalDebe - totalHaber) > 0.01) {
+                alert('El asiento no está balanceado');
+                return;
+            }
+            
+            const asiento = {
+                id: contadorAsientos,
+                fecha,
+                numero,
+                glosa,
+                detalles,
+                totalDebe,
+                totalHaber
+            };
+            
+            asientosContables.push(asiento);
+            contadorAsientos++;
+            
+            // Procesar ventas y compras automáticamente
+            procesarVentasCompras(asiento);
+            
+            alert('Asiento guardado exitosamente');
+            limpiarAsiento();
+            actualizarDashboard();
+        });
+
+        function procesarVentasCompras(asiento) {
+            asiento.detalles.forEach(detalle => {
+                // Detectar ventas (cuenta 70)
+                if (detalle.cuenta === '70' && detalle.haber > 0) {
+                    registroVentasData.push({
+                        fecha: asiento.fecha,
+                        documento: `F001-${String(registroVentasData.length + 1).padStart(4, '0')}`,
+                        cliente: 'Cliente General',
+                        baseImponible: detalle.haber,
+                        igv: detalle.haber * 0.18,
+                        total: detalle.haber * 1.18
+                    });
+                }
+                
+                // Detectar compras (cuenta 60)
+                if (detalle.cuenta === '60' && detalle.debe > 0) {
+                    registroComprasData.push({
+                        fecha: asiento.fecha,
+                        documento: `F001-${String(registroComprasData.length + 1).padStart(4, '0')}`,
+                        proveedor: 'Proveedor General',
+                        baseImponible: detalle.debe,
+                        igv: detalle.debe * 0.18,
+                        total: detalle.debe * 1.18
+                    });
+                }
+            });
+        }
+
+        function mostrarLibroDiario() {
+            const tbody = document.getElementById('libroDiario');
+            tbody.innerHTML = '';
+            
+            asientosContables.forEach(asiento => {
+                asiento.detalles.forEach((detalle, index) => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${index === 0 ? asiento.fecha : ''}</td>
+                        <td>${index === 0 ? asiento.numero : ''}</td>
+                        <td>${detalle.cuenta}</td>
+                        <td>${detalle.descripcion}</td>
+                        <td>${detalle.debe > 0 ? `S/ ${detalle.debe.toFixed(2)}` : ''}</td>
+                        <td>${detalle.haber > 0 ? `S/ ${detalle.haber.toFixed(2)}` : ''}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+                
+                if (asiento.glosa) {
+                    const glosalRow = document.createElement('tr');
+                    glosalRow.innerHTML = `
+                        <td colspan="6"><em>X/X ${asiento.glosa}</em></td>
+                    `;
+                    tbody.appendChild(glosalRow);
+                }
+            });
+        }
+
+        function cargarCuentasMayor() {
+            const select = document.getElementById('cuentaMayor');
+            select.addEventListener('change', function() {
+                mostrarMayorCuenta(this.value);
+            });
+        }
+
+        function mostrarMayorCuenta(codigoCuenta) {
+            const content = document.getElementById('mayorContent');
+            
+            if (!codigoCuenta) {
+                content.innerHTML = '<p class="text-muted">Seleccione una cuenta para ver su mayor</p>';
+                return;
+            }
+            
+            const cuenta = planCuentas[codigoCuenta];
+            const movimientos = [];
+            let saldo = 0;
+            
+            asientosContables.forEach(asiento => {
+                asiento.detalles.forEach(detalle => {
+                    if (detalle.cuenta === codigoCuenta) {
+                        const debe = detalle.debe || 0;
+                        const haber = detalle.haber || 0;
+                        saldo += debe - haber;
+                        
+                        movimientos.push({
+                            fecha: asiento.fecha,
+                            glosa: asiento.glosa,
+                            debe: debe,
+                            haber: haber,
+                            saldo: saldo
+                        });
+                    }
+                });
+            });
+            
+            let html = `
+                <h5>${cuenta.codigo} - ${cuenta.descripcion}</h5>
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Detalle</th>
+                                <th>Debe</th>
+                                <th>Haber</th>
+                                <th>Saldo</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            movimientos.forEach(mov => {
+                html += `
+                    <tr>
+                        <td>${mov.fecha}</td>
+                        <td>${mov.glosa}</td>
+                        <td>${mov.debe > 0 ? `S/ ${mov.debe.toFixed(2)}` : ''}</td>
+                        <td>${mov.haber > 0 ? `S/ ${mov.haber.toFixed(2)}` : ''}</td>
+                        <td>S/ ${mov.saldo.toFixed(2)}</td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                        </tbody>
+                        <tfoot>
+                            <tr class="table-info">
+                                <th colspan="4">SALDO FINAL</th>
+                                <th>S/ ${saldo.toFixed(2)}</th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            `;
+            
+            content.innerHTML = html;
+        }
+
+        function mostrarRegistroVentas() {
+            const tbody = document.getElementById('registroVentas');
+            tbody.innerHTML = '';
+            
+            let totalBase = 0, totalIgv = 0, totalGeneral = 0;
+            
+            registroVentasData.forEach(venta => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${venta.fecha}</td>
+                    <td>${venta.documento}</td>
+                    <td>${venta.cliente}</td>
+                    <td>S/ ${venta.baseImponible.toFixed(2)}</td>
+                    <td>S/ ${venta.igv.toFixed(2)}</td>
+                    <td>S/ ${venta.total.toFixed(2)}</td>
+                `;
+                tbody.appendChild(row);
+                
+                totalBase += venta.baseImponible;
+                totalIgv += venta.igv;
+                totalGeneral += venta.total;
+            });
+            
+            document.getElementById('totalBaseVentas').textContent = `S/ ${totalBase.toFixed(2)}`;
+            document.getElementById('totalIgvVentas').textContent = `S/ ${totalIgv.toFixed(2)}`;
+            document.getElementById('totalGeneralVentas').textContent = `S/ ${totalGeneral.toFixed(2)}`;
+        }
+
+        function mostrarRegistroCompras() {
+            const tbody = document.getElementById('registroCompras');
+            tbody.innerHTML = '';
+            
+            let totalBase = 0, totalIgv = 0, totalGeneral = 0;
+            
+            registroComprasData.forEach(compra => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${compra.fecha}</td>
+                    <td>${compra.documento}</td>
+                    <td>${compra.proveedor}</td>
+                    <td>S/ ${compra.baseImponible.toFixed(2)}</td>
+                    <td>S/ ${compra.igv.toFixed(2)}</td>
+                    <td>S/ ${compra.total.toFixed(2)}</td>
+                `;
+                tbody.appendChild(row);
+                
+                totalBase += compra.baseImponible;
+                totalIgv += compra.igv;
+                totalGeneral += compra.total;
+            });
+            
+            document.getElementById('totalBaseCompras').textContent = `S/ ${totalBase.toFixed(2)}`;
+            document.getElementById('totalIgvCompras').textContent = `S/ ${totalIgv.toFixed(2)}`;
+            document.getElementById('totalGeneralCompras').textContent = `S/ ${totalGeneral.toFixed(2)}`;
+        }
+
+        function calcularSaldos() {
+            const saldos = {};
+            
+            // Inicializar saldos
+            Object.keys(planCuentas).forEach(codigo => {
+                saldos[codigo] = 0;
+            });
+            
+            // Calcular saldos
+            asientosContables.forEach(asiento => {
+                asiento.detalles.forEach(detalle => {
+                    const debe = detalle.debe || 0;
+                    const haber = detalle.haber || 0;
+                    saldos[detalle.cuenta] += debe - haber;
+                });
+            });
+            
+            return saldos;
+        }
+
+        function mostrarBalanceGeneral() {
+            const saldos = calcularSaldos();
+            const activosDiv = document.getElementById('activosBalance');
+            const pasivosDiv = document.getElementById('pasivosBalance');
+            
+            let htmlActivos = '<h5>ACTIVOS CORRIENTES</h5>';
+            let htmlPasivos = '<h5>PASIVOS CORRIENTES</h5>';
+            
+            let totalActivos = 0;
+            let totalPasivos = 0;
+            let totalPatrimonio = 0;
+            
+            // Activos
+            Object.values(planCuentas).forEach(cuenta => {
+                const saldo = saldos[cuenta.codigo];
+                if (cuenta.tipo === 'Activo' && saldo !== 0) {
+                    htmlActivos += `<p>${cuenta.descripcion}: <strong>S/ ${Math.abs(saldo).toFixed(2)}</strong></p>`;
+                    totalActivos += Math.abs(saldo);
+                }
+            });
+            
+            htmlActivos += `<hr><h5>TOTAL ACTIVOS: S/ ${totalActivos.toFixed(2)}</h5>`;
+            
+            // Pasivos
+            Object.values(planCuentas).forEach(cuenta => {
+                const saldo = saldos[cuenta.codigo];
+                if (cuenta.tipo === 'Pasivo' && saldo !== 0) {
+                    htmlPasivos += `<p>${cuenta.descripcion}: <strong>S/ ${Math.abs(saldo).toFixed(2)}</strong></p>`;
+                    totalPasivos += Math.abs(saldo);
+                }
+            });
+            
+            htmlPasivos += '<hr><h5>PATRIMONIO</h5>';
+            
+            // Patrimonio
+            Object.values(planCuentas).forEach(cuenta => {
+                const saldo = saldos[cuenta.codigo];
+                if (cuenta.tipo === 'Patrimonio' && saldo !== 0) {
+                    htmlPasivos += `<p>${cuenta.descripcion}: <strong>S/ ${Math.abs(saldo).toFixed(2)}</strong></p>`;
+                    totalPatrimonio += Math.abs(saldo);
+                }
+            });
+            
+            // Calcular utilidad neta
+            const utilidadNeta = calcularUtilidadNeta();
+            if (utilidadNeta !== 0) {
+                htmlPasivos += `<p>Utilidad del Ejercicio: <strong>S/ ${utilidadNeta.toFixed(2)}</strong></p>`;
+                totalPatrimonio += utilidadNeta;
+            }
+            
+            htmlPasivos += `<hr><h5>TOTAL PASIVOS + PATRIMONIO: S/ ${(totalPasivos + totalPatrimonio).toFixed(2)}</h5>`;
+            
+            activosDiv.innerHTML = htmlActivos;
+            pasivosDiv.innerHTML = htmlPasivos;
+        }
+
+        function calcularUtilidadNeta() {
+            const saldos = calcularSaldos();
+            let ingresos = 0;
+            let gastos = 0;
+            
+            Object.values(planCuentas).forEach(cuenta => {
+                const saldo = saldos[cuenta.codigo];
+                if (cuenta.tipo === 'Ingreso') {
+                    ingresos += Math.abs(saldo);
+                } else if (cuenta.tipo === 'Gasto' || cuenta.tipo === 'Gasto Función') {
+                    gastos += Math.abs(saldo);
+                }
+            });
+            
+            return ingresos - gastos;
+        }
+
+        function mostrarEstadoResultados() {
+            const saldos = calcularSaldos();
+            const div = document.getElementById('estadoResultados');
+            
+            let html = '<h4>ESTADO DE RESULTADOS</h4>';
+            
+            let totalIngresos = 0;
+            let totalGastos = 0;
+            
+            // Ingresos
+            html += '<h5>INGRESOS</h5>';
+            Object.values(planCuentas).forEach(cuenta => {
+                const saldo = saldos[cuenta.codigo];
+                if (cuenta.tipo === 'Ingreso' && saldo !== 0) {
+                    html += `<p>${cuenta.descripcion}: <strong>S/ ${Math.abs(saldo).toFixed(2)}</strong></p>`;
+                    totalIngresos += Math.abs(saldo);
+                }
+            });
+            
+            html += `<hr><p><strong>TOTAL INGRESOS: S/ ${totalIngresos.toFixed(2)}</strong></p>`;
+            
+            // Gastos
+            html += '<h5>GASTOS</h5>';
+            Object.values(planCuentas).forEach(cuenta => {
+                const saldo = saldos[cuenta.codigo];
+                if ((cuenta.tipo === 'Gasto' || cuenta.tipo === 'Gasto Función') && saldo !== 0) {
+                    html += `<p>${cuenta.descripcion}: <strong>S/ ${Math.abs(saldo).toFixed(2)}</strong></p>`;
+                    totalGastos += Math.abs(saldo);
+                }
+            });
+            
+            html += `<hr><p><strong>TOTAL GASTOS: S/ ${totalGastos.toFixed(2)}</strong></p>`;
+            
+            const utilidadNeta = totalIngresos - totalGastos;
+            html += `<hr><h4 class="text-${utilidadNeta >= 0 ? 'success' : 'danger'}">UTILIDAD NETA: S/ ${utilidadNeta.toFixed(2)}</h4>`;
+            
+            div.innerHTML = html;
+        }
+
+        function actualizarDashboard() {
+            // Actualizar contadores
+            document.getElementById('totalAsientos').textContent = asientosContables.length;
+            
+            // Calcular totales
+            const totalVentas = registroVentasData.reduce((sum, v) => sum + v.baseImponible, 0);
+            const totalCompras = registroComprasData.reduce((sum, c) => sum + c.baseImponible, 0);
+            const utilidadNeta = calcularUtilidadNeta();
+            
+            document.getElementById('totalVentas').textContent = `S/ ${totalVentas.toFixed(2)}`;
+            document.getElementById('totalCompras').textContent = `S/ ${totalCompras.toFixed(2)}`;
+            document.getElementById('utilidadNeta').textContent = `S/ ${utilidadNeta.toFixed(2)}`;
+            
+            // Actualizar resumen financiero
+            const saldos = calcularSaldos();
+            let activos = 0, pasivos = 0, patrimonio = 0;
+            
+            Object.values(planCuentas).forEach(cuenta => {
+                const saldo = Math.abs(saldos[cuenta.codigo]);
+                if (cuenta.tipo === 'Activo') activos += saldo;
+                else if (cuenta.tipo === 'Pasivo') pasivos += saldo;
+                else if (cuenta.tipo === 'Patrimonio') patrimonio += saldo;
+            });
+            
+            patrimonio += utilidadNeta;
+            
+            document.getElementById('totalActivos').textContent = `S/ ${activos.toFixed(2)}`;
+            document.getElementById('totalPasivos').textContent = `S/ ${pasivos.toFixed(2)}`;
+            document.getElementById('totalPatrimonio').textContent = `S/ ${patrimonio.toFixed(2)}`;
+            
+            // Mostrar últimos asientos
+            const ultimosDiv = document.getElementById('ultimosAsientos');
+            if (asientosContables.length === 0) {
+                ultimosDiv.innerHTML = '<p class="text-muted">No hay asientos registrados</p>';
+            } else {
+                let html = '';
+                asientosContables.slice(-3).forEach(asiento => {
+                    html += `
+                        <div class="border-bottom pb-2 mb-2">
+                            <small class="text-muted">${asiento.fecha} - ${asiento.numero}</small>
+                            <p class="mb-0">${asiento.glosa || 'Sin glosa'}</p>
+                            <small>Total: S/ ${asiento.totalDebe.toFixed(2)}</small>
+                        </div>
+                    `;
+                });
+                ultimosDiv.innerHTML = html;
+            }
+        }
+
+        // Búsqueda en plan de cuentas
+        document.getElementById('buscarCuenta').addEventListener('input', function() {
+            const termino = this.value.toLowerCase();
+            const rows = document.querySelectorAll('#listaCuentas tr');
+            
+            rows.forEach(row => {
+                const texto = row.textContent.toLowerCase();
+                row.style.display = texto.includes(termino) ? '' : 'none';
+            });
+        });
+    </script>
+</body>
+</html>

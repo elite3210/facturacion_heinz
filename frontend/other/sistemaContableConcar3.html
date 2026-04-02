@@ -1,0 +1,2578 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema Contable CONCAR - Aplicación Web</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+        }
+        .navbar-brand {
+            font-weight: bold;
+            color: #2c5aa0 !important;
+        }
+        .card-header {
+            background: linear-gradient(135deg, #2c5aa0 0%, #5a7db8 100%);
+            color: white;
+            font-weight: bold;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #2c5aa0 0%, #5a7db8 100%);
+            border: none;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #1d3d73 0%, #4a6ba5 100%);
+        }
+        .table th {
+            background-color: #e9ecef;
+            font-weight: 600;
+            border-bottom: 2px solid #dee2e6;
+        }
+        .status-pending {
+            color: #ff6b6b;
+            font-weight: bold;
+        }
+        .status-consolidated {
+            color: #51cf66;
+            font-weight: bold;
+        }
+        .balance-debit {
+            color: #2c5aa0;
+            font-weight: bold;
+        }
+        .balance-credit {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        .sidebar {
+            background: linear-gradient(180deg, #2c5aa0 0%, #5a7db8 100%);
+            min-height: calc(100vh - 56px);
+        }
+        .sidebar .nav-link {
+            color: white;
+            padding: 0.8rem 1rem;
+            border-radius: 0.375rem;
+            margin: 0.2rem 0;
+        }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active {
+            background-color: rgba(255,255,255,0.1);
+            color: white;
+        }
+        .content-area {
+            min-height: calc(100vh - 56px);
+            padding: 2rem;
+        }
+        .form-floating label {
+            color: #6c757d;
+        }
+        .card {
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            border: none;
+        }
+        .alert-info {
+            background-color: #d1ecf1;
+            border-color: #bee5eb;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark" style="background: linear-gradient(135deg, #2c5aa0 0%, #5a7db8 100%);">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-calculator me-2"></i>
+                Sistema Contable CONCAR
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <span class="navbar-text">
+                            <i class="fas fa-user me-1"></i>
+                            Usuario: Administrador
+                        </span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 sidebar">
+                <nav class="nav flex-column py-3">
+                    <a class="nav-link active" href="#" onclick="showSection('dashboard')">
+                        <i class="fas fa-tachometer-alt me-2"></i> Dashboard
+                    </a>
+                    <a class="nav-link" href="#" onclick="showSection('plan-cuentas')">
+                        <i class="fas fa-list me-2"></i> Plan de Cuentas
+                    </a>
+                    <a class="nav-link" href="#" onclick="showSection('libros-auxiliares')">
+                        <i class="fas fa-book me-2"></i> Libros Auxiliares
+                    </a>
+                    <a class="nav-link" href="#" onclick="showSection('registro-transaccion')">
+                        <i class="fas fa-plus-circle me-2"></i> Registrar Transacción
+                    </a>
+                    <a class="nav-link" href="#" onclick="showSection('libro-diario')">
+                        <i class="fas fa-calendar-alt me-2"></i> Libro Diario
+                    </a>
+                    <a class="nav-link" href="#" onclick="showSection('libro-mayor')">
+                        <i class="fas fa-chart-line me-2"></i> Libro Mayor
+                    </a>
+                    <a class="nav-link" href="#" onclick="showSection('balance-comprobacion')">
+                        <i class="fas fa-balance-scale me-2"></i> Balance de Comprobación
+                    </a>
+                    <a class="nav-link" href="#" onclick="showSection('estados-financieros')">
+                        <i class="fas fa-chart-bar me-2"></i> Estados Financieros
+                    </a>
+                </nav>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-md-9 col-lg-10 content-area">
+                
+                <!-- Dashboard -->
+                <div id="dashboard" class="section">
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h2><i class="fas fa-tachometer-alt me-2"></i>Dashboard del Sistema</h2>
+                        </div>
+                    </div>
+                    
+                    <div class="row g-4">
+                        <div class="col-lg-3 col-md-6">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <div class="h1 text-primary">
+                                        <i class="fas fa-file-invoice"></i>
+                                    </div>
+                                    <h5 class="card-title">Transacciones Pendientes</h5>
+                                    <h3 class="text-danger" id="transacciones-pendientes">0</h3>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-lg-3 col-md-6">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <div class="h1 text-success">
+                                        <i class="fas fa-check-circle"></i>
+                                    </div>
+                                    <h5 class="card-title">Asientos Consolidados</h5>
+                                    <h3 class="text-success" id="asientos-consolidados">0</h3>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-lg-3 col-md-6">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <div class="h1 text-info">
+                                        <i class="fas fa-calculator"></i>
+                                    </div>
+                                    <h5 class="card-title">Cuentas Activas</h5>
+                                    <h3 class="text-info" id="cuentas-activas">0</h3>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-lg-3 col-md-6">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <div class="h1 text-warning">
+                                        <i class="fas fa-calendar"></i>
+                                    </div>
+                                    <h5 class="card-title">Último Cierre</h5>
+                                    <h6 class="text-muted" id="ultimo-cierre">No realizado</h6>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>Sistema Contable CONCAR</strong> - Versión Web desarrollada basada en el manual oficial CONCAR CB v2.2. 
+                                Esta aplicación simula las funcionalidades principales de un sistema contable profesional.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Plan de Cuentas -->
+                <div id="plan-cuentas" class="section" style="display: none;">
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h2><i class="fas fa-list me-2"></i>Plan de Cuentas</h2>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-8">
+                            <div class="card">
+                                <div class="card-header">
+                                    <i class="fas fa-plus me-2"></i>Agregar Nueva Cuenta
+                                </div>
+                                <div class="card-body">
+                                    <form id="form-cuenta">
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <div class="form-floating mb-3">
+                                                    <input type="text" class="form-control" id="codigo-cuenta" placeholder="000.000">
+                                                    <label>Código de Cuenta (3 dígitos mín.)</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-8">
+                                                <div class="form-floating mb-3">
+                                                    <input type="text" class="form-control" id="nombre-cuenta" placeholder="Nombre de la cuenta">
+                                                    <label>Nombre de la Cuenta</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-floating mb-3">
+                                                    <select class="form-select" id="tipo-cuenta">
+                                                        <option value="">Seleccionar tipo</option>
+                                                        <option value="ACTIVO">ACTIVO</option>
+                                                        <option value="PASIVO">PASIVO</option>
+                                                        <option value="PATRIMONIO">PATRIMONIO</option>
+                                                        <option value="INGRESOS">INGRESOS</option>
+                                                        <option value="GASTOS">GASTOS</option>
+                                                        <option value="CUENTAS_ORDEN">CUENTAS DE ORDEN</option>
+                                                    </select>
+                                                    <label>Tipo de Cuenta</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-floating mb-3">
+                                                    <select class="form-select" id="naturaleza-cuenta">
+                                                        <option value="">Seleccionar naturaleza</option>
+                                                        <option value="DEUDORA">DEUDORA</option>
+                                                        <option value="ACREEDORA">ACREEDORA</option>
+                                                    </select>
+                                                    <label>Naturaleza</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-save me-2"></i>Guardar Cuenta
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <i class="fas fa-info-circle me-2"></i>Información
+                                </div>
+                                <div class="card-body">
+                                    <p><strong>Estructura del Plan:</strong></p>
+                                    <ul class="list-unstyled">
+                                        <li><i class="fas fa-check text-success me-2"></i>Mínimo 3 dígitos (divisionarias)</li>
+                                        <li><i class="fas fa-check text-success me-2"></i>Cuenta padre a 2 dígitos</li>
+                                        <li><i class="fas fa-check text-success me-2"></i>Compatible con PCGE</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fas fa-table me-2"></i>Catálogo de Cuentas
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-striped table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Código</th>
+                                            <th>Nombre de la Cuenta</th>
+                                            <th>Tipo</th>
+                                            <th>Naturaleza</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tabla-cuentas">
+                                        <!-- Se llenarán dinámicamente -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Libros Auxiliares -->
+                <div id="libros-auxiliares" class="section" style="display: none;">
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h2><i class="fas fa-book me-2"></i>Libros Auxiliares</h2>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-header text-center">
+                                    <i class="fas fa-shopping-cart me-2"></i>Libro Compras
+                                </div>
+                                <div class="card-body text-center">
+                                    <button class="btn btn-primary" onclick="mostrarLibroAuxiliar('compras')">
+                                        Ver Registro
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-header text-center">
+                                    <i class="fas fa-receipt me-2"></i>Libro Ventas
+                                </div>
+                                <div class="card-body text-center">
+                                    <button class="btn btn-primary" onclick="mostrarLibroAuxiliar('ventas')">
+                                        Ver Registro
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-header text-center">
+                                    <i class="fas fa-cash-register me-2"></i>Libro Caja
+                                </div>
+                                <div class="card-body text-center">
+                                    <button class="btn btn-primary" onclick="mostrarLibroAuxiliar('caja')">
+                                        Ver Registro
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="contenido-libro-auxiliar">
+                        <div class="alert alert-info text-center">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Seleccione un libro auxiliar para visualizar su contenido
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Registro de Transacción -->
+                <div id="registro-transaccion" class="section" style="display: none;">
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h2><i class="fas fa-plus-circle me-2"></i>Registro de Transacciones</h2>
+                        </div>
+                    </div>
+
+                    <!-- Formulario Unificado de Asientos -->
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fas fa-edit me-2"></i>Nuevo Asiento Contable
+                        </div>
+                        <div class="card-body">
+                            <form id="form-asiento-contable">
+                                <!-- Cabecera del asiento -->
+                                <div class="row mb-4">
+                                    <div class="col-md-3">
+                                        <div class="form-floating">
+                                            <select class="form-select" id="libro-auxiliar" onchange="cambiarLibroAuxiliar()">
+                                                <option value="diario">Libro Diario</option>
+                                                <option value="ventas">Registro de Ventas</option>
+                                                <option value="compras">Registro de Compras</option>
+                                                <option value="caja">Libro de Caja</option>
+                                                <option value="bancos">Libro de Bancos</option>
+                                            </select>
+                                            <label>Libro Auxiliar</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-floating">
+                                            <input type="date" class="form-control" id="fecha-asiento" required>
+                                            <label>Fecha del Asiento</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-floating">
+                                            <input type="text" class="form-control" id="numero-asiento" readonly>
+                                            <label>Número de Asiento</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-floating">
+                                            <input type="text" class="form-control" id="referencia-asiento">
+                                            <label>Referencia (Opcional)</label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row mb-4">
+                                    <div class="col-md-12">
+                                        <div class="form-floating">
+                                            <textarea class="form-control" id="concepto-asiento" style="height: 80px" required></textarea>
+                                            <label>Concepto General del Asiento</label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Detalle del asiento -->
+                                <div class="card border-secondary">
+                                    <div class="card-header bg-light">
+                                        <div class="row align-items-center">
+                                            <div class="col-md-8">
+                                                <h6 class="mb-0"><i class="fas fa-list me-2"></i>Detalle del Asiento (Mínimo 2 movimientos)</h6>
+                                            </div>
+                                            <div class="col-md-4 text-end">
+                                                <button type="button" class="btn btn-sm btn-success" onclick="agregarMovimiento()">
+                                                    <i class="fas fa-plus me-1"></i>Agregar Movimiento
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="card-body p-0">
+                                        <div class="table-responsive">
+                                            <table class="table table-sm mb-0">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th width="25%">Cuenta</th>
+                                                        <th width="30%">Descripción</th>
+                                                        <th width="15%">Debe</th>
+                                                        <th width="15%">Haber</th>
+                                                        <th width="10%">Referencia</th>
+                                                        <th width="5%">Acción</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="detalle-movimientos">
+                                                    <!-- Los movimientos se agregarán dinámicamente -->
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    <div class="card-footer">
+                                        <div class="row align-items-center">
+                                            <div class="col-md-6">
+                                                <div id="estado-balance" class="alert alert-warning mb-0 py-2">
+                                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                                    <strong>Asiento Vacío</strong> - Agregue movimientos para continuar
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="row text-end">
+                                                    <div class="col-6">
+                                                        <div class="d-flex justify-content-between">
+                                                            <strong>Total Debe:</strong>
+                                                            <span id="total-debe" class="balance-debit fw-bold">S/ 0.00</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <div class="d-flex justify-content-between">
+                                                            <strong>Total Haber:</strong>
+                                                            <span id="total-haber" class="balance-credit fw-bold">S/ 0.00</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="row text-end mt-1">
+                                                    <div class="col-12">
+                                                        <small><strong>Diferencia:</strong> <span id="diferencia-balance" class="fw-bold">S/ 0.00</span></small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Mensaje de error -->
+                                <div id="mensaje-error" class="alert alert-danger mt-3" style="display: none;">
+                                    <i class="fas fa-exclamation-circle me-2"></i>
+                                    <span id="texto-error"></span>
+                                </div>
+
+                                <!-- Botones de acción -->
+                                <div class="mt-3">
+                                    <button type="submit" class="btn btn-primary" id="btn-guardar" disabled>
+                                        <i class="fas fa-save me-2"></i>Guardar Asiento
+                                    </button>
+                                    <button type="button" class="btn btn-secondary ms-2" onclick="limpiarFormulario()">
+                                        <i class="fas fa-eraser me-2"></i>Limpiar Todo
+                                    </button>
+                                    <button type="button" class="btn btn-info ms-2" onclick="validarAsiento()">
+                                        <i class="fas fa-check-circle me-2"></i>Validar Balance
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Libro Diario -->
+                <div id="libro-diario" class="section" style="display: none;">
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h2><i class="fas fa-calendar-alt me-2"></i>Libro Diario</h2>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fas fa-book-open me-2"></i>Asientos Contables - Libro Diario
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>Fecha</th>
+                                            <th>N° Asiento</th>
+                                            <th>Cuenta</th>
+                                            <th>Descripción</th>
+                                            <th>Debe</th>
+                                            <th>Haber</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tabla-libro-diario">
+                                        <!-- Se llenarán dinámicamente -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Libro Mayor -->
+                <div id="libro-mayor" class="section" style="display: none;">
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h2><i class="fas fa-chart-line me-2"></i>Libro Mayor</h2>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="form-floating">
+                                <select class="form-select" id="filtro-cuenta-mayor" onchange="filtrarLibroMayor()">
+                                    <option value="">Todas las cuentas</option>
+                                </select>
+                                <label>Filtrar por Cuenta</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fas fa-list-alt me-2"></i>Movimientos por Cuenta
+                        </div>
+                        <div class="card-body">
+                            <div id="contenido-libro-mayor">
+                                <!-- Se llenará dinámicamente -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Balance de Comprobación -->
+                <div id="balance-comprobacion" class="section" style="display: none;">
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h2><i class="fas fa-balance-scale me-2"></i>Balance de Comprobación</h2>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <div class="form-floating">
+                                <select class="form-select" id="nivel-balance" onchange="generarBalanceComprobacion()">
+                                    <option value="2">2 Dígitos (Nivel Cuenta)</option>
+                                    <option value="3">3 Dígitos (Nivel Divisionaria)</option>
+                                </select>
+                                <label>Nivel de Agrupación</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fas fa-calculator me-2"></i>Balance de Comprobación de Saldos
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th rowspan="2">Código</th>
+                                            <th rowspan="2">Descripción</th>
+                                            <th colspan="2" class="text-center">Saldo Inicial</th>
+                                            <th colspan="2" class="text-center">Movimientos</th>
+                                            <th colspan="2" class="text-center">Saldo Final</th>
+                                        </tr>
+                                        <tr>
+                                            <th>Debe</th>
+                                            <th>Haber</th>
+                                            <th>Debe</th>
+                                            <th>Haber</th>
+                                            <th>Debe</th>
+                                            <th>Haber</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tabla-balance-comprobacion">
+                                        <!-- Se llenarán dinámicamente -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Estados Financieros -->
+                <div id="estados-financieros" class="section" style="display: none;">
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h2><i class="fas fa-chart-bar me-2"></i>Estados Financieros</h2>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header text-center">
+                                    <i class="fas fa-building me-2"></i>Balance General
+                                </div>
+                                <div class="card-body text-center">
+                                    <button class="btn btn-primary" onclick="mostrarEstadoFinanciero('balance')">
+                                        Generar Balance General
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header text-center">
+                                    <i class="fas fa-chart-line me-2"></i>Estado de Resultados
+                                </div>
+                                <div class="card-body text-center">
+                                    <button class="btn btn-primary" onclick="mostrarEstadoFinanciero('resultados')">
+                                        Generar Estado de Resultados
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="contenido-estados-financieros">
+                        <div class="alert alert-info text-center">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Seleccione un estado financiero para generar y visualizar
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Variables globales para almacenar datos
+        let planCuentas = {};
+        let librosAuxiliares = {
+            compras: [],
+            ventas: [],
+            caja: [],
+            bancos: []
+        };
+        let libroDiario = [];
+        let libroMayor = {};
+        let configuracion = {
+            ultimaConsolidacion: null,
+            contadorAsientos: 1
+        };
+        let movimientosAsiento = [];
+        let contadorMovimientos = 0;
+
+        // Funciones de navegación (definidas primero)
+        function showSection(sectionId) {
+            try {
+                // Ocultar todas las secciones
+                document.querySelectorAll('.section').forEach(section => {
+                    section.style.display = 'none';
+                });
+                
+                // Mostrar la sección seleccionada
+                const targetSection = document.getElementById(sectionId);
+                if (targetSection) {
+                    targetSection.style.display = 'block';
+                }
+                
+                // Actualizar navegación activa
+                document.querySelectorAll('.nav-link').forEach(link => {
+                    link.classList.remove('active');
+                });
+                
+                // Buscar el enlace activo por el atributo onclick
+                document.querySelectorAll('.nav-link').forEach(link => {
+                    const onclickAttr = link.getAttribute('onclick');
+                    if (onclickAttr && onclickAttr.includes(`'${sectionId}'`)) {
+                        link.classList.add('active');
+                    }
+                });
+
+                // Cargar datos específicos según la sección
+                switch(sectionId) {
+                    case 'plan-cuentas':
+                        mostrarPlanCuentas();
+                        break;
+                    case 'libro-diario':
+                        mostrarLibroDiario();
+                        break;
+                    case 'libro-mayor':
+                        mostrarLibroMayor();
+                        break;
+                    case 'balance-comprobacion':
+                        generarBalanceComprobacion();
+                        break;
+                    case 'registro-transaccion':
+                        // Reinicializar formulario al abrir la sección
+                        inicializarFormularioAsiento();
+                        break;
+                    case 'libros-auxiliares':
+                        // Mostrar el primer libro auxiliar por defecto
+                        mostrarLibroAuxiliar('compras');
+                        break;
+                    case 'estados-financieros':
+                        // Preparar la sección de estados financieros
+                        break;
+                }
+            } catch (error) {
+                console.error('Error en showSection:', error);
+            }
+        }
+
+        // Funciones de utilidad básicas
+        function formatearMonto(monto) {
+            if (isNaN(monto) || monto === null || monto === undefined) return 'S/ 0.00';
+            return new Intl.NumberFormat('es-PE', {
+                style: 'currency',
+                currency: 'PEN',
+                minimumFractionDigits: 2
+            }).format(monto);
+        }
+
+        function formatearFecha(fecha) {
+            try {
+                return new Date(fecha).toLocaleDateString('es-PE');
+            } catch (error) {
+                return fecha;
+            }
+        }
+
+        // Mostrar mensaje de error
+        function mostrarError(mensaje) {
+            try {
+                const mensajeError = document.getElementById('mensaje-error');
+                const textoError = document.getElementById('texto-error');
+                
+                if (mensajeError && textoError) {
+                    textoError.textContent = mensaje;
+                    mensajeError.style.display = 'block';
+                    
+                    // Ocultar después de 5 segundos
+                    setTimeout(() => {
+                        mensajeError.style.display = 'none';
+                    }, 5000);
+                } else {
+                    // Fallback a alert si no hay elementos
+                    alert(mensaje);
+                }
+            } catch (error) {
+                console.error('Error al mostrar mensaje:', error);
+                alert(mensaje); // Fallback final
+            }
+        }
+
+        // Funciones de almacenamiento
+        function guardarDatos() {
+            try {
+                const datos = {
+                    planCuentas,
+                    librosAuxiliares,
+                    libroDiario,
+                    libroMayor,
+                    configuracion
+                };
+                
+                Object.entries(datos).forEach(([clave, valor]) => {
+                    localStorage.setItem(`concar_${clave}`, JSON.stringify(valor));
+                });
+            } catch (error) {
+                console.error('Error al guardar datos:', error);
+            }
+        }
+
+        function cargarDatos() {
+            try {
+                planCuentas = JSON.parse(localStorage.getItem('concar_planCuentas')) || {};
+                librosAuxiliares = JSON.parse(localStorage.getItem('concar_librosAuxiliares')) || {
+                    compras: [],
+                    ventas: [],
+                    caja: [],
+                    bancos: []
+                };
+                libroDiario = JSON.parse(localStorage.getItem('concar_libroDiario')) || [];
+                libroMayor = JSON.parse(localStorage.getItem('concar_libroMayor')) || {};
+                configuracion = JSON.parse(localStorage.getItem('concar_configuracion')) || {
+                    ultimaConsolidacion: null,
+                    contadorAsientos: 1,
+                    historicoConsolidaciones: []
+                };
+                
+                // Asegurar que existe la estructura de bancos
+                if (!librosAuxiliares.bancos) {
+                    librosAuxiliares.bancos = [];
+                }
+            } catch (error) {
+                console.error('Error al cargar datos:', error);
+                // Reinicializar con datos vacíos si hay error
+                planCuentas = {};
+                librosAuxiliares = { compras: [], ventas: [], caja: [], bancos: [] };
+                libroDiario = [];
+                libroMayor = {};
+                configuracion = { ultimaConsolidacion: null, contadorAsientos: 1, historicoConsolidaciones: [] };
+            }
+        }
+        
+        // Inicializar plan de cuentas básico según PCGE
+        function inicializarPlanCuentasBasico() {
+            const cuentasBasicas = [
+                // ACTIVO
+                { codigo: '101', nombre: 'Caja', tipo: 'ACTIVO', naturaleza: 'DEUDORA' },
+                { codigo: '102', nombre: 'Fondos fijos', tipo: 'ACTIVO', naturaleza: 'DEUDORA' },
+                { codigo: '104', nombre: 'Cuentas corrientes en instituciones financieras', tipo: 'ACTIVO', naturaleza: 'DEUDORA' },
+                { codigo: '106', nombre: 'Depósitos de ahorro', tipo: 'ACTIVO', naturaleza: 'DEUDORA' },
+                { codigo: '107', nombre: 'Fondos sujetos a restricción', tipo: 'ACTIVO', naturaleza: 'DEUDORA' },
+                { codigo: '121', nombre: 'Facturas, boletas y otros comprobantes por cobrar', tipo: 'ACTIVO', naturaleza: 'DEUDORA' },
+                { codigo: '201', nombre: 'Mercaderías manufacturadas', tipo: 'ACTIVO', naturaleza: 'DEUDORA' },
+                { codigo: '331', nombre: 'Terrenos', tipo: 'ACTIVO', naturaleza: 'DEUDORA' },
+                { codigo: '333', nombre: 'Maquinarias y equipos de explotación', tipo: 'ACTIVO', naturaleza: 'DEUDORA' },
+                
+                // PASIVO
+                { codigo: '401', nombre: 'Gobierno central', tipo: 'PASIVO', naturaleza: 'ACREEDORA' },
+                { codigo: '421', nombre: 'Facturas, boletas y otros comprobantes por pagar', tipo: 'PASIVO', naturaleza: 'ACREEDORA' },
+                { codigo: '451', nombre: 'Préstamos de instituciones financieras', tipo: 'PASIVO', naturaleza: 'ACREEDORA' },
+                { codigo: '465', nombre: 'Pasivos por instrumentos financieros derivados', tipo: 'PASIVO', naturaleza: 'ACREEDORA' },
+                
+                // PATRIMONIO
+                { codigo: '501', nombre: 'Capital social', tipo: 'PATRIMONIO', naturaleza: 'ACREEDORA' },
+                { codigo: '591', nombre: 'Utilidades no distribuidas', tipo: 'PATRIMONIO', naturaleza: 'ACREEDORA' },
+                
+                // INGRESOS
+                { codigo: '701', nombre: 'Mercaderías', tipo: 'INGRESOS', naturaleza: 'ACREEDORA' },
+                { codigo: '709', nombre: 'Devoluciones sobre ventas', tipo: 'INGRESOS', naturaleza: 'DEUDORA' },
+                { codigo: '771', nombre: 'Ganancia por medición de activos no financieros al valor razonable', tipo: 'INGRESOS', naturaleza: 'ACREEDORA' },
+                { codigo: '775', nombre: 'Ingresos excepcionales', tipo: 'INGRESOS', naturaleza: 'ACREEDORA' },
+                { codigo: '777', nombre: 'Ingresos financieros', tipo: 'INGRESOS', naturaleza: 'ACREEDORA' },
+                
+                // GASTOS
+                { codigo: '601', nombre: 'Mercaderías', tipo: 'GASTOS', naturaleza: 'DEUDORA' },
+                { codigo: '631', nombre: 'Remuneraciones', tipo: 'GASTOS', naturaleza: 'DEUDORA' },
+                { codigo: '633', nombre: 'Seguridad, previsión social y otras contrib.', tipo: 'GASTOS', naturaleza: 'DEUDORA' },
+                { codigo: '634', nombre: 'Cargas diversas de gestión', tipo: 'GASTOS', naturaleza: 'DEUDORA' },
+                { codigo: '655', nombre: 'Costo neto de enajenación de activos inmovilizados', tipo: 'GASTOS', naturaleza: 'DEUDORA' },
+                { codigo: '671', nombre: 'Pérdida por medición de activos no financieros al valor razonable', tipo: 'GASTOS', naturaleza: 'DEUDORA' },
+                { codigo: '675', nombre: 'Gastos excepcionales', tipo: 'GASTOS', naturaleza: 'DEUDORA' },
+                { codigo: '677', nombre: 'Gastos financieros', tipo: 'GASTOS', naturaleza: 'DEUDORA' }
+            ];
+
+            cuentasBasicas.forEach(cuenta => {
+                if (!planCuentas[cuenta.codigo]) {
+                    planCuentas[cuenta.codigo] = cuenta;
+                }
+            });
+            
+            guardarDatos();
+        }
+
+        function actualizarDashboard() {
+            try {
+                // Contar registros pendientes en libros auxiliares
+                let pendientes = 0;
+                Object.values(librosAuxiliares).forEach(libro => {
+                    pendientes += libro.filter(r => !r.consolidado).length;
+                });
+                
+                // Contar total de asientos en el diario
+                const totalAsientos = libroDiario.length;
+                
+                // Contar cuentas con movimientos (activas)
+                const cuentasActivas = Object.keys(libroMayor).length;
+                
+                // Última consolidación/último asiento
+                const ultimoCierre = configuracion.ultimaConsolidacion ? 
+                    formatearFecha(configuracion.ultimaConsolidacion) : 'No realizado';
+                
+                // Actualizar elementos del dashboard
+                const pendientesElement = document.getElementById('transacciones-pendientes');
+                const asientosElement = document.getElementById('asientos-consolidados');
+                const cuentasElement = document.getElementById('cuentas-activas');
+                const cierreElement = document.getElementById('ultimo-cierre');
+                
+                if (pendientesElement) pendientesElement.textContent = pendientes;
+                if (asientosElement) asientosElement.textContent = totalAsientos;
+                if (cuentasElement) cuentasElement.textContent = cuentasActivas;
+                if (cierreElement) cierreElement.textContent = ultimoCierre;
+                
+            } catch (error) {
+                console.error('Error al actualizar dashboard:', error);
+            }
+        }
+
+        // Inicializar la aplicación
+        function init() {
+            try {
+                cargarDatos();
+                inicializarPlanCuentasBasico();
+                actualizarDashboard();
+                mostrarLibroAuxiliar('compras');
+                
+                // Establecer fecha actual
+                const fechaActual = new Date().toISOString().split('T')[0];
+                const fechaAsientoElement = document.getElementById('fecha-asiento');
+                if (fechaAsientoElement) {
+                    fechaAsientoElement.value = fechaActual;
+                }
+                
+                // Inicializar formulario de asiento
+                inicializarFormularioAsiento();
+                
+                // Configurar event listeners
+                configurarEventListeners();
+                
+                // Mostrar dashboard por defecto
+                setTimeout(() => {
+                    showSection('dashboard');
+                }, 100); // Pequeño delay para asegurar que el DOM esté listo
+                
+                console.log('✅ Sistema CONCAR inicializado correctamente');
+            } catch (error) {
+                console.error('❌ Error al inicializar el sistema:', error);
+                alert('Error al inicializar el sistema. Revise la consola para más detalles.');
+            }
+        }
+
+        // Configurar todos los event listeners
+        function configurarEventListeners() {
+            // Event listener para el formulario de asiento contable
+            const formAsiento = document.getElementById('form-asiento-contable');
+            if (formAsiento) {
+                formAsiento.removeEventListener('submit', handleSubmitAsiento); // Evitar duplicados
+                formAsiento.addEventListener('submit', handleSubmitAsiento);
+            }
+
+            // Event listener para el formulario de cuenta
+            const formCuenta = document.getElementById('form-cuenta');
+            if (formCuenta) {
+                formCuenta.removeEventListener('submit', handleSubmitCuenta);
+                formCuenta.addEventListener('submit', handleSubmitCuenta);
+            }
+        }
+
+        // Handler para el submit del asiento
+        function handleSubmitAsiento(e) {
+            e.preventDefault();
+            
+            try {
+                // Validación final antes de guardar
+                const fecha = document.getElementById('fecha-asiento').value;
+                const concepto = document.getElementById('concepto-asiento').value.trim();
+                const referencia = document.getElementById('referencia-asiento').value.trim();
+                const libro = document.getElementById('libro-auxiliar').value;
+                
+                if (!fecha || !concepto) {
+                    mostrarError('La fecha y el concepto son obligatorios');
+                    return;
+                }
+                
+                // Validar movimientos
+                const movimientosValidos = movimientosAsiento.filter(mov => {
+                    return mov.cuenta && mov.descripcion && (mov.debe > 0 || mov.haber > 0);
+                });
+                
+                if (movimientosValidos.length < 2) {
+                    mostrarError('Se requieren mínimo 2 movimientos válidos');
+                    return;
+                }
+                
+                // Validar balance
+                const totalDebe = movimientosValidos.reduce((sum, mov) => sum + mov.debe, 0);
+                const totalHaber = movimientosValidos.reduce((sum, mov) => sum + mov.haber, 0);
+                const diferencia = Math.abs(totalDebe - totalHaber);
+                
+                if (diferencia > 0.01) {
+                    mostrarError(`El asiento está descuadrado. Diferencia: ${formatearMonto(diferencia)}`);
+                    return;
+                }
+                
+                // Crear el asiento
+                const asiento = {
+                    numero: configuracion.contadorAsientos++,
+                    fecha: fecha,
+                    concepto: concepto,
+                    referencia: referencia,
+                    libro: libro,
+                    movimientos: [],
+                    tipoAsiento: libro === 'diario' ? 'DIRECTO' : 'AUXILIAR'
+                };
+                
+                // Procesar movimientos válidos
+                movimientosValidos.forEach(mov => {
+                    asiento.movimientos.push({
+                        cuenta: mov.cuenta,
+                        descripcion: mov.descripcion,
+                        debe: mov.debe,
+                        haber: mov.haber,
+                        referencia: mov.referencia
+                    });
+                });
+                
+                // Guardar en el libro diario
+                libroDiario.push(asiento);
+                
+                // Actualizar libro mayor
+                asiento.movimientos.forEach(mov => {
+                    actualizarLibroMayor(mov, asiento);
+                });
+                
+                // Si no es libro diario, también guardar en libro auxiliar correspondiente
+                if (libro !== 'diario') {
+                    guardarEnLibroAuxiliar(asiento, libro);
+                }
+                
+                // Actualizar configuración
+                configuracion.ultimaConsolidacion = new Date().toISOString();
+                
+                guardarDatos();
+                actualizarDashboard();
+                
+                // Mostrar mensaje de éxito
+                alert(`✅ Asiento ${asiento.numero.toString().padStart(4, '0')} guardado exitosamente en ${obtenerNombreLibro(libro)}`);
+                
+                // Limpiar formulario y preparar el siguiente
+                limpiarFormulario();
+                
+            } catch (error) {
+                console.error('Error al guardar asiento:', error);
+                mostrarError('Error interno al guardar el asiento. Revise la consola.');
+            }
+        }
+
+        // Handler para el submit de cuenta
+        function handleSubmitCuenta(e) {
+            e.preventDefault();
+            
+            try {
+                const codigo = document.getElementById('codigo-cuenta').value.trim();
+                const nombre = document.getElementById('nombre-cuenta').value.trim();
+                const tipo = document.getElementById('tipo-cuenta').value;
+                const naturaleza = document.getElementById('naturaleza-cuenta').value;
+                
+                if (!codigo || !nombre || !tipo || !naturaleza) {
+                    alert('Todos los campos son obligatorios');
+                    return;
+                }
+                
+                if (codigo.length < 3) {
+                    alert('El código debe tener al menos 3 dígitos');
+                    return;
+                }
+                
+                if (planCuentas[codigo]) {
+                    alert('Ya existe una cuenta con este código');
+                    return;
+                }
+                
+                planCuentas[codigo] = { codigo, nombre, tipo, naturaleza };
+                guardarDatos();
+                mostrarPlanCuentas();
+                actualizarDashboard();
+                
+                // Limpiar formulario
+                e.target.reset();
+                
+                alert('Cuenta agregada exitosamente');
+            } catch (error) {
+                console.error('Error al agregar cuenta:', error);
+                alert('Error al agregar la cuenta. Revise la consola.');
+            }
+        }
+
+        // Inicializar formulario de asiento
+        function inicializarFormularioAsiento() {
+            try {
+                // Establecer número de asiento automático
+                actualizarNumeroAsiento();
+                
+                // Limpiar movimientos y agregar los primeros dos
+                movimientosAsiento = [];
+                contadorMovimientos = 0;
+                const detalleElement = document.getElementById('detalle-movimientos');
+                if (detalleElement) {
+                    detalleElement.innerHTML = '';
+                }
+                
+                // Agregar 2 movimientos iniciales (mínimo requerido)
+                agregarMovimiento();
+                agregarMovimiento();
+                
+                actualizarTotalesBalance();
+            } catch (error) {
+                console.error('Error al inicializar formulario:', error);
+            }
+        }
+
+        // Actualizar número de asiento automático (4 dígitos)
+        function actualizarNumeroAsiento() {
+            const numeroAsientoElement = document.getElementById('numero-asiento');
+            if (numeroAsientoElement) {
+                const numeroAsiento = configuracion.contadorAsientos.toString().padStart(4, '0');
+                numeroAsientoElement.value = numeroAsiento;
+            }
+        }
+
+        // Cambiar libro auxiliar - influye en categorización
+        function cambiarLibroAuxiliar() {
+            try {
+                const libroElement = document.getElementById('libro-auxiliar');
+                const conceptoElement = document.getElementById('concepto-asiento');
+                
+                if (!libroElement || !conceptoElement) return;
+                
+                const libro = libroElement.value;
+                
+                // Sugerir concepto según el libro seleccionado
+                const sugerencias = {
+                    'diario': 'Asiento de ajuste - ',
+                    'ventas': 'Registro de venta - ',
+                    'compras': 'Registro de compra - ',
+                    'caja': 'Movimiento de caja - ',
+                    'bancos': 'Movimiento bancario - '
+                };
+                
+                if (conceptoElement.value === '' || Object.values(sugerencias).some(s => conceptoElement.value.startsWith(s))) {
+                    conceptoElement.value = sugerencias[libro] || '';
+                }
+            } catch (error) {
+                console.error('Error al cambiar libro auxiliar:', error);
+            }
+        }
+
+        // Agregar nuevo movimiento
+        function agregarMovimiento() {
+            try {
+                const tbody = document.getElementById('detalle-movimientos');
+                if (!tbody) {
+                    console.error('No se encontró el elemento detalle-movimientos');
+                    return;
+                }
+                
+                const index = contadorMovimientos++;
+                
+                const row = tbody.insertRow();
+                row.id = `movimiento-${index}`;
+                
+                // Generar opciones de cuentas
+                const opcionesCuentas = Object.entries(planCuentas).sort().map(([codigo, cuenta]) => 
+                    `<option value="${codigo}">${codigo} - ${cuenta.nombre}</option>`
+                ).join('');
+                
+                row.innerHTML = `
+                    <td>
+                        <select class="form-select form-select-sm" id="cuenta-${index}" onchange="actualizarDescripcionMovimiento(${index})" required>
+                            <option value="">Seleccionar cuenta...</option>
+                            ${opcionesCuentas}
+                        </select>
+                    </td>
+                    <td>
+                        <input type="text" class="form-control form-control-sm" id="descripcion-${index}" 
+                               placeholder="Descripción del movimiento" required>
+                    </td>
+                    <td>
+                        <input type="number" class="form-control form-control-sm text-end" id="debe-${index}" 
+                               step="0.01" min="0" placeholder="0.00" 
+                               onchange="validarImporteMovimiento(${index}, 'debe')" 
+                               oninput="actualizarTotalesBalance()">
+                    </td>
+                    <td>
+                        <input type="number" class="form-control form-control-sm text-end" id="haber-${index}" 
+                               step="0.01" min="0" placeholder="0.00" 
+                               onchange="validarImporteMovimiento(${index}, 'haber')" 
+                               oninput="actualizarTotalesBalance()">
+                    </td>
+                    <td>
+                        <input type="text" class="form-control form-control-sm" id="referencia-${index}" 
+                               placeholder="Ref." maxlength="20">
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-sm btn-outline-danger" 
+                                onclick="eliminarMovimiento(${index})">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                    </td>
+                `;
+                
+                // Agregar a la lista de movimientos
+                movimientosAsiento.push({
+                    index: index,
+                    cuenta: '',
+                    descripcion: '',
+                    debe: 0,
+                    haber: 0,
+                    referencia: ''
+                });
+                
+                actualizarBotonesEliminar();
+                actualizarTotalesBalance();
+                
+            } catch (error) {
+                console.error('Error al agregar movimiento:', error);
+            }
+        }
+
+        // Eliminar movimiento
+        function eliminarMovimiento(index) {
+            try {
+                // Verificar que no sea el último movimiento (mínimo 2 requeridos)
+                if (movimientosAsiento.length <= 2) {
+                    mostrarError('Se requieren mínimo 2 movimientos por asiento');
+                    return;
+                }
+                
+                // Eliminar fila de la tabla
+                const row = document.getElementById(`movimiento-${index}`);
+                if (row) {
+                    row.remove();
+                }
+                
+                // Eliminar de la lista
+                movimientosAsiento = movimientosAsiento.filter(mov => mov.index !== index);
+                
+                actualizarBotonesEliminar();
+                actualizarTotalesBalance();
+            } catch (error) {
+                console.error('Error al eliminar movimiento:', error);
+            }
+        }
+
+        // Actualizar botones de eliminar (protección para mínimo 2 movimientos)
+        function actualizarBotonesEliminar() {
+            try {
+                const botones = document.querySelectorAll('[onclick*="eliminarMovimiento"]');
+                botones.forEach(boton => {
+                    boton.disabled = movimientosAsiento.length <= 2;
+                });
+            } catch (error) {
+                console.error('Error al actualizar botones:', error);
+            }
+        }
+
+        // Actualizar descripción automáticamente al seleccionar cuenta
+        function actualizarDescripcionMovimiento(index) {
+            try {
+                const cuentaSelect = document.getElementById(`cuenta-${index}`);
+                const descripcionInput = document.getElementById(`descripcion-${index}`);
+                
+                if (!cuentaSelect || !descripcionInput) return;
+                
+                if (cuentaSelect.value && planCuentas[cuentaSelect.value]) {
+                    // Solo actualizar si está vacía
+                    if (descripcionInput.value === '') {
+                        descripcionInput.value = planCuentas[cuentaSelect.value].nombre;
+                    }
+                }
+                
+                // Actualizar movimiento en la lista
+                const movimiento = movimientosAsiento.find(m => m.index === index);
+                if (movimiento) {
+                    movimiento.cuenta = cuentaSelect.value;
+                    movimiento.descripcion = descripcionInput.value;
+                }
+            } catch (error) {
+                console.error('Error al actualizar descripción:', error);
+            }
+        }
+
+        // Validar importe (Debe y Haber son mutuamente excluyentes)
+        function validarImporteMovimiento(index, tipo) {
+            try {
+                const debeInput = document.getElementById(`debe-${index}`);
+                const haberInput = document.getElementById(`haber-${index}`);
+                
+                if (!debeInput || !haberInput) return;
+                
+                // Si se ingresa en Debe, limpiar Haber y viceversa
+                if (tipo === 'debe' && parseFloat(debeInput.value) > 0) {
+                    haberInput.value = '';
+                } else if (tipo === 'haber' && parseFloat(haberInput.value) > 0) {
+                    debeInput.value = '';
+                }
+                
+                actualizarTotalesBalance();
+            } catch (error) {
+                console.error('Error al validar importe:', error);
+            }
+        }
+
+        // Actualizar totales y validar balance en tiempo real
+        function actualizarTotalesBalance() {
+            let totalDebe = 0;
+            let totalHaber = 0;
+            let movimientosValidos = 0;
+            
+            // Recalcular totales
+            movimientosAsiento.forEach(mov => {
+                const debeInput = document.getElementById(`debe-${mov.index}`);
+                const haberInput = document.getElementById(`haber-${mov.index}`);
+                const cuentaSelect = document.getElementById(`cuenta-${mov.index}`);
+                const descripcionInput = document.getElementById(`descripcion-${mov.index}`);
+                
+                if (debeInput && haberInput && cuentaSelect && descripcionInput) {
+                    const debe = parseFloat(debeInput.value) || 0;
+                    const haber = parseFloat(haberInput.value) || 0;
+                    
+                    totalDebe += debe;
+                    totalHaber += haber;
+                    
+                    // Actualizar datos del movimiento
+                    mov.debe = debe;
+                    mov.haber = haber;
+                    mov.cuenta = cuentaSelect.value;
+                    mov.descripcion = descripcionInput.value;
+                    
+                    // Contar movimientos válidos (con cuenta y al menos un importe)
+                    if (mov.cuenta && mov.descripcion && (debe > 0 || haber > 0)) {
+                        movimientosValidos++;
+                    }
+                }
+            });
+            
+            // Actualizar interfaz
+            document.getElementById('total-debe').textContent = formatearMonto(totalDebe);
+            document.getElementById('total-haber').textContent = formatearMonto(totalHaber);
+            
+            // Calcular diferencia
+            const diferencia = Math.abs(totalDebe - totalHaber);
+            document.getElementById('diferencia-balance').textContent = formatearMonto(diferencia);
+            
+            // Validar estado del asiento
+            validarEstadoAsiento(totalDebe, totalHaber, diferencia, movimientosValidos);
+        }
+
+        // Validar estado del asiento y actualizar interfaz
+        function validarEstadoAsiento(totalDebe, totalHaber, diferencia, movimientosValidos) {
+            const estadoDiv = document.getElementById('estado-balance');
+            const btnGuardar = document.getElementById('btn-guardar');
+            const mensajeError = document.getElementById('mensaje-error');
+            
+            // Ocultar mensaje de error por defecto
+            mensajeError.style.display = 'none';
+            
+            // Validaciones
+            if (totalDebe === 0 && totalHaber === 0) {
+                // Asiento vacío
+                estadoDiv.className = 'alert alert-warning mb-0 py-2';
+                estadoDiv.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i><strong>Asiento Vacío</strong> - Agregue importes para continuar';
+                btnGuardar.disabled = true;
+                
+            } else if (movimientosValidos < 2) {
+                // Menos de 2 movimientos válidos
+                estadoDiv.className = 'alert alert-danger mb-0 py-2';
+                estadoDiv.innerHTML = '<i class="fas fa-times-circle me-2"></i><strong>Movimientos Insuficientes</strong> - Se requieren mínimo 2 movimientos válidos';
+                btnGuardar.disabled = true;
+                
+            } else if (diferencia > 0.01) {
+                // Asiento descuadrado
+                estadoDiv.className = 'alert alert-danger mb-0 py-2';
+                estadoDiv.innerHTML = `<i class="fas fa-times-circle me-2"></i><strong>Asiento Descuadrado</strong> - Diferencia: ${formatearMonto(diferencia)}`;
+                btnGuardar.disabled = true;
+                
+            } else {
+                // Asiento balanceado y válido
+                estadoDiv.className = 'alert alert-success mb-0 py-2';
+                estadoDiv.innerHTML = '<i class="fas fa-check-circle me-2"></i><strong>Asiento Balanceado</strong> - Listo para guardar';
+                btnGuardar.disabled = false;
+            }
+        }
+
+        // Validar asiento manualmente (botón validar)
+        function validarAsiento() {
+            actualizarTotalesBalance();
+            
+            const totalDebe = movimientosAsiento.reduce((sum, mov) => sum + mov.debe, 0);
+            const totalHaber = movimientosAsiento.reduce((sum, mov) => sum + mov.haber, 0);
+            const diferencia = Math.abs(totalDebe - totalHaber);
+            
+            if (diferencia <= 0.01 && movimientosAsiento.filter(mov => mov.cuenta && (mov.debe > 0 || mov.haber > 0)).length >= 2) {
+                alert('✅ El asiento está correctamente balanceado y listo para guardar.');
+            } else {
+                alert(`❌ El asiento no está balanceado.\nDiferencia: ${formatearMonto(diferencia)}\nVerifique que tenga al menos 2 movimientos válidos.`);
+            }
+        }
+
+        // Mostrar mensaje de error
+        function mostrarError(mensaje) {
+            const mensajeError = document.getElementById('mensaje-error');
+            const textoError = document.getElementById('texto-error');
+            
+            textoError.textContent = mensaje;
+            mensajeError.style.display = 'block';
+            
+            // Ocultar después de 5 segundos
+            setTimeout(() => {
+                mensajeError.style.display = 'none';
+            }, 5000);
+        }
+
+        // Limpiar formulario completo
+        function limpiarFormulario() {
+            document.getElementById('form-asiento-contable').reset();
+            document.getElementById('fecha-asiento').value = new Date().toISOString().split('T')[0];
+            document.getElementById('libro-auxiliar').value = 'diario';
+            
+            inicializarFormularioAsiento();
+        }
+
+        // Inicializar plan de cuentas básico según PCGE
+        function inicializarPlanCuentasBasico() {
+            const cuentasBasicas = [
+                // ACTIVO
+                { codigo: '101', nombre: 'Caja', tipo: 'ACTIVO', naturaleza: 'DEUDORA' },
+                { codigo: '102', nombre: 'Fondos fijos', tipo: 'ACTIVO', naturaleza: 'DEUDORA' },
+                { codigo: '104', nombre: 'Cuentas corrientes en instituciones financieras', tipo: 'ACTIVO', naturaleza: 'DEUDORA' },
+                { codigo: '106', nombre: 'Depósitos de ahorro', tipo: 'ACTIVO', naturaleza: 'DEUDORA' },
+                { codigo: '107', nombre: 'Fondos sujetos a restricción', tipo: 'ACTIVO', naturaleza: 'DEUDORA' },
+                { codigo: '121', nombre: 'Facturas, boletas y otros comprobantes por cobrar', tipo: 'ACTIVO', naturaleza: 'DEUDORA' },
+                { codigo: '201', nombre: 'Mercaderías manufacturadas', tipo: 'ACTIVO', naturaleza: 'DEUDORA' },
+                { codigo: '331', nombre: 'Terrenos', tipo: 'ACTIVO', naturaleza: 'DEUDORA' },
+                { codigo: '333', nombre: 'Maquinarias y equipos de explotación', tipo: 'ACTIVO', naturaleza: 'DEUDORA' },
+                
+                // PASIVO
+                { codigo: '401', nombre: 'Gobierno central', tipo: 'PASIVO', naturaleza: 'ACREEDORA' },
+                { codigo: '421', nombre: 'Facturas, boletas y otros comprobantes por pagar', tipo: 'PASIVO', naturaleza: 'ACREEDORA' },
+                { codigo: '451', nombre: 'Préstamos de instituciones financieras', tipo: 'PASIVO', naturaleza: 'ACREEDORA' },
+                { codigo: '465', nombre: 'Pasivos por instrumentos financieros derivados', tipo: 'PASIVO', naturaleza: 'ACREEDORA' },
+                
+                // PATRIMONIO
+                { codigo: '501', nombre: 'Capital social', tipo: 'PATRIMONIO', naturaleza: 'ACREEDORA' },
+                { codigo: '591', nombre: 'Utilidades no distribuidas', tipo: 'PATRIMONIO', naturaleza: 'ACREEDORA' },
+                
+                // INGRESOS
+                { codigo: '701', nombre: 'Mercaderías', tipo: 'INGRESOS', naturaleza: 'ACREEDORA' },
+                { codigo: '709', nombre: 'Devoluciones sobre ventas', tipo: 'INGRESOS', naturaleza: 'DEUDORA' },
+                { codigo: '771', nombre: 'Ganancia por medición de activos no financieros al valor razonable', tipo: 'INGRESOS', naturaleza: 'ACREEDORA' },
+                { codigo: '775', nombre: 'Ingresos excepcionales', tipo: 'INGRESOS', naturaleza: 'ACREEDORA' },
+                { codigo: '777', nombre: 'Ingresos financieros', tipo: 'INGRESOS', naturaleza: 'ACREEDORA' },
+                
+                // GASTOS
+                { codigo: '601', nombre: 'Mercaderías', tipo: 'GASTOS', naturaleza: 'DEUDORA' },
+                { codigo: '631', nombre: 'Remuneraciones', tipo: 'GASTOS', naturaleza: 'DEUDORA' },
+                { codigo: '633', nombre: 'Seguridad, previsión social y otras contrib.', tipo: 'GASTOS', naturaleza: 'DEUDORA' },
+                { codigo: '634', nombre: 'Cargas diversas de gestión', tipo: 'GASTOS', naturaleza: 'DEUDORA' },
+                { codigo: '655', nombre: 'Costo neto de enajenación de activos inmovilizados', tipo: 'GASTOS', naturaleza: 'DEUDORA' },
+                { codigo: '671', nombre: 'Pérdida por medición de activos no financieros al valor razonable', tipo: 'GASTOS', naturaleza: 'DEUDORA' },
+                { codigo: '675', nombre: 'Gastos excepcionales', tipo: 'GASTOS', naturaleza: 'DEUDORA' },
+                { codigo: '677', nombre: 'Gastos financieros', tipo: 'GASTOS', naturaleza: 'DEUDORA' }
+            ];
+
+            cuentasBasicas.forEach(cuenta => {
+                if (!planCuentas[cuenta.codigo]) {
+                    planCuentas[cuenta.codigo] = cuenta;
+                }
+            });
+            
+            guardarDatos();
+        }
+
+        // Funciones para el plan de cuentas
+        function mostrarPlanCuentas() {
+            try {
+                const tbody = document.getElementById('tabla-cuentas');
+                if (!tbody) return;
+                
+                tbody.innerHTML = '';
+                
+                Object.entries(planCuentas).sort().forEach(([codigo, cuenta]) => {
+                    const row = tbody.insertRow();
+                    row.innerHTML = `
+                        <td><strong>${codigo}</strong></td>
+                        <td>${cuenta.nombre}</td>
+                        <td><span class="badge bg-secondary">${cuenta.tipo}</span></td>
+                        <td><span class="badge ${cuenta.naturaleza === 'DEUDORA' ? 'bg-info' : 'bg-warning'}">${cuenta.naturaleza}</span></td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-danger" onclick="eliminarCuenta('${codigo}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    `;
+                });
+            } catch (error) {
+                console.error('Error al mostrar plan de cuentas:', error);
+            }
+        }
+
+        // Formulario de cuentas - MOVIDO A HANDLER
+        // Esta función ahora está manejada por handleSubmitCuenta
+
+        function eliminarCuenta(codigo) {
+            try {
+                if (confirm('¿Está seguro de eliminar esta cuenta?')) {
+                    delete planCuentas[codigo];
+                    guardarDatos();
+                    mostrarPlanCuentas();
+                    actualizarDashboard();
+                }
+            } catch (error) {
+                console.error('Error al eliminar cuenta:', error);
+            }
+        }
+
+        // Funciones para libros auxiliares (actualizada para nueva estructura)
+        function mostrarLibroAuxiliar(tipo) {
+            const contenido = document.getElementById('contenido-libro-auxiliar');
+            const registros = librosAuxiliares[tipo] || [];
+            
+            let titulo = '';
+            let columnas = '';
+            
+            switch(tipo) {
+                case 'compras':
+                    titulo = 'Registro de Compras';
+                    columnas = `
+                        <th>Fecha</th>
+                        <th>N° Asiento</th>
+                        <th>Concepto</th>
+                        <th>Total Debe</th>
+                        <th>Total Haber</th>
+                        <th>Estado</th>
+                    `;
+                    break;
+                case 'ventas':
+                    titulo = 'Registro de Ventas';
+                    columnas = `
+                        <th>Fecha</th>
+                        <th>N° Asiento</th>
+                        <th>Concepto</th>
+                        <th>Total Debe</th>
+                        <th>Total Haber</th>
+                        <th>Estado</th>
+                    `;
+                    break;
+                case 'caja':
+                    titulo = 'Libro de Caja';
+                    columnas = `
+                        <th>Fecha</th>
+                        <th>N° Asiento</th>
+                        <th>Concepto</th>
+                        <th>Ingresos</th>
+                        <th>Egresos</th>
+                        <th>Estado</th>
+                    `;
+                    break;
+                case 'bancos':
+                    titulo = 'Libro de Bancos';
+                    columnas = `
+                        <th>Fecha</th>
+                        <th>N° Asiento</th>
+                        <th>Concepto</th>
+                        <th>Ingresos</th>
+                        <th>Egresos</th>
+                        <th>Estado</th>
+                    `;
+                    break;
+            }
+            
+            let filas = '';
+            registros.forEach(registro => {
+                const estadoClass = registro.consolidado ? 'status-consolidated' : 'status-pending';
+                const estadoTexto = registro.consolidado ? 'CONSOLIDADO' : 'PENDIENTE';
+                
+                const totalDebe = registro.movimientos?.reduce((sum, mov) => sum + mov.debe, 0) || 0;
+                const totalHaber = registro.movimientos?.reduce((sum, mov) => sum + mov.haber, 0) || 0;
+                
+                if (tipo === 'caja' || tipo === 'bancos') {
+                    filas += `
+                        <tr>
+                            <td>${formatearFecha(registro.fecha)}</td>
+                            <td>${registro.numeroAsiento?.toString().padStart(4, '0') || '-'}</td>
+                            <td>${registro.concepto}</td>
+                            <td class="text-end">${totalDebe > 0 ? formatearMonto(totalDebe) : '-'}</td>
+                            <td class="text-end">${totalHaber > 0 ? formatearMonto(totalHaber) : '-'}</td>
+                            <td><span class="${estadoClass}">${estadoTexto}</span></td>
+                        </tr>
+                    `;
+                } else {
+                    filas += `
+                        <tr>
+                            <td>${formatearFecha(registro.fecha)}</td>
+                            <td>${registro.numeroAsiento?.toString().padStart(4, '0') || '-'}</td>
+                            <td>${registro.concepto}</td>
+                            <td class="text-end">${formatearMonto(totalDebe)}</td>
+                            <td class="text-end">${formatearMonto(totalHaber)}</td>
+                            <td><span class="${estadoClass}">${estadoTexto}</span></td>
+                        </tr>
+                    `;
+                }
+            });
+            
+            contenido.innerHTML = `
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-table me-2"></i>${titulo}
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>${columnas}</tr>
+                                </thead>
+                                <tbody>
+                                    ${filas || '<tr><td colspan="6" class="text-center">No hay registros en este libro</td></tr>'}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Registro de asientos contables (formulario unificado) - MOVIDO A HANDLER
+        // Esta función ahora está manejada por handleSubmitAsiento
+
+        // Guardar en libro auxiliar específico
+        function guardarEnLibroAuxiliar(asiento, libro) {
+            try {
+                // Solo para libros auxiliares específicos (no diario)
+                if (libro === 'diario') return;
+                
+                const registro = {
+                    id: Date.now(),
+                    numeroAsiento: asiento.numero,
+                    fecha: asiento.fecha,
+                    concepto: asiento.concepto,
+                    referencia: asiento.referencia,
+                    movimientos: asiento.movimientos,
+                    consolidado: true // Ya está en el diario
+                };
+                
+                // Asegurarse de que existe la estructura
+                if (!librosAuxiliares[libro]) {
+                    librosAuxiliares[libro] = [];
+                }
+                
+                librosAuxiliares[libro].push(registro);
+            } catch (error) {
+                console.error('Error al guardar en libro auxiliar:', error);
+            }
+        }
+
+        // Obtener nombre completo del libro
+        function obtenerNombreLibro(libro) {
+            const nombres = {
+                'diario': 'Libro Diario',
+                'ventas': 'Registro de Ventas',
+                'compras': 'Registro de Compras',
+                'caja': 'Libro de Caja',
+                'bancos': 'Libro de Bancos'
+            };
+            return nombres[libro] || 'Libro no identificado';
+        }
+
+        // Función auxiliar para actualizar el libro mayor
+        function actualizarLibroMayor(movimiento, asiento) {
+            if (!libroMayor[movimiento.cuenta]) {
+                libroMayor[movimiento.cuenta] = {
+                    cuenta: movimiento.cuenta,
+                    descripcion: planCuentas[movimiento.cuenta] ? planCuentas[movimiento.cuenta].nombre : 'Cuenta no definida',
+                    movimientos: [],
+                    saldoDeudor: 0,
+                    saldoAcreedor: 0
+                };
+            }
+            
+            libroMayor[movimiento.cuenta].movimientos.push({
+                fecha: asiento.fecha,
+                concepto: asiento.concepto,
+                debe: movimiento.debe,
+                haber: movimiento.haber,
+                numeroAsiento: asiento.numero,
+                referencia: movimiento.referencia || asiento.referencia
+            });
+            
+            // Actualizar saldos
+            if (movimiento.debe > 0) {
+                libroMayor[movimiento.cuenta].saldoDeudor += movimiento.debe;
+            }
+            if (movimiento.haber > 0) {
+                libroMayor[movimiento.cuenta].saldoAcreedor += movimiento.haber;
+            }
+        }
+
+        function generarAsientoContable(transaccion, tipoLibro) {
+            const asiento = {
+                numero: configuracion.contadorAsientos++,
+                fecha: transaccion.fecha,
+                concepto: `${tipoLibro.toUpperCase()}: ${transaccion.concepto}`,
+                movimientos: [],
+                tipoAsiento: 'AUXILIAR',
+                referenciaAuxiliar: {
+                    libro: tipoLibro,
+                    documento: transaccion.numeroDocumento,
+                    proveedor: transaccion.proveedorCliente
+                }
+            };
+            
+            // Generar movimientos según el tipo de libro
+            switch(tipoLibro) {
+                case 'compras':
+                    // Debe: Compras (cuenta 601)
+                    asiento.movimientos.push({
+                        cuenta: '601',
+                        descripcion: 'Mercaderías',
+                        debe: transaccion.monto,
+                        haber: 0
+                    });
+                    // Debe: Compras (cuenta 601)
+                    asiento.movimientos.push({
+                        cuenta: '401',
+                        descripcion: 'Gobierno central',
+                        debe: transaccion.monto,
+                        haber: 0
+                    });
+                    // Haber: Proveedores (cuenta 421)
+                    asiento.movimientos.push({
+                        cuenta: '421',
+                        descripcion: 'Facturas por pagar',
+                        debe: 0,
+                        haber: transaccion.monto
+                    });
+                    break;
+                    
+                case 'ventas':
+                    // Debe: Clientes (cuenta 121)
+                    asiento.movimientos.push({
+                        cuenta: '121',
+                        descripcion: 'Facturas por cobrar',
+                        debe: transaccion.monto,
+                        haber: 0
+                    });
+                    // Haber: Ventas (cuenta 701)
+                    asiento.movimientos.push({
+                        cuenta: '401',
+                        descripcion: 'Gobierno central',
+                        debe: 0,
+                        haber: transaccion.monto
+                    });
+                    // Haber: Ventas (cuenta 701)
+                    asiento.movimientos.push({
+                        cuenta: '701',
+                        descripcion: 'Mercaderías',
+                        debe: 0,
+                        haber: transaccion.monto
+                    });
+                    break;
+                    
+                case 'caja':
+                    if (transaccion.monto > 0) {
+                        // Ingreso a caja
+                        asiento.movimientos.push({
+                            cuenta: '101',
+                            descripcion: 'Caja',
+                            debe: transaccion.monto,
+                            haber: 0
+                        });
+                        asiento.movimientos.push({
+                            cuenta: '701',
+                            descripcion: 'Ingresos diversos',
+                            debe: 0,
+                            haber: transaccion.monto
+                        });
+                    } else {
+                        // Egreso de caja
+                        const montoPositivo = Math.abs(transaccion.monto);
+                        asiento.movimientos.push({
+                            cuenta: '634',
+                            descripcion: 'Gastos diversos',
+                            debe: montoPositivo,
+                            haber: 0
+                        });
+                        asiento.movimientos.push({
+                            cuenta: '101',
+                            descripcion: 'Caja',
+                            debe: 0,
+                            haber: montoPositivo
+                        });
+                    }
+                    break;
+            }
+            
+            libroDiario.push(asiento);
+            
+            // Actualizar libro mayor
+            asiento.movimientos.forEach(mov => {
+                actualizarLibroMayor(mov, asiento);
+            });
+        }
+
+        // Libro Diario (actualizado para nueva estructura)
+        function mostrarLibroDiario() {
+            const tabla = document.getElementById('tabla-libro-diario');
+            tabla.innerHTML = '';
+            
+            libroDiario.forEach(asiento => {
+                // Fila de cabecera del asiento
+                const headerRow = tabla.insertRow();
+                headerRow.style.backgroundColor = '#f8f9fa';
+                headerRow.innerHTML = `
+                    <td colspan="6" class="py-2">
+                        <strong>ASIENTO N° ${asiento.numero.toString().padStart(4, '0')}</strong> - 
+                        ${formatearFecha(asiento.fecha)} - 
+                        <span class="badge ${asiento.tipoAsiento === 'DIRECTO' ? 'bg-primary' : 'bg-info'}">${obtenerNombreLibro(asiento.libro)}</span>
+                        ${asiento.referencia ? `- Ref: ${asiento.referencia}` : ''}
+                        <br><small class="text-muted">${asiento.concepto}</small>
+                    </td>
+                `;
+                
+                // Filas de movimientos
+                asiento.movimientos.forEach((mov, index) => {
+                    const row = tabla.insertRow();
+                    row.innerHTML = `
+                        <td>${index === 0 ? formatearFecha(asiento.fecha) : ''}</td>
+                        <td>${index === 0 ? asiento.numero.toString().padStart(4, '0') : ''}</td>
+                        <td><strong>${mov.cuenta}</strong></td>
+                        <td>${mov.descripcion}${mov.referencia ? ` (${mov.referencia})` : ''}</td>
+                        <td class="text-end balance-debit">${mov.debe > 0 ? formatearMonto(mov.debe) : ''}</td>
+                        <td class="text-end balance-credit">${mov.haber > 0 ? formatearMonto(mov.haber) : ''}</td>
+                    `;
+                });
+                
+                // Fila de totales del asiento
+                const totalDebe = asiento.movimientos.reduce((sum, mov) => sum + mov.debe, 0);
+                const totalHaber = asiento.movimientos.reduce((sum, mov) => sum + mov.haber, 0);
+                
+                const totalRow = tabla.insertRow();
+                totalRow.style.borderBottom = '2px solid #dee2e6';
+                totalRow.innerHTML = `
+                    <td colspan="4" class="text-end"><strong>TOTALES:</strong></td>
+                    <td class="text-end balance-debit"><strong>${formatearMonto(totalDebe)}</strong></td>
+                    <td class="text-end balance-credit"><strong>${formatearMonto(totalHaber)}</strong></td>
+                `;
+                
+                // Espacio entre asientos
+                const spacerRow = tabla.insertRow();
+                spacerRow.innerHTML = '<td colspan="6" style="height: 10px; border: none;"></td>';
+            });
+            
+            if (libroDiario.length === 0) {
+                const emptyRow = tabla.insertRow();
+                emptyRow.innerHTML = '<td colspan="6" class="text-center text-muted py-4">No hay asientos registrados en el Libro Diario</td>';
+            }
+        }
+
+        // Libro Mayor
+        function mostrarLibroMayor() {
+            const select = document.getElementById('filtro-cuenta-mayor');
+            const contenido = document.getElementById('contenido-libro-mayor');
+            
+            // Llenar select con cuentas
+            select.innerHTML = '<option value="">Todas las cuentas</option>';
+            Object.keys(libroMayor).sort().forEach(cuenta => {
+                const nombreCuenta = planCuentas[cuenta] ? planCuentas[cuenta].nombre : 'Cuenta no definida';
+                select.innerHTML += `<option value="${cuenta}">${cuenta} - ${nombreCuenta}</option>`;
+            });
+            
+            filtrarLibroMayor();
+        }
+
+        function filtrarLibroMayor() {
+            const filtro = document.getElementById('filtro-cuenta-mayor').value;
+            const contenido = document.getElementById('contenido-libro-mayor');
+            
+            let cuentasAMostrar = Object.entries(libroMayor);
+            
+            if (filtro) {
+                cuentasAMostrar = cuentasAMostrar.filter(([cuenta]) => cuenta === filtro);
+            }
+            
+            let html = '';
+            
+            cuentasAMostrar.forEach(([cuenta, datos]) => {
+                const nombreCuenta = planCuentas[cuenta] ? planCuentas[cuenta].nombre : 'Cuenta no definida';
+                const saldoFinal = datos.saldoDeudor - datos.saldoAcreedor;
+                
+                html += `
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h5>Cuenta ${cuenta} - ${nombreCuenta}</h5>
+                            <small>Saldo: ${formatearMonto(Math.abs(saldoFinal))} ${saldoFinal >= 0 ? '(Deudor)' : '(Acreedor)'}</small>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Fecha</th>
+                                            <th>N° Asiento</th>
+                                            <th>Concepto</th>
+                                            <th>Debe</th>
+                                            <th>Haber</th>
+                                            <th>Saldo</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                `;
+                
+                let saldoAcumulado = 0;
+                datos.movimientos.forEach(mov => {
+                    saldoAcumulado += mov.debe - mov.haber;
+                    html += `
+                        <tr>
+                            <td>${formatearFecha(mov.fecha)}</td>
+                            <td>${mov.numeroAsiento.toString().padStart(4, '0')}</td>
+                            <td>${mov.concepto}</td>
+                            <td class="text-end">${mov.debe > 0 ? formatearMonto(mov.debe) : ''}</td>
+                            <td class="text-end">${mov.haber > 0 ? formatearMonto(mov.haber) : ''}</td>
+                            <td class="text-end ${saldoAcumulado >= 0 ? 'balance-debit' : 'balance-credit'}">
+                                ${formatearMonto(Math.abs(saldoAcumulado))} ${saldoAcumulado >= 0 ? 'D' : 'H'}
+                            </td>
+                        </tr>
+                    `;
+                });
+                
+                html += `
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            contenido.innerHTML = html || '<div class="alert alert-info">No hay movimientos para mostrar</div>';
+        }
+
+        // Balance de Comprobación
+        function generarBalanceComprobacion() {
+            const nivel = parseInt(document.getElementById('nivel-balance').value);
+            const tabla = document.getElementById('tabla-balance-comprobacion');
+            tabla.innerHTML = '';
+            
+            // Agrupar cuentas según el nivel
+            const cuentasAgrupadas = {};
+            
+            Object.entries(libroMayor).forEach(([cuenta, datos]) => {
+                const codigoAgrupado = cuenta.substring(0, nivel);
+                
+                if (!cuentasAgrupadas[codigoAgrupado]) {
+                    cuentasAgrupadas[codigoAgrupado] = {
+                        codigo: codigoAgrupado,
+                        descripcion: obtenerDescripcionAgrupada(codigoAgrupado),
+                        saldoInicialDeudor: 0,
+                        saldoInicialAcreedor: 0,
+                        movimientosDeudor: 0,
+                        movimientosAcreedor: 0,
+                        saldoFinalDeudor: 0,
+                        saldoFinalAcreedor: 0
+                    };
+                }
+                
+                const grupo = cuentasAgrupadas[codigoAgrupado];
+                grupo.movimientosDeudor += datos.saldoDeudor;
+                grupo.movimientosAcreedor += datos.saldoAcreedor;
+                
+                const saldoFinal = datos.saldoDeudor - datos.saldoAcreedor;
+                if (saldoFinal > 0) {
+                    grupo.saldoFinalDeudor += saldoFinal;
+                } else {
+                    grupo.saldoFinalAcreedor += Math.abs(saldoFinal);
+                }
+            });
+            
+            // Mostrar en tabla
+            let totalDeudor = 0, totalAcreedor = 0;
+            
+            Object.values(cuentasAgrupadas).sort((a, b) => a.codigo.localeCompare(b.codigo)).forEach(grupo => {
+                const row = tabla.insertRow();
+                row.innerHTML = `
+                    <td><strong>${grupo.codigo}</strong></td>
+                    <td>${grupo.descripcion}</td>
+                    <td class="text-end">${formatearMonto(grupo.saldoInicialDeudor)}</td>
+                    <td class="text-end">${formatearMonto(grupo.saldoInicialAcreedor)}</td>
+                    <td class="text-end">${formatearMonto(grupo.movimientosDeudor)}</td>
+                    <td class="text-end">${formatearMonto(grupo.movimientosAcreedor)}</td>
+                    <td class="text-end balance-debit">${formatearMonto(grupo.saldoFinalDeudor)}</td>
+                    <td class="text-end balance-credit">${formatearMonto(grupo.saldoFinalAcreedor)}</td>
+                `;
+                
+                totalDeudor += grupo.saldoFinalDeudor;
+                totalAcreedor += grupo.saldoFinalAcreedor;
+            });
+            
+            // Fila de totales
+            const totalRow = tabla.insertRow();
+            totalRow.innerHTML = `
+                <td colspan="2"><strong>TOTALES</strong></td>
+                <td class="text-end"><strong>-</strong></td>
+                <td class="text-end"><strong>-</strong></td>
+                <td class="text-end"><strong>-</strong></td>
+                <td class="text-end"><strong>-</strong></td>
+                <td class="text-end balance-debit"><strong>${formatearMonto(totalDeudor)}</strong></td>
+                <td class="text-end balance-credit"><strong>${formatearMonto(totalAcreedor)}</strong></td>
+            `;
+            totalRow.style.backgroundColor = '#f8f9fa';
+        }
+
+        function obtenerDescripcionAgrupada(codigo) {
+            // Obtener descripción basada en el primer dígito según PCGE
+            const primerDigito = codigo.charAt(0);
+            const descripciones = {
+                '1': 'ACTIVO CORRIENTE',
+                '2': 'ACTIVO REALIZABLE',
+                '3': 'ACTIVO INMOVILIZADO',
+                '4': 'PASIVO',
+                '5': 'PATRIMONIO',
+                '6': 'GASTOS POR NATURALEZA',
+                '7': 'INGRESOS',
+                '8': 'SALDOS INTERMEDIARIOS DE GESTIÓN',
+                '9': 'CONTABILIDAD ANALÍTICA'
+            };
+            
+            if (planCuentas[codigo]) {
+                return planCuentas[codigo].nombre;
+            } else if (descripciones[primerDigito]) {
+                return descripciones[primerDigito];
+            } else {
+                return 'CUENTA NO CLASIFICADA';
+            }
+        }
+
+        // Estados Financieros
+        function mostrarEstadoFinanciero(tipo) {
+            const contenido = document.getElementById('contenido-estados-financieros');
+            
+            if (tipo === 'balance') {
+                generarBalanceGeneral(contenido);
+            } else if (tipo === 'resultados') {
+                generarEstadoResultados(contenido);
+            }
+        }
+
+        function generarBalanceGeneral(contenido) {
+            const activos = {};
+            const pasivos = {};
+            const patrimonio = {};
+            
+            // Clasificar cuentas
+            Object.entries(libroMayor).forEach(([cuenta, datos]) => {
+                const saldo = datos.saldoDeudor - datos.saldoAcreedor;
+                const primerDigito = cuenta.charAt(0);
+                const nombreCuenta = planCuentas[cuenta] ? planCuentas[cuenta].nombre : 'Cuenta no definida';
+                
+                if (['1', '2', '3'].includes(primerDigito) && saldo !== 0) {
+                    activos[cuenta] = { nombre: nombreCuenta, saldo: Math.abs(saldo) };
+                } else if (primerDigito === '4' && saldo !== 0) {
+                    pasivos[cuenta] = { nombre: nombreCuenta, saldo: Math.abs(saldo) };
+                } else if (primerDigito === '5' && saldo !== 0) {
+                    patrimonio[cuenta] = { nombre: nombreCuenta, saldo: Math.abs(saldo) };
+                }
+            });
+            
+            const totalActivos = Object.values(activos).reduce((sum, item) => sum + item.saldo, 0);
+            const totalPasivos = Object.values(pasivos).reduce((sum, item) => sum + item.saldo, 0);
+            const totalPatrimonio = Object.values(patrimonio).reduce((sum, item) => sum + item.saldo, 0);
+            
+            contenido.innerHTML = `
+                <div class="card">
+                    <div class="card-header text-center">
+                        <h4>BALANCE GENERAL</h4>
+                        <small>Al ${formatearFecha(new Date().toISOString())}</small>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5 class="text-primary">ACTIVO</h5>
+                                <table class="table table-sm">
+                                    ${Object.entries(activos).map(([codigo, datos]) => `
+                                        <tr>
+                                            <td>${codigo} ${datos.nombre}</td>
+                                            <td class="text-end">${formatearMonto(datos.saldo)}</td>
+                                        </tr>
+                                    `).join('')}
+                                    <tr class="table-active">
+                                        <td><strong>TOTAL ACTIVO</strong></td>
+                                        <td class="text-end"><strong>${formatearMonto(totalActivos)}</strong></td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="col-md-6">
+                                <h5 class="text-danger">PASIVO</h5>
+                                <table class="table table-sm">
+                                    ${Object.entries(pasivos).map(([codigo, datos]) => `
+                                        <tr>
+                                            <td>${codigo} ${datos.nombre}</td>
+                                            <td class="text-end">${formatearMonto(datos.saldo)}</td>
+                                        </tr>
+                                    `).join('')}
+                                    <tr class="table-active">
+                                        <td><strong>TOTAL PASIVO</strong></td>
+                                        <td class="text-end"><strong>${formatearMonto(totalPasivos)}</strong></td>
+                                    </tr>
+                                </table>
+                                
+                                <h5 class="text-success mt-3">PATRIMONIO</h5>
+                                <table class="table table-sm">
+                                    ${Object.entries(patrimonio).map(([codigo, datos]) => `
+                                        <tr>
+                                            <td>${codigo} ${datos.nombre}</td>
+                                            <td class="text-end">${formatearMonto(datos.saldo)}</td>
+                                        </tr>
+                                    `).join('')}
+                                    <tr class="table-active">
+                                        <td><strong>TOTAL PATRIMONIO</strong></td>
+                                        <td class="text-end"><strong>${formatearMonto(totalPatrimonio)}</strong></td>
+                                    </tr>
+                                </table>
+                                
+                                <div class="border-top pt-2 mt-3">
+                                    <div class="row">
+                                        <div class="col-8"><strong>TOTAL PASIVO + PATRIMONIO</strong></div>
+                                        <div class="col-4 text-end"><strong>${formatearMonto(totalPasivos + totalPatrimonio)}</strong></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function generarEstadoResultados(contenido) {
+            const ingresos = {};
+            const gastos = {};
+            
+            // Clasificar cuentas de ingresos y gastos
+            Object.entries(libroMayor).forEach(([cuenta, datos]) => {
+                const saldo = datos.saldoDeudor - datos.saldoAcreedor;
+                const primerDigito = cuenta.charAt(0);
+                const nombreCuenta = planCuentas[cuenta] ? planCuentas[cuenta].nombre : 'Cuenta no definida';
+                
+                if (primerDigito === '7' && saldo !== 0) {
+                    ingresos[cuenta] = { nombre: nombreCuenta, saldo: Math.abs(saldo) };
+                } else if (primerDigito === '6' && saldo !== 0) {
+                    gastos[cuenta] = { nombre: nombreCuenta, saldo: Math.abs(saldo) };
+                }
+            });
+            
+            const totalIngresos = Object.values(ingresos).reduce((sum, item) => sum + item.saldo, 0);
+            const totalGastos = Object.values(gastos).reduce((sum, item) => sum + item.saldo, 0);
+            const utilidadPerdida = totalIngresos - totalGastos;
+            
+            contenido.innerHTML = `
+                <div class="card">
+                    <div class="card-header text-center">
+                        <h4>ESTADO DE RESULTADOS</h4>
+                        <small>Del 01 de Enero al ${formatearFecha(new Date().toISOString())}</small>
+                    </div>
+                    <div class="card-body">
+                        <table class="table">
+                            <tbody>
+                                <tr class="table-success">
+                                    <td colspan="2"><h5>INGRESOS</h5></td>
+                                </tr>
+                                ${Object.entries(ingresos).map(([codigo, datos]) => `
+                                    <tr>
+                                        <td>${codigo} ${datos.nombre}</td>
+                                        <td class="text-end">${formatearMonto(datos.saldo)}</td>
+                                    </tr>
+                                `).join('')}
+                                <tr class="table-active">
+                                    <td><strong>TOTAL INGRESOS</strong></td>
+                                    <td class="text-end"><strong>${formatearMonto(totalIngresos)}</strong></td>
+                                </tr>
+                                
+                                <tr class="table-danger">
+                                    <td colspan="2"><h5>GASTOS</h5></td>
+                                </tr>
+                                ${Object.entries(gastos).map(([codigo, datos]) => `
+                                    <tr>
+                                        <td>${codigo} ${datos.nombre}</td>
+                                        <td class="text-end">(${formatearMonto(datos.saldo)})</td>
+                                    </tr>
+                                `).join('')}
+                                <tr class="table-active">
+                                    <td><strong>TOTAL GASTOS</strong></td>
+                                    <td class="text-end"><strong>(${formatearMonto(totalGastos)})</strong></td>
+                                </tr>
+                                
+                                <tr class="border-top border-3" style="background-color: #f8f9fa;">
+                                    <td><strong>${utilidadPerdida >= 0 ? 'UTILIDAD' : 'PÉRDIDA'} DEL EJERCICIO</strong></td>
+                                    <td class="text-end ${utilidadPerdida >= 0 ? 'text-success' : 'text-danger'}">
+                                        <strong>${formatearMonto(Math.abs(utilidadPerdida))}</strong>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Funciones de utilidad
+        function formatearMonto(monto) {
+            return new Intl.NumberFormat('es-PE', {
+                style: 'currency',
+                currency: 'PEN',
+                minimumFractionDigits: 2
+            }).format(monto);
+        }
+
+        function formatearFecha(fecha) {
+            return new Date(fecha).toLocaleDateString('es-PE');
+        }
+
+        function actualizarDashboard() {
+            // Contar registros pendientes en libros auxiliares (ahora muy pocos ya que se consolidan automáticamente)
+            let pendientes = 0;
+            Object.values(librosAuxiliares).forEach(libro => {
+                pendientes += libro.filter(r => !r.consolidado).length;
+            });
+            
+            // Contar total de asientos en el diario
+            const totalAsientos = libroDiario.length;
+            
+            // Contar cuentas con movimientos (activas)
+            const cuentasActivas = Object.keys(libroMayor).length;
+            
+            // Última consolidación/último asiento
+            const ultimoCierre = configuracion.ultimaConsolidacion ? 
+                formatearFecha(configuracion.ultimaConsolidacion) : 'No realizado';
+            
+            // Actualizar elementos del dashboard
+            document.getElementById('transacciones-pendientes').textContent = pendientes;
+            document.getElementById('asientos-consolidados').textContent = totalAsientos;
+            document.getElementById('cuentas-activas').textContent = cuentasActivas;
+            document.getElementById('ultimo-cierre').textContent = ultimoCierre;
+            
+            // Actualizar títulos para mejor claridad
+            const labels = document.querySelectorAll('.card-title');
+            if (labels.length >= 4) {
+                labels[0].textContent = 'Registros Pendientes';
+                labels[1].textContent = 'Total Asientos';
+                labels[2].textContent = 'Cuentas con Movimientos';
+                labels[3].textContent = 'Último Registro';
+            }
+        }
+
+        // Funciones de almacenamiento
+        function guardarDatos() {
+            const datos = {
+                planCuentas,
+                librosAuxiliares,
+                libroDiario,
+                libroMayor,
+                configuracion
+            };
+            
+            Object.entries(datos).forEach(([clave, valor]) => {
+                localStorage.setItem(`concar_${clave}`, JSON.stringify(valor));
+            });
+        }
+
+        function cargarDatos() {
+            try {
+                planCuentas = JSON.parse(localStorage.getItem('concar_planCuentas')) || {};
+                librosAuxiliares = JSON.parse(localStorage.getItem('concar_librosAuxiliares')) || {
+                    compras: [],
+                    ventas: [],
+                    caja: [],
+                    bancos: []
+                };
+                libroDiario = JSON.parse(localStorage.getItem('concar_libroDiario')) || [];
+                libroMayor = JSON.parse(localStorage.getItem('concar_libroMayor')) || {};
+                configuracion = JSON.parse(localStorage.getItem('concar_configuracion')) || {
+                    ultimaConsolidacion: null,
+                    contadorAsientos: 1,
+                    historicoConsolidaciones: []
+                };
+                
+                // Asegurar que existe la estructura de bancos
+                if (!librosAuxiliares.bancos) {
+                    librosAuxiliares.bancos = [];
+                }
+            } catch (error) {
+                console.error('Error al cargar datos:', error);
+            }
+        }
+
+        // Inicializar la aplicación al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            init();
+            
+            // Configurar eventos adicionales
+            configurarEventosAdicionales();
+        });
+
+        // Configurar eventos adicionales del sistema
+        function configurarEventosAdicionales() {
+            // Auto-guardar en localStorage cada vez que se modifica algo
+            setInterval(guardarDatos, 30000); // Auto-guardar cada 30 segundos
+            
+            // Confirmar antes de salir si hay cambios sin guardar
+            window.addEventListener('beforeunload', function (e) {
+                const formulario = document.getElementById('form-asiento-contable');
+                const tieneMovimientos = movimientosAsiento.some(mov => 
+                    mov.cuenta || mov.descripcion || mov.debe > 0 || mov.haber > 0
+                );
+                
+                if (tieneMovimientos) {
+                    e.preventDefault();
+                    e.returnValue = '¿Está seguro de salir? Hay un asiento en progreso que se perderá.';
+                    return e.returnValue;
+                }
+            });
+            
+            // Atajos de teclado
+            document.addEventListener('keydown', function(e) {
+                // Ctrl + S para guardar
+                if (e.ctrlKey && e.key === 's') {
+                    e.preventDefault();
+                    const btnGuardar = document.getElementById('btn-guardar');
+                    if (!btnGuardar.disabled) {
+                        btnGuardar.click();
+                    }
+                }
+                
+                // Ctrl + N para nuevo asiento
+                if (e.ctrlKey && e.key === 'n') {
+                    e.preventDefault();
+                    limpiarFormulario();
+                }
+                
+                // F9 para validar
+                if (e.key === 'F9') {
+                    e.preventDefault();
+                    validarAsiento();
+                }
+            });
+        }
+
+        // Funciones de exportación (opcional)
+        function exportarLibroDiario() {
+            const csv = ['Fecha,Numero,Cuenta,Descripcion,Debe,Haber,Libro'];
+            
+            libroDiario.forEach(asiento => {
+                asiento.movimientos.forEach(mov => {
+                    const fila = [
+                        asiento.fecha,
+                        asiento.numero.toString().padStart(4, '0'),
+                        mov.cuenta,
+                        mov.descripcion.replace(/,/g, ';'),
+                        mov.debe,
+                        mov.haber,
+                        obtenerNombreLibro(asiento.libro)
+                    ];
+                    csv.push(fila.join(','));
+                });
+            });
+            
+            const csvContent = csv.join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            
+            link.setAttribute('href', url);
+            link.setAttribute('download', `libro_diario_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Funciones auxiliares mejoradas
+        function formatearNumeroAsiento(numero) {
+            return numero.toString().padStart(4, '0');
+        }
+
+        function validarFormatoMoneda(valor) {
+            return !isNaN(valor) && isFinite(valor) && valor >= 0;
+        }
+
+        function obtenerResumenAsiento() {
+            const movimientosValidos = movimientosAsiento.filter(mov => 
+                mov.cuenta && mov.descripcion && (mov.debe > 0 || mov.haber > 0)
+            );
+            
+            const totalDebe = movimientosValidos.reduce((sum, mov) => sum + mov.debe, 0);
+            const totalHaber = movimientosValidos.reduce((sum, mov) => sum + mov.haber, 0);
+            const diferencia = Math.abs(totalDebe - totalHaber);
+            
+            return {
+                movimientosValidos: movimientosValidos.length,
+                totalDebe,
+                totalHaber,
+                diferencia,
+                balanceado: diferencia <= 0.01 && totalDebe > 0 && totalHaber > 0,
+                completo: movimientosValidos.length >= 2
+            };
+        }
+
+        // Función para mostrar estadísticas del sistema
+        function mostrarEstadisticasDetalladas() {
+            const estadisticas = {
+                totalAsientos: libroDiario.length,
+                cuentasActivas: Object.keys(libroMayor).length,
+                totalMovimientos: libroDiario.reduce((sum, asiento) => sum + asiento.movimientos.length, 0),
+                librosMasUsados: obtenerLibrosMasUsados(),
+                cuentasMasMovidas: obtenerCuentasMasMovidas()
+            };
+            
+            console.log('📊 Estadísticas del Sistema CONCAR:', estadisticas);
+            return estadisticas;
+        }
+
+        function obtenerLibrosMasUsados() {
+            const conteo = {};
+            libroDiario.forEach(asiento => {
+                const libro = asiento.libro || 'diario';
+                conteo[libro] = (conteo[libro] || 0) + 1;
+            });
+            
+            return Object.entries(conteo)
+                .sort(([,a], [,b]) => b - a)
+                .slice(0, 3)
+                .map(([libro, cantidad]) => ({ libro: obtenerNombreLibro(libro), cantidad }));
+        }
+
+        function obtenerCuentasMasMovidas() {
+            return Object.entries(libroMayor)
+                .map(([cuenta, datos]) => ({
+                    cuenta,
+                    nombre: datos.descripcion,
+                    movimientos: datos.movimientos.length
+                }))
+                .sort((a, b) => b.movimientos - a.movimientos)
+                .slice(0, 5);
+        }
+
+        // Función de búsqueda en asientos
+        function buscarEnAsientos(termino) {
+            if (!termino || termino.length < 2) return [];
+            
+            const terminoLower = termino.toLowerCase();
+            
+            return libroDiario.filter(asiento => {
+                return asiento.concepto.toLowerCase().includes(terminoLower) ||
+                       asiento.numero.toString().includes(termino) ||
+                       asiento.movimientos.some(mov => 
+                           mov.cuenta.includes(termino) ||
+                           mov.descripcion.toLowerCase().includes(terminoLower)
+                       );
+            });
+        }
+
+        // Función para obtener el siguiente número de asiento disponible
+        function obtenerSiguienteNumeroAsiento() {
+            if (libroDiario.length === 0) {
+                return 1;
+            }
+            
+            const numerosUsados = libroDiario.map(asiento => asiento.numero).sort((a, b) => a - b);
+            let siguienteNumero = 1;
+            
+            for (let numero of numerosUsados) {
+                if (numero === siguienteNumero) {
+                    siguienteNumero++;
+                } else {
+                    break;
+                }
+            }
+            
+            return siguienteNumero;
+        }
+
+        // Función para recalcular contador de asientos
+        function recalcularContadorAsientos() {
+            configuracion.contadorAsientos = obtenerSiguienteNumeroAsiento();
+            actualizarNumeroAsiento();
+            guardarDatos();
+        }
+
+        // Función para validar integridad de datos
+        function validarIntegridadDatos() {
+            const errores = [];
+            
+            // Validar que todos los asientos estén balanceados
+            libroDiario.forEach((asiento, index) => {
+                const totalDebe = asiento.movimientos.reduce((sum, mov) => sum + mov.debe, 0);
+                const totalHaber = asiento.movimientos.reduce((sum, mov) => sum + mov.haber, 0);
+                const diferencia = Math.abs(totalDebe - totalHaber);
+                
+                if (diferencia > 0.01) {
+                    errores.push(`Asiento ${asiento.numero}: Descuadrado por ${formatearMonto(diferencia)}`);
+                }
+                
+                if (asiento.movimientos.length < 2) {
+                    errores.push(`Asiento ${asiento.numero}: Tiene menos de 2 movimientos`);
+                }
+            });
+            
+            // Validar cuentas en el plan
+            Object.keys(libroMayor).forEach(cuenta => {
+                if (!planCuentas[cuenta]) {
+                    errores.push(`Cuenta ${cuenta}: No existe en el plan de cuentas`);
+                }
+            });
+            
+            if (errores.length > 0) {
+                console.warn('⚠️ Errores de integridad encontrados:', errores);
+                return false;
+            }
+            
+            console.log('✅ Integridad de datos correcta');
+            return true;
+        }
+
+        // Mensaje de información del sistema
+        console.log(`
+🏦 SISTEMA CONTABLE CONCAR - Versión Web
+════════════════════════════════════════════════════════════
+📅 Inicializado: ${new Date().toLocaleString('es-PE')}
+💾 Almacenamiento: LocalStorage del navegador
+🔢 Asientos registrados: ${libroDiario.length}
+📊 Plan de cuentas: ${Object.keys(planCuentas).length} cuentas activas
+
+⌨️  ATAJOS DE TECLADO:
+• Ctrl + S: Guardar asiento
+• Ctrl + N: Nuevo asiento  
+• F9: Validar balance
+
+📋 FUNCIONES DISPONIBLES:
+• mostrarEstadisticasDetalladas() - Ver estadísticas del sistema
+• exportarLibroDiario() - Exportar a CSV
+• validarIntegridadDatos() - Verificar consistencia
+• recalcularContadorAsientos() - Recalcular numeración
+
+════════════════════════════════════════════════════════════
+        `);
+
+        // Inicializar al cargar la página
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagrama de Flujo de Asientos Contables</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            overflow-x: auto;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            font-size: 28px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .header p {
+            color: #7f8c8d;
+            font-size: 16px;
+            margin: 5px 0;
+        }
+
+        .flow-diagram {
+            position: relative;
+            min-height: 1200px;
+            margin: 40px 0;
+        }
+
+        .asiento-box {
+            position: absolute;
+            background: linear-gradient(145deg, #ffffff, #f1f3f4);
+            border: 2px solid #e1e8ed;
+            border-radius: 12px;
+            padding: 15px;
+            width: 200px;
+            min-height: 120px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .asiento-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.15);
+            border-color: #667eea;
+        }
+
+        .asiento-title {
+            font-weight: bold;
+            font-size: 12px;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            text-align: center;
+            line-height: 1.3;
+            border-bottom: 1px solid #e1e8ed;
+            padding-bottom: 5px;
+        }
+
+        .asiento-number {
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .cuentas {
+            font-size: 11px;
+            color: #5a6c7d;
+            line-height: 1.4;
+        }
+
+        .cuenta-debe {
+            color: #e74c3c;
+            font-weight: 500;
+        }
+
+        .cuenta-haber {
+            color: #27ae60;
+            font-weight: 500;
+        }
+
+        .arrow {
+            position: absolute;
+            background: #667eea;
+            z-index: 1;
+        }
+
+        .arrow-horizontal {
+            height: 3px;
+        }
+
+        .arrow-vertical {
+            width: 3px;
+        }
+
+        .arrow-head {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-style: solid;
+        }
+
+        .arrow-head-right {
+            border-left: 8px solid #667eea;
+            border-top: 6px solid transparent;
+            border-bottom: 6px solid transparent;
+        }
+
+        .arrow-head-down {
+            border-top: 8px solid #667eea;
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+        }
+
+        /* Posicionamiento específico de los asientos */
+        .asiento-1 { top: 50px; left: 50px; background: linear-gradient(145deg, #e8f4fd, #d1ecf1); }
+        .asiento-2 { top: 50px; left: 300px; background: linear-gradient(145deg, #e8f4fd, #d1ecf1); }
+        .asiento-3 { top: 220px; left: 50px; background: linear-gradient(145deg, #fff2e8, #f7e6d1); }
+        .asiento-4 { top: 220px; left: 300px; background: linear-gradient(145deg, #fff2e8, #f7e6d1); }
+        .asiento-5 { top: 390px; left: 50px; background: linear-gradient(145deg, #f0e8ff, #e6d1f7); }
+        .asiento-6 { top: 390px; left: 300px; background: linear-gradient(145deg, #f0e8ff, #e6d1f7); }
+        .asiento-7 { top: 560px; left: 50px; background: linear-gradient(145deg, #e8ffe8, #d1f7d1); }
+        .asiento-8 { top: 560px; left: 300px; background: linear-gradient(145deg, #e8ffe8, #d1f7d1); }
+        .asiento-9 { top: 730px; left: 175px; background: linear-gradient(145deg, #ffe8e8, #f7d1d1); }
+        .asiento-10 { top: 900px; left: 175px; background: linear-gradient(145deg, #f5f5f5, #e8e8e8); }
+        .asiento-11 { top: 50px; left: 600px; background: linear-gradient(145deg, #e8f8ff, #d1f0ff); }
+        .asiento-12 { top: 220px; left: 600px; background: linear-gradient(145deg, #e8f8ff, #d1f0ff); }
+        .asiento-13 { top: 390px; left: 600px; background: linear-gradient(145deg, #e8f8ff, #d1f0ff); }
+
+        .legend {
+            margin-top: 40px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 5px solid #667eea;
+        }
+
+        .legend h3 {
+            color: #2c3e50;
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+
+        .legend-item {
+            display: inline-block;
+            margin: 5px 15px 5px 0;
+            font-size: 12px;
+        }
+
+        .legend-color {
+            display: inline-block;
+            width: 20px;
+            height: 15px;
+            margin-right: 8px;
+            border-radius: 3px;
+            vertical-align: middle;
+        }
+
+        .fase-compras { background: linear-gradient(145deg, #e8f4fd, #d1ecf1); }
+        .fase-md { background: linear-gradient(145deg, #fff2e8, #f7e6d1); }
+        .fase-mod { background: linear-gradient(145deg, #f0e8ff, #e6d1f7); }
+        .fase-cif { background: linear-gradient(145deg, #e8ffe8, #d1f7d1); }
+        .fase-terminados { background: linear-gradient(145deg, #ffe8e8, #f7d1d1); }
+        .fase-cierre { background: linear-gradient(145deg, #f5f5f5, #e8e8e8); }
+        .fase-ventas { background: linear-gradient(145deg, #e8f8ff, #d1f0ff); }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .asiento-box {
+                width: 160px;
+                min-height: 100px;
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 22px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔄 DIAGRAMA DE FLUJO DE ASIENTOS CONTABLES</h1>
+            <p><strong>Sistema de Costos por Órdenes de Producción</strong></p>
+            <p>Confecciones DENIM S.A.C. - Orden de Producción N° 001-2025</p>
+            <p>Producción: 1,000 pantalones de jeans | Período: 05/01/2025 - 30/01/2025</p>
+        </div>
+
+        <div class="flow-diagram">
+            <!-- Asiento 1: Compra de Materiales -->
+            <div class="asiento-box asiento-1">
+                <div class="asiento-number">1</div>
+                <div class="asiento-title">COMPRA DE MATERIALES</div>
+                <div class="cuentas">
+                    <div class="cuenta-debe">🔴 60 COMPRAS<br>S/ 49,000</div>
+                    <div class="cuenta-haber">🟢 42 CTAS. POR PAGAR<br>S/ 58,820</div>
+                    <div class="cuenta-haber">🟢 40 TRIBUTOS<br>S/ 8,820</div>
+                </div>
+            </div>
+
+            <!-- Asiento 2: Ingreso al Almacén -->
+            <div class="asiento-box asiento-2">
+                <div class="asiento-number">2</div>
+                <div class="asiento-title">INGRESO AL ALMACÉN</div>
+                <div class="cuentas">
+                    <div class="cuenta-debe">🔴 24 MATERIAS PRIMAS<br>S/ 49,000</div>
+                    <div class="cuenta-haber">🟢 61 VARIACIÓN EXISTENCIAS<br>S/ 49,000</div>
+                </div>
+            </div>
+
+            <!-- Asiento 3: Requisición MD -->
+            <div class="asiento-box asiento-3">
+                <div class="asiento-number">3</div>
+                <div class="asiento-title">REQUISICIÓN MATERIAL DIRECTO</div>
+                <div class="cuentas">
+                    <div class="cuenta-debe">🔴 91 COSTO PROD. - MD<br>S/ 49,000</div>
+                    <div class="cuenta-haber">🟢 79 CARGAS IMPUTABLES<br>S/ 49,000</div>
+                </div>
+            </div>
+
+            <!-- Asiento 4: Salida del Almacén -->
+            <div class="asiento-box asiento-4">
+                <div class="asiento-number">4</div>
+                <div class="asiento-title">SALIDA DEL ALMACÉN</div>
+                <div class="cuentas">
+                    <div class="cuenta-debe">🔴 61 VARIACIÓN EXISTENCIAS<br>S/ 49,000</div>
+                    <div class="cuenta-haber">🟢 24 MATERIAS PRIMAS<br>S/ 49,000</div>
+                </div>
+            </div>
+
+            <!-- Asiento 5: Registro MOD -->
+            <div class="asiento-box asiento-5">
+                <div class="asiento-number">5</div>
+                <div class="asiento-title">REGISTRO MANO DE OBRA DIRECTA</div>
+                <div class="cuentas">
+                    <div class="cuenta-debe">🔴 62 GASTOS PERSONAL<br>S/ 19,800</div>
+                    <div class="cuenta-haber">🟢 40 TRIBUTOS<br>S/ 1,782</div>
+                    <div class="cuenta-haber">🟢 41 REMUNERACIONES<br>S/ 18,018</div>
+                </div>
+            </div>
+
+            <!-- Asiento 6: Transferencia MOD -->
+            <div class="asiento-box asiento-6">
+                <div class="asiento-number">6</div>
+                <div class="asiento-title">TRANSFERENCIA MOD A COSTOS</div>
+                <div class="cuentas">
+                    <div class="cuenta-debe">🔴 92 COSTO PROD. - MOD<br>S/ 19,800</div>
+                    <div class="cuenta-haber">🟢 79 CARGAS IMPUTABLES<br>S/ 19,800</div>
+                </div>
+            </div>
+
+            <!-- Asiento 7: Registro CIF -->
+            <div class="asiento-box asiento-7">
+                <div class="asiento-number">7</div>
+                <div class="asiento-title">REGISTRO COSTOS INDIRECTOS</div>
+                <div class="cuentas">
+                    <div class="cuenta-debe">🔴 63 SERVICIOS TERCEROS<br>S/ 2,800</div>
+                    <div class="cuenta-debe">🔴 68 DEPRECIACIÓN<br>S/ 3,500</div>
+                    <div class="cuenta-debe">🔴 62 SUPERVISIÓN<br>S/ 5,700</div>
+                    <div class="cuenta-haber">🟢 DIVERSAS CUENTAS<br>S/ 12,000</div>
+                </div>
+            </div>
+
+            <!-- Asiento 8: Aplicación CIF -->
+            <div class="asiento-box asiento-8">
+                <div class="asiento-number">8</div>
+                <div class="asiento-title">APLICACIÓN CIF A ORDEN</div>
+                <div class="cuentas">
+                    <div class="cuenta-debe">🔴 93 COSTO PROD. - CIF<br>S/ 12,000</div>
+                    <div class="cuenta-haber">🟢 79 CARGAS IMPUTABLES<br>S/ 12,000</div>
+                </div>
+            </div>
+
+            <!-- Asiento 9: Transferencia a PT -->
+            <div class="asiento-box asiento-9">
+                <div class="asiento-number">9</div>
+                <div class="asiento-title">TRANSFERENCIA A PRODUCTOS TERMINADOS</div>
+                <div class="cuentas">
+                    <div class="cuenta-debe">🔴 21 PRODUCTOS TERMINADOS<br>S/ 80,800</div>
+                    <div class="cuenta-haber">🟢 71 VARIACIÓN PRODUCCIÓN<br>S/ 80,800</div>
+                </div>
+            </div>
+
+            <!-- Asiento 10: Cierre Elemento 9 -->
+            <div class="asiento-box asiento-10">
+                <div class="asiento-number">10</div>
+                <div class="asiento-title">CIERRE CUENTAS ELEMENTO 9</div>
+                <div class="cuentas">
+                    <div class="cuenta-debe">🔴 79 CARGAS IMPUTABLES<br>S/ 80,800</div>
+                    <div class="cuenta-haber">🟢 91 COSTO PROD. - MD<br>S/ 49,000</div>
+                    <div class="cuenta-haber">🟢 92 COSTO PROD. - MOD<br>S/ 19,800</div>
+                    <div class="cuenta-haber">🟢 93 COSTO PROD. - CIF<br>S/ 12,000</div>
+                </div>
+            </div>
+
+            <!-- Asiento 11: Venta -->
+            <div class="asiento-box asiento-11">
+                <div class="asiento-number">11</div>
+                <div class="asiento-title">VENTA DE PRODUCTOS (800 unidades)</div>
+                <div class="cuentas">
+                    <div class="cuenta-debe">🔴 12 CTAS. POR COBRAR<br>S/ 113,040</div>
+                    <div class="cuenta-haber">🟢 70 VENTAS<br>S/ 95,800</div>
+                    <div class="cuenta-haber">🟢 40 TRIBUTOS - IGV<br>S/ 17,240</div>
+                </div>
+            </div>
+
+            <!-- Asiento 12: Costo de Ventas -->
+            <div class="asiento-box asiento-12">
+                <div class="asiento-number">12</div>
+                <div class="asiento-title">REGISTRO COSTO DE VENTAS</div>
+                <div class="cuentas">
+                    <div class="cuenta-debe">🔴 69 COSTO DE VENTAS<br>S/ 64,640</div>
+                    <div class="cuenta-haber">🟢 21 PRODUCTOS TERMINADOS<br>S/ 64,640</div>
+                </div>
+            </div>
+
+            <!-- Asiento 13: Devengado Costo Ventas -->
+            <div class="asiento-box asiento-13">
+                <div class="asiento-number">13</div>
+                <div class="asiento-title">DEVENGADO COSTO DE VENTAS</div>
+                <div class="cuentas">
+                    <div class="cuenta-debe">🔴 71 VARIACIÓN PRODUCCIÓN<br>S/ 64,640</div>
+                    <div class="cuenta-haber">🟢 69 COSTO DE VENTAS<br>S/ 64,640</div>
+                </div>
+            </div>
+
+            <!-- Flechas de conexión -->
+            <!-- Conexión 1-2 -->
+            <div class="arrow arrow-horizontal" style="top: 130px; left: 250px; width: 50px;"></div>
+            <div class="arrow-head arrow-head-right" style="top: 124px; left: 300px;"></div>
+
+            <!-- Conexión 2-4 -->
+            <div class="arrow arrow-vertical" style="top: 170px; left: 377px; height: 50px;"></div>
+            <div class="arrow-head arrow-head-down" style="top: 220px; left: 371px;"></div>
+
+            <!-- Conexión 3-4 -->
+            <div class="arrow arrow-horizontal" style="top: 300px; left: 250px; width: 50px;"></div>
+            <div class="arrow-head arrow-head-right" style="top: 294px; left: 300px;"></div>
+
+            <!-- Conexión 4-6 -->
+            <div class="arrow arrow-vertical" style="top: 340px; left: 377px; height: 50px;"></div>
+            <div class="arrow-head arrow-head-down" style="top: 390px; left: 371px;"></div>
+
+            <!-- Conexión 5-6 -->
+            <div class="arrow arrow-horizontal" style="top: 470px; left: 250px; width: 50px;"></div>
+            <div class="arrow-head arrow-head-right" style="top: 464px; left: 300px;"></div>
+
+            <!-- Conexión 6-8 -->
+            <div class="arrow arrow-vertical" style="top: 510px; left: 377px; height: 50px;"></div>
+            <div class="arrow-head arrow-head-down" style="top: 560px; left: 371px;"></div>
+
+            <!-- Conexión 7-8 -->
+            <div class="arrow arrow-horizontal" style="top: 640px; left: 250px; width: 50px;"></div>
+            <div class="arrow-head arrow-head-right" style="top: 634px; left: 300px;"></div>
+
+            <!-- Conexión convergente a 9 -->
+            <div class="arrow arrow-horizontal" style="top: 470px; left: 400px; width: 50px;"></div>
+            <div class="arrow arrow-vertical" style="top: 470px; left: 450px; height: 290px;"></div>
+            <div class="arrow arrow-horizontal" style="top: 810px; left: 275px; width: 175px;"></div>
+            <div class="arrow-head arrow-head-down" style="top: 730px; left: 244px;"></div>
+
+            <!-- Conexión 9-10 -->
+            <div class="arrow arrow-vertical" style="top: 850px; left: 252px; height: 50px;"></div>
+            <div class="arrow-head arrow-head-down" style="top: 900px; left: 246px;"></div>
+
+            <!-- Conexión 11-12 -->
+            <div class="arrow arrow-vertical" style="top: 170px; left: 677px; height: 50px;"></div>
+            <div class="arrow-head arrow-head-down" style="top: 220px; left: 671px;"></div>
+
+            <!-- Conexión 12-13 -->
+            <div class="arrow arrow-vertical" style="top: 340px; left: 677px; height: 50px;"></div>
+            <div class="arrow-head arrow-head-down" style="top: 390px; left: 671px;"></div>
+        </div>
+
+        <div class="legend">
+            <h3>📊 LEYENDA DE FASES DEL PROCESO</h3>
+            <div class="legend-item">
+                <span class="legend-color fase-compras"></span>
+                <strong>Fase 1:</strong> Compras y Almacén
+            </div>
+            <div class="legend-item">
+                <span class="legend-color fase-md"></span>
+                <strong>Fase 2:</strong> Material Directo
+            </div>
+            <div class="legend-item">
+                <span class="legend-color fase-mod"></span>
+                <strong>Fase 3:</strong> Mano de Obra Directa
+            </div>
+            <div class="legend-item">
+                <span class="legend-color fase-cif"></span>
+                <strong>Fase 4:</strong> Costos Indirectos
+            </div>
+            <div class="legend-item">
+                <span class="legend-color fase-terminados"></span>
+                <strong>Fase 5:</strong> Productos Terminados
+            </div>
+            <div class="legend-item">
+                <span class="legend-color fase-cierre"></span>
+                <strong>Fase 6:</strong> Cierre Analítico
+            </div>
+            <div class="legend-item">
+                <span class="legend-color fase-ventas"></span>
+                <strong>Fase 7:</strong> Ventas y Resultados
+            </div>
+
+            <br><br>
+            <p><strong>🔴 Cuentas Deudoras</strong> | <strong>🟢 Cuentas Acreedoras</strong></p>
+            <p><strong>Costo Total de Producción:</strong> S/ 80,800 | <strong>Costo Unitario:</strong> S/ 80.80</p>
+            <p><strong>Unidades Vendidas:</strong> 800 | <strong>Unidades en Stock:</strong> 200 | <strong>Costo de Ventas:</strong> S/ 64,640</p>
+        </div>
+    </div>
+</body>
+</html>

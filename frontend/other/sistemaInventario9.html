@@ -1,0 +1,2681 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Inventario - Calzados Mirla SAC</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #0d6efd;
+            --primary-dark: #0a58ca;
+            --sidebar-bg: #1e293b;
+            --sidebar-text: #cbd5e1;
+            --content-bg: #f1f5f9;
+            --primary-gradient: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+            --success-gradient: linear-gradient(135deg, #198754 0%, #146c43 100%);
+            --warning-gradient: linear-gradient(135deg, #ffc107 0%, #e6ac00 100%);
+            --danger-gradient: linear-gradient(135deg, #dc3545 0%, #b02a37 100%);
+            --info-gradient: linear-gradient(135deg, #0dcaf0 0%, #3dd5f3 100%);
+            --sidebar-width: 260px;
+            --sidebar-collapsed: 70px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--content-bg);
+            overflow-x: hidden;
+        }
+
+        /* ========== LOGIN SCREEN STYLES ========== */
+        .login-container {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .login-card {
+            max-width: 400px;
+            width: 100%;
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+        }
+
+        .login-header {
+            background: var(--primary-gradient);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .login-header h4 {
+            margin: 0;
+            font-weight: 600;
+            font-size: 1.5rem;
+        }
+
+        .login-body {
+            padding: 2rem;
+            background: white;
+        }
+
+        .form-floating label {
+            color: #6c757d;
+        }
+
+        .form-floating .form-control:focus~label,
+        .form-floating .form-control:not(:placeholder-shown)~label {
+            color: var(--primary-color);
+        }
+
+        .btn-login {
+            background: var(--primary-gradient);
+            border: none;
+            padding: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(13, 110, 253, 0.3);
+        }
+
+        .login-footer {
+            background: #f8f9fa;
+            padding: 1rem;
+            text-align: center;
+            color: #6c757d;
+            font-size: 0.85rem;
+        }
+
+        /* ========== SIDEBAR STYLES ========== */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: var(--sidebar-width);
+            background: var(--sidebar-bg);
+            color: var(--sidebar-text);
+            z-index: 1000;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .sidebar.collapsed {
+            width: var(--sidebar-collapsed);
+        }
+
+        .sidebar:hover,
+        .sidebar.force-expand {
+            width: var(--sidebar-width);
+        }
+
+        .sidebar-toggle-btn {
+            position: absolute;
+            top: 15px;
+            right: -15px;
+            background: var(--primary-color);
+            border: none;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            transition: all 0.3s ease;
+            z-index: 1001;
+        }
+
+        .sidebar-toggle-btn:hover {
+            background: var(--primary-dark);
+            transform: scale(1.1);
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            background: rgba(0, 0, 0, 0.1);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+            white-space: nowrap;
+            position: relative;
+        }
+
+        .sidebar-header h4 {
+            color: white;
+            margin: 0;
+            font-weight: 600;
+            opacity: 1;
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar.collapsed .sidebar-header h4 {
+            opacity: 0;
+        }
+
+        .sidebar.collapsed:not(:hover) .sidebar-header h4 {
+            opacity: 0;
+        }
+
+        .sidebar-nav {
+            list-style: none;
+            padding: 1rem 0;
+        }
+
+        .sidebar-nav li {
+            margin: 0;
+        }
+
+        .sidebar-nav a {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1.5rem;
+            color: var(--sidebar-text);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            border-left: 3px solid transparent;
+            position: relative;
+        }
+
+        .sidebar-nav a:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .sidebar-nav a.active {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            border-left-color: var(--primary-color);
+        }
+
+        .sidebar-nav i {
+            width: 20px;
+            margin-right: 1rem;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .sidebar.collapsed:not(:hover) .sidebar-nav span {
+            opacity: 0;
+        }
+
+        .sidebar-footer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .user-info {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar.collapsed:not(:hover) .user-info .user-details {
+            opacity: 0;
+        }
+
+        .user-info .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: var(--primary-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 0.5rem auto;
+            color: white;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar.collapsed:not(:hover) .user-info .user-avatar {
+            margin-bottom: 0;
+        }
+
+        .btn-logout {
+            background: #dc3545;
+            border: none;
+            color: white;
+            width: 100%;
+            padding: 0.5rem;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-logout:hover {
+            background: #b02a37;
+            transform: translateY(-1px);
+        }
+
+        .sidebar.collapsed:not(:hover) .btn-logout span {
+            opacity: 0;
+        }
+
+        /* ========== MAIN CONTENT STYLES ========== */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+            background: var(--content-bg);
+            transition: margin-left 0.3s ease;
+            padding: 2rem;
+        }
+
+        .content-header {
+            background: white;
+            padding: 1.5rem 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            margin-bottom: 2rem;
+        }
+
+        .content-header h2 {
+            margin: 0;
+            color: #2d3748;
+            font-weight: 600;
+        }
+
+        /* ========== STATS CARDS ========== */
+        .stats-card {
+            border: none;
+            border-radius: 15px;
+            padding: 1.5rem;
+            color: white;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .stats-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+        }
+
+        .stats-card.primary {
+            background: var(--primary-gradient);
+        }
+
+        .stats-card.success {
+            background: var(--success-gradient);
+        }
+
+        .stats-card.warning {
+            background: var(--warning-gradient);
+        }
+
+        .stats-card.info {
+            background: var(--info-gradient);
+        }
+
+        .stats-card .card-icon {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            font-size: 4rem;
+            opacity: 0.2;
+        }
+
+        .stats-card .card-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .stats-card h3 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .stats-card p {
+            margin: 0;
+            opacity: 0.9;
+            font-weight: 500;
+        }
+
+        /* ========== CARDS AND TABLES ========== */
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+        }
+
+        .card-header {
+            background: var(--primary-gradient) !important;
+            color: white !important;
+            border: none;
+            border-radius: 12px 12px 0 0 !important;
+            padding: 1rem 1.5rem;
+        }
+
+        .card-header h5 {
+            margin: 0;
+            font-weight: 600;
+        }
+
+        .table {
+            margin: 0;
+        }
+
+        .table thead th {
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+        }
+
+        .table tbody tr {
+            transition: all 0.3s ease;
+        }
+
+        .table tbody tr:hover {
+            background: rgba(13, 110, 253, 0.05);
+            transform: scale(1.01);
+        }
+
+        /* ========== BADGES AND BUTTONS ========== */
+        .badge {
+            font-size: 0.75rem;
+            padding: 0.5rem 0.75rem;
+            border-radius: 20px;
+        }
+
+        .btn {
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 0.85rem;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-primary {
+            background: var(--primary-gradient);
+            border: none;
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 8px 20px rgba(13, 110, 253, 0.3);
+        }
+
+        /* ========== MODALS ========== */
+        .modal-content {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-header {
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            border-radius: 15px 15px 0 0;
+        }
+
+        .modal-title {
+            font-weight: 600;
+        }
+
+        .form-control,
+        .form-select {
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15);
+        }
+
+        /* ========== ALERT STYLES ========== */
+        .alert {
+            border: none;
+            border-radius: 10px;
+            font-weight: 500;
+        }
+
+        /* ========== UTILITIES ========== */
+        .hidden {
+            display: none !important;
+        }
+
+        .activity-log {
+            max-height: 350px;
+            overflow-y: auto;
+        }
+
+        .activity-item {
+            padding: 0.75rem;
+            border-left: 3px solid var(--primary-color);
+            background: white;
+            margin-bottom: 0.5rem;
+            border-radius: 0 8px 8px 0;
+            transition: all 0.3s ease;
+        }
+
+        .activity-item:hover {
+            background: #f8f9fa;
+            transform: translateX(5px);
+        }
+
+        /* ========== MOBILE NAVIGATION ========== */
+        .mobile-navbar {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: var(--primary-gradient);
+            color: white;
+            z-index: 1002;
+            padding: 0 1rem;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .mobile-navbar .navbar-brand {
+            display: flex;
+            align-items: center;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .mobile-navbar .navbar-brand i {
+            margin-right: 0.5rem;
+        }
+
+        .mobile-navbar .btn {
+            background: none;
+            border: none;
+            color: white;
+            padding: 0.5rem;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .mobile-navbar .btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .user-avatar-mobile {
+            width: 35px;
+            height: 35px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        /* ========== RIGHT SIDEBAR (MOBILE USER MENU) ========== */
+        .right-sidebar {
+            position: fixed;
+            top: 0;
+            right: -300px;
+            width: 300px;
+            height: 100vh;
+            background: white;
+            z-index: 1001;
+            transition: all 0.3s ease;
+            box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+            padding: 0;
+        }
+
+        .right-sidebar.show {
+            right: 0;
+        }
+
+        .right-sidebar .sidebar-header {
+            background: var(--primary-gradient);
+            color: white;
+            padding: 1.5rem;
+            border-bottom: none;
+        }
+
+        .right-sidebar .user-profile {
+            padding: 2rem 1.5rem;
+            text-align: center;
+            border-bottom: 1px solid #eee;
+        }
+
+        .right-sidebar .user-profile .user-avatar {
+            width: 80px;
+            height: 80px;
+            background: var(--primary-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem auto;
+            color: white;
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+        .right-sidebar .user-profile h5 {
+            margin: 0 0 0.5rem 0;
+            color: #333;
+        }
+
+        .right-sidebar .user-profile .badge {
+            font-size: 0.8rem;
+        }
+
+        .right-sidebar .sidebar-menu {
+            padding: 1rem 0;
+        }
+
+        .right-sidebar .menu-item {
+            display: block;
+            padding: 1rem 1.5rem;
+            color: #333;
+            text-decoration: none;
+            border-bottom: 1px solid #f0f0f0;
+            transition: all 0.3s ease;
+        }
+
+        .right-sidebar .menu-item:hover {
+            background: #f8f9fa;
+            color: var(--primary-color);
+        }
+
+        .right-sidebar .menu-item i {
+            width: 20px;
+            margin-right: 1rem;
+        }
+
+        .mobile-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            display: none;
+        }
+
+        .mobile-overlay.show {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                width: var(--sidebar-width) !important;
+            }
+
+            .sidebar.show {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 1rem;
+            }
+
+            .content-header {
+                padding: 1rem;
+            }
+
+            .stats-card h3 {
+                font-size: 2rem;
+            }
+        }
+
+        /* ========== SCROLL STYLES ========== */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-dark);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- ========== LOGIN SCREEN ========== -->
+    <div class="login-container" id="loginScreen">
+        <div class="card login-card">
+            <div class="login-header">
+                <i class="fas fa-shoe-prints fa-2x mb-3"></i>
+                <h4>Calzados Mirla SAC</h4>
+                <p class="mb-0">Sistema de Gestión de Inventario</p>
+            </div>
+            <div class="login-body">
+                <form id="loginForm">
+                    <div class="form-floating mb-3">
+                        <input type="text" class="form-control" id="username" placeholder="Usuario" required>
+                        <label for="username"><i class="fas fa-user me-2"></i>Usuario</label>
+                    </div>
+                    <div class="form-floating mb-4">
+                        <input type="password" class="form-control" id="password" placeholder="Contraseña" required>
+                        <label for="password"><i class="fas fa-lock me-2"></i>Contraseña</label>
+                    </div>
+                    <button type="submit" class="btn btn-login btn-primary w-100">
+                        <i class="fas fa-sign-in-alt me-2"></i>Ingresar al Sistema
+                    </button>
+                </form>
+                <div class="mt-4">
+                    <small class="text-muted">
+                        <strong>Usuarios de prueba:</strong><br>
+                        <code>admin / admin123</code> (Administrador)<br>
+                        <code>maria.gonzalez / lima123</code> (Encargado Lima)<br>
+                        <code>operador / operador123</code> (Operador)<br>
+                        <code>consulta / consulta123</code> (Solo Consulta)
+                    </small>
+                </div>
+            </div>
+            <div class="login-footer">
+                <small>Sistema de Inventario v2.0 - Calzados Mirla SAC</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== MAIN APPLICATION ========== -->
+    <div id="mainApp" class="hidden">
+        <!-- Mobile Navigation Bar -->
+        <nav class="mobile-navbar">
+            <button class="btn" onclick="toggleMobileSidebar()">
+                <i class="fas fa-bars"></i>
+            </button>
+
+            <div class="navbar-brand">
+                <i class="fas fa-shoe-prints"></i>
+                Calzados Mirla
+            </div>
+
+            <button class="btn" onclick="toggleRightSidebar()">
+                <div class="user-avatar-mobile" id="mobileUserAvatar">U</div>
+            </button>
+        </nav>
+
+        <!-- Mobile Overlay -->
+        <div class="mobile-overlay" id="mobileOverlay" onclick="closeMobileSidebars()"></div>
+
+        <!-- Left Sidebar -->
+        <nav class="sidebar" id="sidebar">
+            <button class="sidebar-toggle-btn" onclick="toggleSidebar()">
+                <i class="fas fa-chevron-left" id="toggleIcon"></i>
+            </button>
+
+            <div class="sidebar-header">
+                <h4><i class="fas fa-shoe-prints me-2"></i>Calzados Mirla</h4>
+            </div>
+
+            <ul class="sidebar-nav">
+                <li>
+                    <a href="#" data-section="dashboard" class="nav-link active">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" data-section="movements" class="nav-link">
+                        <i class="fas fa-dolly"></i>
+                        <span>Movimientos</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" data-section="transfers" class="nav-link">
+                        <i class="fas fa-truck"></i>
+                        <span>Transferencias</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" data-section="reports" class="nav-link">
+                        <i class="fas fa-chart-pie"></i>
+                        <span>Reportes</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" data-section="warehouses" class="nav-link">
+                        <i class="fas fa-warehouse"></i>
+                        <span>Almacenes</span>
+                    </a>
+                </li>
+                <li class="admin-only">
+                    <a href="#" data-section="users" class="nav-link">
+                        <i class="fas fa-users-cog"></i>
+                        <span>Usuarios</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" data-section="audit" class="nav-link">
+                        <i class="fas fa-clipboard-list"></i>
+                        <span>Auditoría</span>
+                    </a>
+                </li>
+            </ul>
+
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar" id="userAvatar">U</div>
+                    <div class="user-details">
+                        <div class="fw-bold" id="userName">Usuario</div>
+                        <small id="userRole">Rol</small>
+                    </div>
+                </div>
+                <button class="btn btn-logout" onclick="logout()">
+                    <i class="fas fa-sign-out-alt me-2"></i>
+                    <span>Salir</span>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Right Sidebar (Mobile User Menu) -->
+        <div class="right-sidebar" id="rightSidebar">
+            <div class="sidebar-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Mi Perfil</h5>
+                    <button class="btn btn-sm" onclick="toggleRightSidebar()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="user-profile">
+                <div class="user-avatar" id="rightSidebarAvatar">U</div>
+                <h5 id="rightSidebarName">Usuario</h5>
+                <span class="badge bg-primary" id="rightSidebarRole">Rol</span>
+            </div>
+
+            <div class="sidebar-menu">
+                <a href="#" class="menu-item" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Cerrar Sesión
+                </a>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- ========== DASHBOARD SECTION ========== -->
+            <div id="dashboard" class="content-section">
+                <div class="content-header">
+                    <h2><i class="fas fa-tachometer-alt me-3"></i>Dashboard - Panel de Control</h2>
+                </div>
+
+                <!-- Stats Cards -->
+                <div class="row mb-4">
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="stats-card primary">
+                            <div class="card-icon">
+                                <i class="fas fa-boxes"></i>
+                            </div>
+                            <div class="card-content">
+                                <h3 id="totalStock">0</h3>
+                                <p>Stock Total (Pares)</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="stats-card success">
+                            <div class="card-icon">
+                                <i class="fas fa-dollar-sign"></i>
+                            </div>
+                            <div class="card-content">
+                                <h3 id="totalValue">S/ 0.00</h3>
+                                <p>Valor Total</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="stats-card warning">
+                            <div class="card-icon">
+                                <i class="fas fa-exchange-alt"></i>
+                            </div>
+                            <div class="card-content">
+                                <h3 id="totalMovements">0</h3>
+                                <p>Movimientos Hoy</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="stats-card info">
+                            <div class="card-icon">
+                                <i class="fas fa-calculator"></i>
+                            </div>
+                            <div class="card-content">
+                                <h3 id="avgPrice">S/ 0.00</h3>
+                                <p>Precio Promedio</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dashboard Content -->
+                <div class="row">
+                    <div class="col-lg-8 mb-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5><i class="fas fa-warehouse me-2"></i>Stock por Almacén</h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="warehouseStats"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 mb-4" id="recentActivityCard">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5><i class="fas fa-clock me-2"></i>Actividad Reciente</h5>
+                            </div>
+                            <div class="card-body p-0">
+                                <div id="recentActivity" class="activity-log"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========== MOVEMENTS SECTION ========== -->
+            <div id="movements" class="content-section hidden">
+                <div class="content-header d-flex justify-content-between align-items-center">
+                    <h2><i class="fas fa-dolly me-3"></i>Gestión de Movimientos</h2>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#movementModal">
+                        <i class="fas fa-plus me-2"></i>Nuevo Movimiento
+                    </button>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-list me-2"></i>Historial de Movimientos</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Tipo</th>
+                                        <th>Origen</th>
+                                        <th>Destino</th>
+                                        <th>Cantidad</th>
+                                        <th>Valor</th>
+                                        <th>Usuario</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="movementsTable">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========== TRANSFERS SECTION ========== -->
+            <div id="transfers" class="content-section hidden">
+                <div class="content-header d-flex justify-content-between align-items-center">
+                    <h2><i class="fas fa-truck me-3"></i>Gestión de Transferencias</h2>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#transferModal">
+                        <i class="fas fa-plus me-2"></i>Nueva Transferencia
+                    </button>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-list me-2"></i>Estado de Transferencias</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Origen</th>
+                                        <th>Destino</th>
+                                        <th>Cantidad</th>
+                                        <th>Valor</th>
+                                        <th>Estado</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="transfersTable">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========== REPORTS SECTION ========== -->
+            <div id="reports" class="content-section hidden">
+                <div class="content-header">
+                    <h2><i class="fas fa-chart-pie me-3"></i>Reportes y Análisis</h2>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-6 mb-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5><i class="fas fa-warehouse me-2"></i>Resumen por Almacén</h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="warehouseReport"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6 mb-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5><i class="fas fa-balance-scale me-2"></i>Verificación Contable</h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="accountingVerification"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========== WAREHOUSES SECTION ========== -->
+            <div id="warehouses" class="content-section hidden">
+                <div class="content-header">
+                    <h2><i class="fas fa-warehouse me-3"></i>Gestión de Almacenes</h2>
+                </div>
+
+                <div class="row" id="warehouseCards">
+                </div>
+            </div>
+
+            <!-- ========== USERS SECTION ========== -->
+            <div id="users" class="content-section hidden admin-only">
+                <div class="content-header">
+                    <h2><i class="fas fa-users-cog me-3"></i>Gestión de Usuarios</h2>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-users me-2"></i>Lista de Usuarios del Sistema</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Usuario</th>
+                                        <th>Nombre</th>
+                                        <th>Rol</th>
+                                        <th>Almacenes</th>
+                                        <th>Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="usersTable">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========== AUDIT SECTION ========== -->
+            <div id="audit" class="content-section hidden">
+                <div class="content-header d-flex justify-content-between align-items-center">
+                    <h2><i class="fas fa-clipboard-list me-3"></i>Auditoría del Sistema</h2>
+                    <button class="btn btn-success" onclick="exportData()">
+                        <i class="fas fa-download me-2"></i>Exportar Datos
+                    </button>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-search me-2"></i>Filtros de Auditoría</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label">Usuario</label>
+                                <select class="form-select" id="auditUserFilter">
+                                    <option value="">Todos los usuarios</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Acción</label>
+                                <select class="form-select" id="auditActionFilter">
+                                    <option value="">Todas las acciones</option>
+                                    <option value="login">Login</option>
+                                    <option value="logout">Logout</option>
+                                    <option value="movement">Movimiento</option>
+                                    <option value="transfer">Transferencia</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Fecha</label>
+                                <input type="date" class="form-control" id="auditDateFilter">
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Fecha y Hora</th>
+                                        <th>Usuario</th>
+                                        <th>Acción</th>
+                                        <th>Detalles</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="auditTable">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- ========== MOVEMENT
+
+<!-- ========== MOVEMENT MODAL ========== -->
+    <div class="modal fade" id="movementModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-plus-circle me-2"></i>Crear Nuevo Movimiento
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="movementForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Tipo de Movimiento</label>
+                                <select class="form-select" id="movementType" required>
+                                    <option value="">Seleccionar tipo...</option>
+                                    <option value="production">📦 Producción</option>
+                                    <option value="sale">💰 Venta</option>
+                                    <option value="return">↩️ Devolución</option>
+                                    <option value="loss">❌ Pérdida</option>
+                                    <option value="damage">⚠️ Daño</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Almacén</label>
+                                <select class="form-select" id="movementWarehouse" required>
+                                    <option value="">Seleccionar almacén...</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Cantidad (Pares)</label>
+                                <input type="number" class="form-control" id="movementQuantity" min="1" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Precio por Par (S/)</label>
+                                <input type="number" class="form-control" id="movementPrice" min="0" step="0.01"
+                                    required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Valor Total (S/)</label>
+                                <input type="number" class="form-control" id="movementTotal" readonly>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Observaciones</label>
+                            <textarea class="form-control" id="movementNotes" rows="3"
+                                placeholder="Detalles adicionales sobre el movimiento..."></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i>Cancelar
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="createMovement()">
+                        <i class="fas fa-save me-2"></i>Crear Movimiento
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== TRANSFER MODAL ========== -->
+    <div class="modal fade" id="transferModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-truck me-2"></i>Nueva Transferencia
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="transferForm">
+                        <div class="mb-3">
+                            <label class="form-label">Almacén Origen</label>
+                            <select class="form-select" id="transferFrom" required>
+                                <option value="">Seleccionar origen...</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Almacén Destino</label>
+                            <select class="form-select" id="transferTo" required>
+                                <option value="">Seleccionar destino...</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Cantidad (Pares)</label>
+                            <input type="number" class="form-control" id="transferQuantity" min="1" required>
+                            <div class="form-text">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Stock disponible: <span id="availableStock" class="fw-bold">0</span> pares
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Precio por Par (S/)</label>
+                            <input type="number" class="form-control" id="transferPrice" min="0" step="0.01" required>
+                            <div class="form-text">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Precio promedio actual: <span id="avgPriceDisplay" class="fw-bold">S/ 0.00</span>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Valor Total (S/)</label>
+                            <input type="number" class="form-control" id="transferTotal" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Observaciones</label>
+                            <textarea class="form-control" id="transferNotes" rows="3"
+                                placeholder="Motivo de la transferencia..."></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i>Cancelar
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="createTransfer()">
+                        <i class="fas fa-paper-plane me-2"></i>Iniciar Transferencia
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== SCRIPTS ========== -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // ========== GLOBAL VARIABLES ==========
+        let currentUser = null;
+        let systemData = {
+            users: [
+                {
+                    id: 1,
+                    username: 'admin',
+                    password: 'admin123',
+                    name: 'Administrador Sistema',
+                    role: 'admin',
+                    warehouses: ['all'],
+                    active: true
+                },
+                {
+                    id: 2,
+                    username: 'maria.gonzalez',
+                    password: 'lima123',
+                    name: 'María González',
+                    role: 'manager',
+                    warehouses: ['tienda-lima'],
+                    active: true
+                },
+                {
+                    id: 3,
+                    username: 'operador',
+                    password: 'operador123',
+                    name: 'Operador Sistema',
+                    role: 'operator',
+                    warehouses: ['central', 'tienda-lima'],
+                    active: true
+                },
+                {
+                    id: 4,
+                    username: 'consulta',
+                    password: 'consulta123',
+                    name: 'Usuario Consulta',
+                    role: 'viewer',
+                    warehouses: ['all'],
+                    active: true
+                }
+            ],
+            warehouses: [
+                {
+                    id: 'central',
+                    name: 'Almacén Central',
+                    type: 'physical',
+                    manager: 'Juan Pérez',
+                    stock: 150,
+                    value: 7500,
+                    location: 'Planta de Producción'
+                },
+                {
+                    id: 'tienda-lima',
+                    name: 'Tienda Lima',
+                    type: 'physical',
+                    manager: 'María González',
+                    stock: 75,
+                    value: 3750,
+                    location: 'Lima Centro'
+                },
+                {
+                    id: 'tienda-huancayo',
+                    name: 'Tienda Huancayo',
+                    type: 'physical',
+                    manager: 'Carlos Mendoza',
+                    stock: 50,
+                    value: 2500,
+                    location: 'Huancayo'
+                },
+                {
+                    id: 'tienda-huaraz',
+                    name: 'Tienda Huaraz',
+                    type: 'physical',
+                    manager: 'Ana Rodríguez',
+                    stock: 30,
+                    value: 1500,
+                    location: 'Huaraz'
+                },
+                {
+                    id: 'en-transito',
+                    name: 'En Tránsito',
+                    type: 'transit',
+                    manager: 'Sistema',
+                    stock: 0,
+                    value: 0,
+                    location: 'Virtual'
+                },
+                {
+                    id: 'productos-perdidos',
+                    name: 'Productos Perdidos',
+                    type: 'virtual',
+                    manager: 'Sistema',
+                    stock: 5,
+                    value: 250,
+                    location: 'Virtual'
+                },
+                {
+                    id: 'ventas-realizadas',
+                    name: 'Ventas Realizadas',
+                    type: 'virtual',
+                    manager: 'Sistema',
+                    stock: 200,
+                    value: 10000,
+                    location: 'Virtual'
+                },
+                {
+                    id: 'productos-dañados',
+                    name: 'Productos Dañados',
+                    type: 'virtual',
+                    manager: 'Sistema',
+                    stock: 10,
+                    value: 500,
+                    location: 'Virtual'
+                }
+            ],
+            movements: [],
+            transfers: [],
+            auditLog: []
+        };
+
+        // ========== INITIALIZATION ==========
+        document.addEventListener('DOMContentLoaded', function () {
+            loadSystemData();
+            checkSession();
+            setupEventListeners();
+            startAutoSave();
+        });
+
+        // ========== DATA MANAGEMENT ==========
+        function loadSystemData() {
+            const savedData = JSON.parse(localStorage.getItem('calzadosMirlaData') || '{}');
+            if (Object.keys(savedData).length > 0) {
+                systemData = { ...systemData, ...savedData };
+            } else {
+                generateSampleData();
+                saveSystemData();
+            }
+        }
+
+        function saveSystemData() {
+            localStorage.setItem('calzadosMirlaData', JSON.stringify(systemData));
+        }
+
+        function generateSampleData() {
+            const today = new Date().toISOString().split('T')[0];
+            systemData.movements = [
+                {
+                    id: 1,
+                    date: today,
+                    type: 'production',
+                    from: 'sistema',
+                    to: 'central',
+                    quantity: 100,
+                    price: 50,
+                    value: 5000,
+                    user: 'admin',
+                    notes: 'Producción inicial'
+                },
+                {
+                    id: 2,
+                    date: today,
+                    type: 'transfer',
+                    from: 'central',
+                    to: 'tienda-lima',
+                    quantity: 50,
+                    price: 50,
+                    value: 2500,
+                    user: 'admin',
+                    notes: 'Transferencia inicial'
+                },
+                {
+                    id: 3,
+                    date: today,
+                    type: 'sale',
+                    from: 'tienda-lima',
+                    to: 'ventas-realizadas',
+                    quantity: 25,
+                    price: 50,
+                    value: 1250,
+                    user: 'maria.gonzalez',
+                    notes: 'Venta del día'
+                }
+            ];
+
+            systemData.transfers = [
+                {
+                    id: 1,
+                    date: today,
+                    from: 'central',
+                    to: 'tienda-huancayo',
+                    quantity: 25,
+                    status: 'pending',
+                    user: 'admin',
+                    notes: 'Transferencia pendiente'
+                }
+            ];
+
+            systemData.auditLog = [
+                {
+                    id: 1,
+                    date: new Date().toISOString(),
+                    user: 'admin',
+                    action: 'login',
+                    details: 'Inicio de sesión exitoso'
+                }
+            ];
+        }
+
+        function startAutoSave() {
+            setInterval(() => {
+                if (currentUser) {
+                    saveSystemData();
+                }
+            }, 300000); // Auto-save every 5 minutes
+        }
+
+        // ========== SESSION MANAGEMENT ==========
+        function checkSession() {
+            const savedUser = localStorage.getItem('currentUser');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                showMainApp();
+            } else {
+                showLoginScreen();
+            }
+        }
+
+        function login(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            const user = systemData.users.find(u => u.username === username && u.password === password && u.active);
+
+            if (user) {
+                currentUser = user;
+                localStorage.setItem('currentUser', JSON.stringify(user));
+
+                addAuditLog('login', 'Inicio de sesión exitoso');
+
+                showMainApp();
+                showAlert('success', `¡Bienvenido, ${user.name}!`);
+            } else {
+                showAlert('danger', 'Usuario o contraseña incorrectos');
+                document.getElementById('loginForm').reset();
+            }
+        }
+
+        function logout() {
+            if (currentUser) {
+                addAuditLog('logout', 'Cierre de sesión');
+                saveSystemData();
+            }
+
+            currentUser = null;
+            localStorage.removeItem('currentUser');
+            showLoginScreen();
+            showAlert('info', 'Sesión cerrada correctamente');
+        }
+
+        function showLoginScreen() {
+            document.getElementById('loginScreen').classList.remove('hidden');
+            document.getElementById('mainApp').classList.add('hidden');
+            document.getElementById('loginForm').reset();
+        }
+
+        function showMainApp() {
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('mainApp').classList.remove('hidden');
+
+            // Generate user initials for avatar
+            const initials = currentUser.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+
+            // Update user info in all locations
+            document.getElementById('userName').textContent = currentUser.name;
+            document.getElementById('userRole').textContent = getRoleName(currentUser.role);
+            document.getElementById('userAvatar').textContent = initials;
+
+            // Update mobile user info
+            document.getElementById('mobileUserAvatar').textContent = initials;
+            document.getElementById('rightSidebarName').textContent = currentUser.name;
+            document.getElementById('rightSidebarRole').textContent = getRoleName(currentUser.role);
+            document.getElementById('rightSidebarAvatar').textContent = initials;
+
+            // Hide admin-only sections if not admin
+            if (currentUser.role !== 'admin') {
+                document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+                // Hide recent activity card for non-admin users
+                document.getElementById('recentActivityCard').style.display = 'none';
+            } else {
+                // Show recent activity card for admin users
+                document.getElementById('recentActivityCard').style.display = 'block';
+            }
+
+            // Initialize sidebar state
+            initializeSidebar();
+
+            updateDashboard();
+            showSection('dashboard');
+        }
+
+        // ========== EVENT LISTENERS ==========
+        function setupEventListeners() {
+            // Login form
+            document.getElementById('loginForm').addEventListener('submit', login);
+
+            // Navigation
+            document.querySelectorAll('.nav-link[data-section]').forEach(link => {
+                link.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    showSection(this.dataset.section);
+
+                    // Update active state
+                    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+
+            // Movement form calculations
+            const quantityInput = document.getElementById('movementQuantity');
+            const priceInput = document.getElementById('movementPrice');
+            const totalInput = document.getElementById('movementTotal');
+
+            function calculateTotal() {
+                const quantity = parseFloat(quantityInput.value) || 0;
+                const price = parseFloat(priceInput.value) || 0;
+                totalInput.value = (quantity * price).toFixed(2);
+            }
+
+            quantityInput.addEventListener('input', calculateTotal);
+            priceInput.addEventListener('input', calculateTotal);
+
+            // Transfer form warehouse selection and calculations
+            document.getElementById('movementType').addEventListener('change', updateMovementWarehouses);
+
+            // Transfer form calculations
+            const transferQuantityInput = document.getElementById('transferQuantity');
+            const transferPriceInput = document.getElementById('transferPrice');
+            const transferTotalInput = document.getElementById('transferTotal');
+
+            function calculateTransferTotal() {
+                const quantity = parseFloat(transferQuantityInput.value) || 0;
+                const price = parseFloat(transferPriceInput.value) || 0;
+                transferTotalInput.value = (quantity * price).toFixed(2);
+            }
+
+            transferQuantityInput.addEventListener('input', calculateTransferTotal);
+            transferPriceInput.addEventListener('input', calculateTransferTotal);
+
+            // Audit filters
+            document.getElementById('auditUserFilter').addEventListener('change', filterAuditLog);
+            document.getElementById('auditActionFilter').addEventListener('change', filterAuditLog);
+            document.getElementById('auditDateFilter').addEventListener('change', filterAuditLog);
+
+            // Keyboard shortcuts
+            document.addEventListener('keydown', function (e) {
+                if (e.ctrlKey && e.key === 's') {
+                    e.preventDefault();
+                    exportData();
+                }
+                if (e.key === 'Escape') {
+                    const openModal = document.querySelector('.modal.show');
+                    if (openModal) {
+                        bootstrap.Modal.getInstance(openModal).hide();
+                    }
+                    // Close mobile sidebars
+                    closeMobileSidebars();
+                }
+            });
+
+            // Click outside to close mobile sidebars
+            document.addEventListener('click', function (e) {
+                const sidebar = document.getElementById('sidebar');
+                const rightSidebar = document.getElementById('rightSidebar');
+                const mobileNavbar = document.querySelector('.mobile-navbar');
+
+                if (window.innerWidth <= 768) {
+                    // Close left sidebar if clicking outside
+                    if (sidebar.classList.contains('show') &&
+                        !sidebar.contains(e.target) &&
+                        !mobileNavbar.contains(e.target)) {
+                        sidebar.classList.remove('show');
+                        document.getElementById('mobileOverlay').classList.remove('show');
+                    }
+
+                    // Close right sidebar if clicking outside
+                    if (rightSidebar.classList.contains('show') &&
+                        !rightSidebar.contains(e.target) &&
+                        !mobileNavbar.contains(e.target)) {
+                        rightSidebar.classList.remove('show');
+                        document.getElementById('mobileOverlay').classList.remove('show');
+                    }
+                } else {
+                    // Desktop: Auto-collapse sidebar when clicking outside
+                    if (!sidebar.contains(e.target) && !sidebar.classList.contains('force-expand')) {
+                        sidebar.classList.add('collapsed');
+                        document.getElementById('toggleIcon').className = 'fas fa-chevron-right';
+                    }
+                }
+            });
+        }
+
+        // ========== SECTION MANAGEMENT ==========
+        function showSection(sectionName) {
+            // Hide all sections
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.add('hidden');
+            });
+
+            // Show selected section
+            document.getElementById(sectionName).classList.remove('hidden');
+
+            // Load section-specific data
+            switch (sectionName) {
+                case 'dashboard':
+                    updateDashboard();
+                    break;
+                case 'movements':
+                    loadMovements();
+                    break;
+                case 'transfers':
+                    loadTransfers();
+                    break;
+                case 'reports':
+                    loadReports();
+                    break;
+                case 'warehouses':
+                    loadWarehouses();
+                    break;
+                case 'users':
+                    if (currentUser.role === 'admin') loadUsers();
+                    break;
+                case 'audit':
+                    loadAuditLog();
+                    break;
+            }
+        }
+
+        // ========== DASHBOARD FUNCTIONS ==========
+        function updateDashboard() {
+            const physicalWarehouses = systemData.warehouses.filter(w => w.type === 'physical' || w.type === 'transit');
+            const totalStock = physicalWarehouses.reduce((sum, w) => sum + w.stock, 0);
+            const totalValue = physicalWarehouses.reduce((sum, w) => sum + w.value, 0);
+
+            const avgPrice = totalStock > 0 ? totalValue / totalStock : 0;
+
+            const today = new Date().toISOString().split('T')[0];
+            const todayMovements = systemData.movements.filter(m => m.date === today).length;
+
+            document.getElementById('totalStock').textContent = totalStock.toLocaleString();
+            document.getElementById('totalValue').textContent = `S/ ${totalValue.toLocaleString('es-PE', { minimumFractionDigits: 2 })}`;
+            document.getElementById('totalMovements').textContent = todayMovements;
+            document.getElementById('avgPrice').textContent = `S/ ${avgPrice.toFixed(2)}`;
+
+            updateWarehouseStats();
+
+            // Solo actualizar actividad reciente si el usuario es admin
+            if (currentUser.role === 'admin') {
+                updateRecentActivity();
+            }
+        }
+
+        function updateWarehouseStats() {
+            const userWarehouses = getUserWarehouses();
+            const statsHtml = userWarehouses.map(warehouse => `
+            <div class="row align-items-center mb-3 p-3 border-start border-4 border-primary bg-light rounded">
+                <div class="col-md-6">
+                    <h6 class="mb-1 fw-bold">${warehouse.name}</h6>
+                    <small class="text-muted">
+                        <i class="fas fa-user me-1"></i>${warehouse.manager}
+                        <span class="ms-3">
+                            <i class="fas fa-map-marker-alt me-1"></i>${warehouse.location}
+                        </span>
+                    </small>
+                </div>
+                <div class="col-md-3 text-center">
+                    <span class="badge bg-primary fs-6">${warehouse.stock} pares</span>
+                </div>
+                <div class="col-md-3 text-center">
+                    <span class="badge bg-success fs-6">S/ ${warehouse.value.toFixed(2)}</span>
+                </div>
+            </div>
+        `).join('');
+
+            document.getElementById('warehouseStats').innerHTML = statsHtml || '<p class="text-muted text-center">No hay almacenes disponibles</p>';
+        }
+
+        function updateRecentActivity() {
+            const recentLogs = systemData.auditLog
+                .slice(-8)
+                .reverse()
+                .map(log => `
+                <div class="activity-item">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <strong class="text-primary">${log.user}</strong>
+                            <span class="badge bg-secondary ms-2">${log.action}</span>
+                            <div class="mt-1">
+                                <small class="text-muted">${log.details}</small>
+                            </div>
+                        </div>
+                        <small class="text-muted">${formatDateTime(log.date)}</small>
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('recentActivity').innerHTML = recentLogs ||
+                '<div class="text-center p-4"><i class="fas fa-clock fa-2x text-muted mb-2"></i><p class="text-muted">No hay actividad reciente</p></div>';
+        }
+
+        // ========== MOVEMENTS FUNCTIONS ==========
+        function loadMovements() {
+            updateMovementWarehouses();
+            const userWarehouses = getUserWarehouses().map(w => w.id);
+            const userMovements = systemData.movements.filter(m =>
+                (currentUser.role === 'admin' || currentUser.warehouses.includes('all')) ||
+                userWarehouses.includes(m.from) || userWarehouses.includes(m.to)
+            );
+
+            const movementsHtml = userMovements.map(movement => `
+            <tr>
+                <td><i class="fas fa-calendar me-2"></i>${formatDate(movement.date)}</td>
+                <td><span class="badge bg-${getMovementBadgeColor(movement.type)}">${getMovementTypeName(movement.type)}</span></td>
+                <td><i class="fas fa-warehouse me-2"></i>${getWarehouseName(movement.from)}</td>
+                <td><i class="fas fa-arrow-right me-2"></i>${getWarehouseName(movement.to)}</td>
+                <td><strong>${movement.quantity}</strong> pares</td>
+                <td><strong>S/ ${movement.value.toFixed(2)}</strong></td>
+                <td><i class="fas fa-user me-2"></i>${movement.user}</td>
+            </tr>
+        `).join('');
+
+            document.getElementById('movementsTable').innerHTML = movementsHtml ||
+                '<tr><td colspan="7" class="text-center text-muted">No hay movimientos registrados</td></tr>';
+        }
+
+        function updateMovementWarehouses() {
+            const type = document.getElementById('movementType').value;
+            const warehouseSelect = document.getElementById('movementWarehouse');
+
+            let availableWarehouses = [];
+
+            switch (type) {
+                case 'production':
+                    // Solo almacén central y solo si el usuario tiene permisos
+                    if (canAccessWarehouse('central') || currentUser.role === 'admin') {
+                        const centralWarehouse = systemData.warehouses.find(w => w.id === 'central');
+                        if (centralWarehouse) {
+                            availableWarehouses = [centralWarehouse];
+                        }
+                    }
+                    break;
+                case 'sale':
+                case 'loss':
+                case 'damage':
+                    availableWarehouses = getUserWarehouses().filter(w => w.type === 'physical' && w.stock > 0);
+                    break;
+                case 'return':
+                    availableWarehouses = getUserWarehouses().filter(w => w.type === 'physical');
+                    break;
+                default:
+                    availableWarehouses = getUserWarehouses();
+            }
+
+            warehouseSelect.innerHTML = '<option value="">Seleccionar almacén...</option>' +
+                availableWarehouses.map(w => `<option value="${w.id}">${w.name} (${w.stock} pares)</option>`).join('');
+        }
+
+        function createMovement() {
+            const type = document.getElementById('movementType').value;
+            const warehouse = document.getElementById('movementWarehouse').value;
+            const quantity = parseInt(document.getElementById('movementQuantity').value);
+            const price = parseFloat(document.getElementById('movementPrice').value);
+            const notes = document.getElementById('movementNotes').value;
+
+            if (!type || !warehouse || !quantity || !price) {
+                showAlert('danger', 'Por favor complete todos los campos requeridos');
+                return;
+            }
+
+            // Validaciones especiales para producción
+            if (type === 'production') {
+                if (warehouse !== 'central') {
+                    showAlert('danger', 'La producción solo puede realizarse al Almacén Central');
+                    return;
+                }
+                if (!canAccessWarehouse('central') && currentUser.role !== 'admin') {
+                    showAlert('danger', 'Solo el encargado del Almacén Central o el Administrador pueden realizar producciones');
+                    return;
+                }
+            }
+
+            if (!canAccessWarehouse(warehouse)) {
+                showAlert('danger', 'No tiene permisos para este almacén');
+                return;
+            }
+
+            if (['sale', 'loss', 'damage'].includes(type)) {
+                const warehouseData = systemData.warehouses.find(w => w.id === warehouse);
+                if (warehouseData.stock < quantity) {
+                    showAlert('danger', 'Stock insuficiente en el almacén');
+                    return;
+                }
+            }
+
+            const movement = {
+                id: Date.now(),
+                date: new Date().toISOString().split('T')[0],
+                type: type,
+                from: getMovementFrom(type, warehouse),
+                to: getMovementTo(type, warehouse),
+                quantity: quantity,
+                price: price,
+                value: quantity * price,
+                user: currentUser.username,
+                notes: notes
+            };
+
+            executeMovement(movement);
+
+            addAuditLog('movement', `${getMovementTypeName(type)} - ${quantity} pares - ${getWarehouseName(warehouse)}`);
+
+            document.getElementById('movementForm').reset();
+            bootstrap.Modal.getInstance(document.getElementById('movementModal')).hide();
+
+            showAlert('success', '✅ Movimiento creado exitosamente');
+            updateDashboard();
+
+            if (!document.getElementById('movements').classList.contains('hidden')) {
+                loadMovements();
+            }
+        }
+
+        // ========== TRANSFERS FUNCTIONS ==========
+        function loadTransfers() {
+            updateTransferWarehouses();
+            const userWarehouses = getUserWarehouses().map(w => w.id);
+            const userTransfers = systemData.transfers.filter(t =>
+                (currentUser.role === 'admin' || currentUser.warehouses.includes('all')) ||
+                userWarehouses.includes(t.from) || userWarehouses.includes(t.to)
+            );
+
+            const transfersHtml = userTransfers.map(transfer => `
+            <tr>
+                <td><i class="fas fa-calendar me-2"></i>${formatDate(transfer.date)}</td>
+                <td><i class="fas fa-warehouse me-2"></i>${getWarehouseName(transfer.from)}</td>
+                <td><i class="fas fa-arrow-right me-2"></i>${getWarehouseName(transfer.to)}</td>
+                <td><strong>${transfer.quantity}</strong> pares</td>
+                <td><strong>S/ ${(transfer.value || 0).toFixed(2)}</strong></td>
+                <td><span class="badge bg-${transfer.status === 'completed' ? 'success' : 'warning'}">${transfer.status === 'completed' ? 'Completada' : 'Pendiente'}</span></td>
+                <td>
+                    ${transfer.status === 'pending' && canConfirmTransfer(transfer) ?
+                    `<button class="btn btn-sm btn-success" onclick="confirmTransfer(${transfer.id})">
+                            <i class="fas fa-check me-1"></i>Confirmar
+                        </button>` :
+                    '<span class="text-muted"><i class="fas fa-ban me-1"></i>No disponible</span>'
+                }
+                </td>
+            </tr>
+        `).join('');
+
+            document.getElementById('transfersTable').innerHTML = transfersHtml ||
+                '<tr><td colspan="7" class="text-center text-muted">No hay transferencias registradas</td></tr>';
+        }
+
+        function updateTransferWarehouses() {
+            const userWarehouses = getUserWarehouses().filter(w => w.type === 'physical');
+
+            // Para almacén origen: solo almacenes que el usuario puede gestionar
+            const originOptions = userWarehouses.map(w => `<option value="${w.id}">${w.name} (${w.stock} pares)</option>`).join('');
+            document.getElementById('transferFrom').innerHTML = '<option value="">Seleccionar origen...</option>' + originOptions;
+
+            // Para almacén destino: todos los almacenes físicos EXCEPTO el origen seleccionado
+            const allPhysicalWarehouses = systemData.warehouses.filter(w => w.type === 'physical');
+
+            // Event listener para filtrar destinos cuando se seleccione origen
+            document.getElementById('transferFrom').addEventListener('change', function () {
+                const selectedOrigin = this.value;
+                const destinationSelect = document.getElementById('transferTo');
+
+                if (selectedOrigin) {
+                    // Filtrar opciones de destino excluyendo el origen seleccionado
+                    const filteredDestinations = allPhysicalWarehouses
+                        .filter(w => w.id !== selectedOrigin)
+                        .map(w => `<option value="${w.id}">${w.name}</option>`).join('');
+
+                    destinationSelect.innerHTML = '<option value="">Seleccionar destino...</option>' + filteredDestinations;
+
+                    // Actualizar stock disponible
+                    updateAvailableStock();
+                } else {
+                    destinationSelect.innerHTML = '<option value="">Seleccionar destino...</option>';
+                    document.getElementById('availableStock').textContent = '0';
+                }
+            });
+        }
+
+        function updateAvailableStock() {
+            const warehouseId = document.getElementById('transferFrom').value;
+            const warehouse = systemData.warehouses.find(w => w.id === warehouseId);
+
+            if (warehouse) {
+                document.getElementById('availableStock').textContent = warehouse.stock;
+
+                // Calcular y mostrar precio promedio actual
+                const avgPrice = warehouse.stock > 0 ? warehouse.value / warehouse.stock : 0;
+                document.getElementById('avgPriceDisplay').textContent = `S/ ${avgPrice.toFixed(2)}`;
+
+                // Sugerir el precio promedio como valor inicial
+                document.getElementById('transferPrice').value = avgPrice.toFixed(2);
+
+                // Recalcular total si hay cantidad
+                const quantity = parseFloat(document.getElementById('transferQuantity').value) || 0;
+                if (quantity > 0) {
+                    document.getElementById('transferTotal').value = (quantity * avgPrice).toFixed(2);
+                }
+            } else {
+                document.getElementById('availableStock').textContent = '0';
+                document.getElementById('avgPriceDisplay').textContent = 'S/ 0.00';
+                document.getElementById('transferPrice').value = '';
+                document.getElementById('transferTotal').value = '';
+            }
+        }
+
+        function createTransfer() {
+            const from = document.getElementById('transferFrom').value;
+            const to = document.getElementById('transferTo').value;
+            const quantity = parseInt(document.getElementById('transferQuantity').value);
+            const price = parseFloat(document.getElementById('transferPrice').value);
+            const notes = document.getElementById('transferNotes').value;
+
+            if (!from || !to || !quantity || !price) {
+                showAlert('danger', 'Por favor complete todos los campos requeridos');
+                return;
+            }
+
+            if (from === to) {
+                showAlert('danger', 'El almacén origen y destino no pueden ser el mismo');
+                return;
+            }
+
+            if (!canAccessWarehouse(from)) {
+                showAlert('danger', 'No tiene permisos para el almacén origen');
+                return;
+            }
+
+            const fromWarehouse = systemData.warehouses.find(w => w.id === from);
+            if (fromWarehouse.stock < quantity) {
+                showAlert('danger', 'Stock insuficiente en el almacén origen');
+                return;
+            }
+
+            const transfer = {
+                id: Date.now(),
+                date: new Date().toISOString().split('T')[0],
+                from: from,
+                to: to,
+                quantity: quantity,
+                price: price,
+                value: quantity * price,
+                status: 'pending',
+                user: currentUser.username,
+                notes: notes
+            };
+
+            // Usar el precio especificado por el usuario en lugar del promedio
+            executeTransfer(from, 'en-transito', quantity, price);
+
+            systemData.transfers.push(transfer);
+            saveSystemData();
+
+            addAuditLog('transfer', `Transferencia iniciada: ${quantity} pares de ${getWarehouseName(from)} a ${getWarehouseName(to)} - Valor: S/ ${transfer.value.toFixed(2)}`);
+
+            document.getElementById('transferForm').reset();
+            bootstrap.Modal.getInstance(document.getElementById('transferModal')).hide();
+
+            showAlert('success', '🚚 Transferencia iniciada exitosamente');
+            updateDashboard();
+
+            if (!document.getElementById('transfers').classList.contains('hidden')) {
+                loadTransfers();
+            }
+        }
+
+        function confirmTransfer(transferId) {
+            const transfer = systemData.transfers.find(t => t.id === transferId);
+            if (!transfer || transfer.status !== 'pending') {
+                showAlert('danger', 'Transferencia no encontrada o ya confirmada');
+                return;
+            }
+
+            if (!canConfirmTransfer(transfer)) {
+                showAlert('danger', 'No tiene permisos para confirmar esta transferencia');
+                return;
+            }
+
+            const transitWarehouse = systemData.warehouses.find(w => w.id === 'en-transito');
+            if (transitWarehouse.stock < transfer.quantity) {
+                showAlert('danger', 'Error: No hay suficiente stock en tránsito');
+                return;
+            }
+
+            // Usar el precio original de la transferencia
+            const transferPrice = transfer.price || (transitWarehouse.value / transitWarehouse.stock);
+            executeTransfer('en-transito', transfer.to, transfer.quantity, transferPrice);
+
+            transfer.status = 'completed';
+            saveSystemData();
+
+            addAuditLog('transfer', `Transferencia confirmada: ${transfer.quantity} pares recibidos en ${getWarehouseName(transfer.to)} - Valor: S/ ${(transfer.quantity * transferPrice).toFixed(2)}`);
+
+            showAlert('success', '✅ Transferencia confirmada exitosamente');
+            updateDashboard();
+            loadTransfers();
+        }
+
+        // ========== REPORTS FUNCTIONS ==========
+        function loadReports() {
+            loadWarehouseReport();
+            loadAccountingVerification();
+        }
+
+        function loadWarehouseReport() {
+            const userWarehouses = getUserWarehouses();
+            const reportHtml = userWarehouses.map(warehouse => {
+                const entries = systemData.movements.filter(m => m.to === warehouse.id).reduce((sum, m) => sum + m.quantity, 0);
+                const exits = systemData.movements.filter(m => m.from === warehouse.id).reduce((sum, m) => sum + m.quantity, 0);
+
+                return `
+                <div class="card mb-3 border-start border-4 border-primary">
+                    <div class="card-body">
+                        <h6 class="card-title">
+                            <i class="fas fa-warehouse me-2"></i>${warehouse.name}
+                        </h6>
+                        <div class="row text-center">
+                            <div class="col-3">
+                                <div class="p-2 bg-success bg-opacity-10 rounded">
+                                    <small class="text-muted d-block">Entradas</small>
+                                    <strong class="text-success fs-5">${entries}</strong>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="p-2 bg-danger bg-opacity-10 rounded">
+                                    <small class="text-muted d-block">Salidas</small>
+                                    <strong class="text-danger fs-5">${exits}</strong>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="p-2 bg-primary bg-opacity-10 rounded">
+                                    <small class="text-muted d-block">Stock</small>
+                                    <strong class="text-primary fs-5">${warehouse.stock}</strong>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="p-2 bg-info bg-opacity-10 rounded">
+                                    <small class="text-muted d-block">Valor</small>
+                                    <strong class="text-info fs-6">S/ ${warehouse.value.toFixed(2)}</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            }).join('');
+
+            document.getElementById('warehouseReport').innerHTML = reportHtml;
+        }
+
+        function loadAccountingVerification() {
+            const totalEntries = systemData.movements.reduce((sum, m) => sum + m.quantity, 0);
+            const totalExits = systemData.movements.reduce((sum, m) => sum + m.quantity, 0);
+            const isBalanced = Math.abs(totalEntries - totalExits) < 0.01;
+
+            const verificationHtml = `
+            <div class="alert alert-${isBalanced ? 'success' : 'danger'} border-0">
+                <h6><i class="fas fa-${isBalanced ? 'check-circle' : 'exclamation-triangle'} me-2"></i> 
+                    ${isBalanced ? 'Sistema Contable Balanceado' : 'Sistema Contable Desbalanceado'}
+                </h6>
+                <div class="row mt-3">
+                    <div class="col-4 text-center">
+                        <div class="p-2 bg-light rounded">
+                            <small class="text-muted d-block">Total Entradas</small>
+                            <strong class="text-success">${totalEntries} pares</strong>
+                        </div>
+                    </div>
+                    <div class="col-4 text-center">
+                        <div class="p-2 bg-light rounded">
+                            <small class="text-muted d-block">Total Salidas</small>
+                            <strong class="text-danger">${totalExits} pares</strong>
+                        </div>
+                    </div>
+                    <div class="col-4 text-center">
+                        <div class="p-2 bg-light rounded">
+                            <small class="text-muted d-block">Diferencia</small>
+                            <strong class="${isBalanced ? 'text-success' : 'text-danger'}">${(totalEntries - totalExits).toFixed(2)} pares</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-4">
+                <h6><i class="fas fa-chart-pie me-2"></i>Resumen por Tipo de Almacén:</h6>
+                ${['physical', 'virtual', 'transit'].map(type => {
+                const warehouses = systemData.warehouses.filter(w => w.type === type);
+                const totalStock = warehouses.reduce((sum, w) => sum + w.stock, 0);
+                const totalValue = warehouses.reduce((sum, w) => sum + w.value, 0);
+
+                return `
+                        <div class="row align-items-center mb-2 p-2 border rounded">
+                            <div class="col-4">
+                                <strong class="text-primary">
+                                    <i class="fas fa-${type === 'physical' ? 'warehouse' : type === 'virtual' ? 'cloud' : 'truck'} me-2"></i>
+                                    ${type === 'physical' ? 'Físicos' : type === 'virtual' ? 'Virtuales' : 'En Tránsito'}
+                                </strong>
+                            </div>
+                            <div class="col-4 text-center">
+                                <span class="badge bg-primary">${totalStock} pares</span>
+                            </div>
+                            <div class="col-4 text-center">
+                                <span class="badge bg-success">S/ ${totalValue.toFixed(2)}</span>
+                            </div>
+                        </div>
+                    `;
+            }).join('')}
+            </div>
+        `;
+
+            document.getElementById('accountingVerification').innerHTML = verificationHtml;
+        }
+
+        // ========== WAREHOUSES FUNCTIONS ==========
+        function loadWarehouses() {
+            const userWarehouses = getUserWarehouses();
+            const warehousesHtml = userWarehouses.map(warehouse => `
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="p-3 bg-primary bg-opacity-10 rounded-circle me-3">
+                                <i class="fas fa-warehouse fa-2x text-primary"></i>
+                            </div>
+                            <div>
+                                <h5 class="card-title mb-1">${warehouse.name}</h5>
+                                <span class="badge bg-${warehouse.type === 'physical' ? 'success' : warehouse.type === 'virtual' ? 'info' : 'warning'}">
+                                    ${warehouse.type === 'physical' ? 'Físico' : warehouse.type === 'virtual' ? 'Virtual' : 'Tránsito'}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="row">
+                                <div class="col-6">
+                                    <small class="text-muted d-block">Encargado</small>
+                                    <strong><i class="fas fa-user me-1"></i>${warehouse.manager}</strong>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted d-block">Ubicación</small>
+                                    <strong><i class="fas fa-map-marker-alt me-1"></i>${warehouse.location}</strong>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <div class="p-3 bg-primary bg-opacity-10 rounded">
+                                    <h4 class="text-primary mb-0">${warehouse.stock}</h4>
+                                    <small class="text-muted">Pares en Stock</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="p-3 bg-success bg-opacity-10 rounded">
+                                    <h4 class="text-success mb-0">S/ ${warehouse.value.toFixed(2)}</h4>
+                                    <small class="text-muted">Valor Total</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+
+            document.getElementById('warehouseCards').innerHTML = warehousesHtml;
+        }
+
+        // ========== USERS FUNCTIONS ==========
+        function loadUsers() {
+            if (currentUser.role !== 'admin') return;
+
+            const usersHtml = systemData.users.map(user => `
+            <tr>
+                <td>
+                    <div class="d-flex align-items-center">
+                        <div class="p-2 bg-primary bg-opacity-10 rounded-circle me-3">
+                            <i class="fas fa-user text-primary"></i>
+                        </div>
+                        <strong>${user.username}</strong>
+                    </div>
+                </td>
+                <td>${user.name}</td>
+                <td><span class="badge bg-info">${getRoleName(user.role)}</span></td>
+                <td>
+                    <small class="text-muted">
+                        ${user.warehouses.includes('all') ?
+                    '<span class="badge bg-warning">Todos los almacenes</span>' :
+                    user.warehouses.map(w => `<span class="badge bg-secondary me-1">${getWarehouseName(w)}</span>`).join('')
+                }
+                    </small>
+                </td>
+                <td><span class="badge bg-${user.active ? 'success' : 'danger'}">${user.active ? 'Activo' : 'Inactivo'}</span></td>
+            </tr>
+        `).join('');
+
+            document.getElementById('usersTable').innerHTML = usersHtml;
+        }
+
+        // ========== AUDIT FUNCTIONS ==========
+        function loadAuditLog() {
+            populateAuditFilters();
+            filterAuditLog();
+        }
+
+        function populateAuditFilters() {
+            const users = [...new Set(systemData.auditLog.map(log => log.user))];
+            const userOptions = users.map(user => `<option value="${user}">${user}</option>`).join('');
+            document.getElementById('auditUserFilter').innerHTML = '<option value="">Todos los usuarios</option>' + userOptions;
+        }
+
+        function filterAuditLog() {
+            const userFilter = document.getElementById('auditUserFilter').value;
+            const actionFilter = document.getElementById('auditActionFilter').value;
+            const dateFilter = document.getElementById('auditDateFilter').value;
+
+            let filteredLogs = systemData.auditLog;
+
+            if (userFilter) {
+                filteredLogs = filteredLogs.filter(log => log.user === userFilter);
+            }
+
+            if (actionFilter) {
+                filteredLogs = filteredLogs.filter(log => log.action === actionFilter);
+            }
+
+            if (dateFilter) {
+                filteredLogs = filteredLogs.filter(log => log.date.startsWith(dateFilter));
+            }
+
+            const auditHtml = filteredLogs.reverse().map(log => `
+            <tr>
+                <td><i class="fas fa-clock me-2"></i>${formatDateTime(log.date)}</td>
+                <td>
+                    <div class="d-flex align-items-center">
+                        <div class="p-1 bg-primary bg-opacity-10 rounded-circle me-2">
+                            <i class="fas fa-user text-primary"></i>
+                        </div>
+                        <strong>${log.user}</strong>
+                    </div>
+                </td>
+                <td><span class="badge bg-secondary">${log.action}</span></td>
+                <td>${log.details}</td>
+            </tr>
+        `).join('');
+
+            document.getElementById('auditTable').innerHTML = auditHtml ||
+                '<tr><td colspan="4" class="text-center text-muted">No se encontraron registros</td></tr>';
+        }
+
+        // ========== BUSINESS LOGIC FUNCTIONS ==========
+        function executeMovement(movement) {
+            systemData.movements.push(movement);
+
+            const fromWarehouse = systemData.warehouses.find(w => w.id === movement.from);
+            const toWarehouse = systemData.warehouses.find(w => w.id === movement.to);
+
+            if (fromWarehouse && movement.from !== 'sistema') {
+                fromWarehouse.stock -= movement.quantity;
+                fromWarehouse.value -= movement.value;
+            }
+
+            if (toWarehouse && movement.to !== 'sistema') {
+                toWarehouse.stock += movement.quantity;
+                toWarehouse.value += movement.value;
+            }
+
+            saveSystemData();
+        }
+
+        function executeTransfer(from, to, quantity, price) {
+            const fromWarehouse = systemData.warehouses.find(w => w.id === from);
+            const toWarehouse = systemData.warehouses.find(w => w.id === to);
+
+            if (fromWarehouse) {
+                fromWarehouse.stock -= quantity;
+                fromWarehouse.value -= quantity * price;
+            }
+
+            if (toWarehouse) {
+                toWarehouse.stock += quantity;
+                toWarehouse.value += quantity * price;
+            }
+
+            saveSystemData();
+        }
+
+        function getMovementFrom(type, warehouse) {
+            switch (type) {
+                case 'production': return 'sistema';
+                case 'sale': return warehouse;
+                case 'return': return 'ventas-realizadas';
+                case 'loss': return warehouse;
+                case 'damage': return warehouse;
+                default: return warehouse;
+            }
+        }
+
+        function getMovementTo(type, warehouse) {
+            switch (type) {
+                case 'production': return warehouse;
+                case 'sale': return 'ventas-realizadas';
+                case 'return': return warehouse;
+                case 'loss': return 'productos-perdidos';
+                case 'damage': return 'productos-dañados';
+                default: return warehouse;
+            }
+        }
+
+        // ========== PERMISSION FUNCTIONS ==========
+        function getUserWarehouses() {
+            if (currentUser.warehouses.includes('all')) {
+                return systemData.warehouses;
+            }
+            return systemData.warehouses.filter(w => currentUser.warehouses.includes(w.id));
+        }
+
+        function canAccessWarehouse(warehouseId) {
+            return currentUser.warehouses.includes('all') || currentUser.warehouses.includes(warehouseId);
+        }
+
+        function canConfirmTransfer(transfer) {
+            return canAccessWarehouse(transfer.to) && ['manager', 'admin'].includes(currentUser.role);
+        }
+
+        // ========== UTILITY FUNCTIONS ==========
+        function getWarehouseName(warehouseId) {
+            if (warehouseId === 'sistema') return 'Sistema';
+            const warehouse = systemData.warehouses.find(w => w.id === warehouseId);
+            return warehouse ? warehouse.name : warehouseId;
+        }
+
+        function getMovementTypeName(type) {
+            const types = {
+                'production': 'Producción',
+                'sale': 'Venta',
+                'return': 'Devolución',
+                'loss': 'Pérdida',
+                'damage': 'Daño',
+                'transfer': 'Transferencia'
+            };
+            return types[type] || type;
+        }
+
+        function getMovementBadgeColor(type) {
+            const colors = {
+                'production': 'success',
+                'sale': 'primary',
+                'return': 'info',
+                'loss': 'warning',
+                'damage': 'danger',
+                'transfer': 'secondary'
+            };
+            return colors[type] || 'secondary';
+        }
+
+        function getRoleName(role) {
+            const roles = {
+                'admin': 'Administrador',
+                'manager': 'Encargado',
+                'operator': 'Operador',
+                'viewer': 'Solo Consulta'
+            };
+            return roles[role] || role;
+        }
+
+        function addAuditLog(action, details) {
+            systemData.auditLog.push({
+                id: Date.now(),
+                date: new Date().toISOString(),
+                user: currentUser.username,
+                action: action,
+                details: details
+            });
+            saveSystemData();
+        }
+
+        function formatDate(dateString) {
+            return new Date(dateString).toLocaleDateString('es-PE');
+        }
+
+        function formatDateTime(dateString) {
+            return new Date(dateString).toLocaleString('es-PE', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function showAlert(type, message) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+            alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 350px; box-shadow: 0 8px 25px rgba(0,0,0,0.15);';
+            alertDiv.innerHTML = `
+            <div class="d-flex align-items-center">
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'danger' ? 'exclamation-triangle' : 'info-circle'} me-2"></i>
+                <div>${message}</div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+
+            document.body.appendChild(alertDiv);
+
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.parentNode.removeChild(alertDiv);
+                }
+            }, 5000);
+        }
+
+        // ========== ADMIN FUNCTIONS ==========
+        function exportData() {
+            if (currentUser.role !== 'admin') {
+                showAlert('danger', 'Solo los administradores pueden exportar datos');
+                return;
+            }
+
+            const dataToExport = {
+                exportDate: new Date().toISOString(),
+                exportedBy: currentUser.username,
+                version: '2.0',
+                data: systemData
+            };
+
+            const dataStr = JSON.stringify(dataToExport, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(dataBlob);
+            link.download = `calzados-mirla-backup-${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+
+            addAuditLog('export', 'Datos exportados exitosamente');
+            showAlert('success', '📁 Datos exportados exitosamente');
+        }
+
+        function clearAllData() {
+            if (currentUser.role !== 'admin') {
+                showAlert('danger', 'Solo los administradores pueden limpiar datos');
+                return;
+            }
+
+            if (confirm('⚠️ ¿Está seguro de que desea limpiar todos los datos?\n\nEsta acción eliminará:\n- Todos los movimientos\n- Todas las transferencias\n- Todo el historial de auditoría\n\nEsta acción NO SE PUEDE DESHACER.')) {
+                localStorage.removeItem('calzadosMirlaData');
+                addAuditLog('clear', 'Todos los datos fueron limpiados');
+                showAlert('success', 'Datos limpiados exitosamente. Recargando sistema...');
+                setTimeout(() => location.reload(), 2000);
+            }
+        }
+
+        // ========== SESSION TIMEOUT AND ADMIN CONTROLS ==========
+        function initializeSession() {
+            if (currentUser) {
+                startSessionTimeout();
+                addAdminControls();
+            }
+        }
+
+        function startSessionTimeout() {
+            let timeout;
+
+            function resetTimeout() {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => {
+                    showAlert('warning', '⏰ Su sesión expirará en 2 minutos por inactividad');
+                    setTimeout(() => {
+                        showAlert('info', 'Sesión cerrada por inactividad');
+                        logout();
+                    }, 120000); // 2 minutes
+                }, 1800000); // 30 minutes
+            }
+
+            document.addEventListener('click', resetTimeout);
+            document.addEventListener('keypress', resetTimeout);
+            document.addEventListener('scroll', resetTimeout);
+
+            resetTimeout();
+        }
+
+        function addAdminControls() {
+            if (currentUser && currentUser.role === 'admin') {
+                const sidebar = document.querySelector('.sidebar-nav');
+                const adminControls = document.createElement('li');
+                adminControls.innerHTML = `
+                <div class="px-3 mt-4 border-top border-secondary pt-3">
+                    <h6 class="text-white-50 mb-3">
+                        <i class="fas fa-tools me-2"></i>Controles Admin
+                    </h6>
+                    <button class="btn btn-outline-light btn-sm w-100 mb-2" onclick="clearAllData()">
+                        <i class="fas fa-trash me-2"></i>Limpiar Datos
+                    </button>
+                </div>
+            `;
+                sidebar.appendChild(adminControls);
+            }
+        }
+
+        // ========== SIDEBAR AND MOBILE NAVIGATION ==========
+        function initializeSidebar() {
+            // Initialize sidebar as collapsed on desktop
+            if (window.innerWidth > 768) {
+                const sidebar = document.getElementById('sidebar');
+                sidebar.classList.add('collapsed');
+                document.getElementById('toggleIcon').className = 'fas fa-chevron-right';
+            }
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const toggleIcon = document.getElementById('toggleIcon');
+
+            if (sidebar.classList.contains('collapsed')) {
+                sidebar.classList.remove('collapsed');
+                sidebar.classList.add('force-expand');
+                toggleIcon.className = 'fas fa-chevron-left';
+            } else {
+                sidebar.classList.add('collapsed');
+                sidebar.classList.remove('force-expand');
+                toggleIcon.className = 'fas fa-chevron-right';
+            }
+        }
+
+        function toggleMobileSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobileOverlay');
+            const rightSidebar = document.getElementById('rightSidebar');
+
+            // Close right sidebar if open
+            rightSidebar.classList.remove('show');
+
+            // Toggle left sidebar
+            sidebar.classList.toggle('show');
+            overlay.classList.toggle('show');
+        }
+
+        function toggleRightSidebar() {
+            const rightSidebar = document.getElementById('rightSidebar');
+            const overlay = document.getElementById('mobileOverlay');
+            const sidebar = document.getElementById('sidebar');
+
+            // Close left sidebar if open
+            sidebar.classList.remove('show');
+
+            // Toggle right sidebar
+            rightSidebar.classList.toggle('show');
+            overlay.classList.toggle('show');
+        }
+
+        function closeMobileSidebars() {
+            document.getElementById('sidebar').classList.remove('show');
+            document.getElementById('rightSidebar').classList.remove('show');
+            document.getElementById('mobileOverlay').classList.remove('show');
+        }
+
+        // Handle window resize
+        window.addEventListener('resize', function () {
+            if (window.innerWidth > 768) {
+                // Desktop mode
+                closeMobileSidebars();
+                const sidebar = document.getElementById('sidebar');
+                if (!sidebar.classList.contains('force-expand')) {
+                    sidebar.classList.add('collapsed');
+                    document.getElementById('toggleIcon').className = 'fas fa-chevron-right';
+                }
+            } else {
+                // Mobile mode
+                const sidebar = document.getElementById('sidebar');
+                sidebar.classList.remove('collapsed', 'force-expand');
+                sidebar.classList.remove('show');
+            }
+        }); 
+        
+
+        // Add mobile menu button for small screens
+        document.addEventListener('DOMContentLoaded', function () {
+            if (window.innerWidth <= 768) {
+                const mainContent = document.querySelector('.main-content');
+                const mobileMenuBtn = document.createElement('button');
+                mobileMenuBtn.className = 'btn btn-primary position-fixed sidebar-toggle';
+                mobileMenuBtn.style.cssText = 'top: 20px; left: 20px; z-index: 999;';
+                mobileMenuBtn.innerHTML = '<i class="fas fa-bars"></i>';
+                mobileMenuBtn.onclick = toggleSidebar;
+                mainContent.appendChild(mobileMenuBtn);
+            }
+
+            // Initialize session after a delay
+            setTimeout(() => {
+                if (currentUser) {
+                    initializeSession();
+                }
+            }, 1000);
+        });
+
+        // ========== FINAL INITIALIZATION ==========
+        // This runs when the page loads to check and initialize the session
+        document.addEventListener('DOMContentLoaded', function () {
+            setTimeout(() => {
+                if (currentUser) {
+                    initializeSession();
+                }
+            }, 500);
+        });
+    </script>
+</body>
+
+</html>

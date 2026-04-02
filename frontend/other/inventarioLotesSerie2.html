@@ -1,0 +1,1995 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema ERP - Gestión de Inventario Avanzado</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .navbar-brand {
+            font-weight: bold;
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .scanner-input {
+            font-size: 1.2rem;
+            border: 2px solid #007bff;
+        }
+
+        .product-card {
+            transition: transform 0.2s;
+        }
+
+        .product-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .status-badge {
+            font-size: 0.8rem;
+        }
+
+        .scan-area {
+            background: #f8f9fa;
+            border: 2px dashed #dee2e6;
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .scan-area.active {
+            border-color: #007bff;
+            background: #e3f2fd;
+        }
+
+        .lot-card {
+            border-left: 4px solid #28a745;
+        }
+
+        .document-header {
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            padding: 15px;
+        }
+
+        .kardex-table {
+            font-size: 0.9rem;
+        }
+
+        .movement-pending {
+            background-color: #fff3cd;
+        }
+
+        .movement-confirmed {
+            background-color: #d1edff;
+        }
+
+        .movement-transit {
+            background-color: #f8d7da;
+        }
+
+        .location-virtual {
+            font-style: italic;
+            color: #6c757d;
+        }
+
+        .barcode-display {
+            font-family: 'Courier New', monospace;
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="#"><i class="fas fa-industry"></i> Sistema ERP Calzados</a>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text me-3" id="currentLocation">Ubicación: Almacén Principal</span>
+                <div class="dropdown">
+                    <button class="btn btn-outline-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-map-marker-alt"></i> Cambiar Ubicación
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item location-item" href="#" data-location="warehouse">Almacén
+                                Principal</a></li>
+                        <li><a class="dropdown-item location-item" href="#" data-location="store_001">Tienda Centro</a>
+                        </li>
+                        <li><a class="dropdown-item location-item" href="#" data-location="store_002">Tienda Norte</a>
+                        </li>
+                        <li><a class="dropdown-item location-item" href="#" data-location="store_003">Tienda Sur</a>
+                        </li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li><a class="dropdown-item location-item location-virtual" href="#"
+                                data-location="transit"><i>En Tránsito</i></a></li>
+                        <li><a class="dropdown-item location-item location-virtual" href="#"
+                                data-location="customers"><i>Almacén Clientes</i></a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <!-- Tabs -->
+        <ul class="nav nav-tabs" id="mainTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="scanner-tab" data-bs-toggle="tab" data-bs-target="#scanner"
+                    type="button">
+                    <i class="fas fa-qrcode"></i> Escáner
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="lots-tab" data-bs-toggle="tab" data-bs-target="#lots" type="button">
+                    <i class="fas fa-layer-group"></i> Lotes
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="products-tab" data-bs-toggle="tab" data-bs-target="#products"
+                    type="button">
+                    <i class="fas fa-box"></i> Productos
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="transfers-tab" data-bs-toggle="tab" data-bs-target="#transfers"
+                    type="button">
+                    <i class="fas fa-truck"></i> Transferencias
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="inventory-tab" data-bs-toggle="tab" data-bs-target="#inventory"
+                    type="button">
+                    <i class="fas fa-warehouse"></i> Inventario
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="kardex-tab" data-bs-toggle="tab" data-bs-target="#kardex" type="button">
+                    <i class="fas fa-chart-line"></i> Kardex
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="sales-tab" data-bs-toggle="tab" data-bs-target="#sales" type="button">
+                    <i class="fas fa-shopping-cart"></i> Ventas
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content mt-3" id="mainTabContent">
+            <!-- Scanner Tab -->
+            <div class="tab-pane fade show active" id="scanner" role="tabpanel">
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5><i class="fas fa-qrcode"></i> Escáner de Códigos de Barras</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="scan-area" id="scanArea">
+                                    <i class="fas fa-qrcode fa-3x text-muted mb-3"></i>
+                                    <h5>Escanear Código de Barras</h5>
+                                    <p class="text-muted">Haga clic aquí y escanee o ingrese el código manualmente</p>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <label for="barcodeInput" class="form-label">Código de Barras / Número de
+                                            Serie</label>
+                                        <input type="text" class="form-control scanner-input" id="barcodeInput"
+                                            placeholder="Escanee o ingrese el código...">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="quantity" class="form-label">Cantidad</label>
+                                        <input type="number" class="form-control" id="quantity" value="1" min="1">
+                                    </div>
+                                </div>
+
+                                <div class="row mt-3">
+                                    <div class="col-md-6">
+                                        <label for="operationType" class="form-label">Tipo de Operación</label>
+                                        <select class="form-select" id="operationType">
+                                            <option value="receive_lot">Recibir Lote</option>
+                                            <option value="transfer_out">Salida/Transferencia</option>
+                                            <option value="confirm_receipt">Confirmar Recepción</option>
+                                            <option value="sale">Venta</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="transferTo" class="form-label">Destino</label>
+                                        <select class="form-select" id="transferTo">
+                                            <option value="warehouse">Almacén Principal</option>
+                                            <option value="store_001">Tienda Centro</option>
+                                            <option value="store_002">Tienda Norte</option>
+                                            <option value="store_003">Tienda Sur</option>
+                                            <option value="customers">Clientes (Venta)</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <button type="button" class="btn btn-primary btn-lg w-100 mt-3" id="processBtn">
+                                    <i class="fas fa-check"></i> Procesar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6><i class="fas fa-info-circle"></i> Información del Producto</h6>
+                            </div>
+                            <div class="card-body" id="productInfo">
+                                <p class="text-muted text-center">Escanee un código para ver la información</p>
+                            </div>
+                        </div>
+
+                        <div class="card mt-3">
+                            <div class="card-header">
+                                <h6><i class="fas fa-history"></i> Operaciones Recientes</h6>
+                            </div>
+                            <div class="card-body" id="recentHistory">
+                                <p class="text-muted text-center">No hay movimientos recientes</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lots Tab -->
+            <div class="tab-pane fade" id="lots" role="tabpanel">
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5><i class="fas fa-layer-group"></i> Gestión de Lotes</h5>
+                                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#lotModal">
+                                    <i class="fas fa-plus"></i> Crear Lote
+                                </button>
+                            </div>
+                            <div class="card-body">
+                                <div id="lotsList">
+                                    <!-- Lots will be loaded here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6><i class="fas fa-chart-pie"></i> Estadísticas de Lotes</h6>
+                            </div>
+                            <div class="card-body" id="lotStats">
+                                <!-- Stats will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Products Tab -->
+            <div class="tab-pane fade" id="products" role="tabpanel">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5><i class="fas fa-box"></i> Gestión de Productos</h5>
+                        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#productModal">
+                            <i class="fas fa-plus"></i> Nuevo Producto
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="row" id="productsList">
+                            <!-- Products will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transfers Tab -->
+            <div class="tab-pane fade" id="transfers" role="tabpanel">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-truck"></i> Transferencias y Documentos</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Documento</th>
+                                        <th>Fecha</th>
+                                        <th>Origen</th>
+                                        <th>Destino</th>
+                                        <th>Estado</th>
+                                        <th>Productos</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="transfersTable">
+                                    <!-- Transfers will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Inventory Tab -->
+            <div class="tab-pane fade" id="inventory" role="tabpanel">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-warehouse"></i> Inventario por Ubicación</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Número de Serie</th>
+                                        <th>Producto</th>
+                                        <th>Lote</th>
+                                        <th>Ubicación</th>
+                                        <th>Estado</th>
+                                        <th>Fecha</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="inventoryTable">
+                                    <!-- Inventory will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Kardex Tab -->
+            <div class="tab-pane fade" id="kardex" role="tabpanel">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6>Filtros de Kardex</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label for="kardexType" class="form-label">Tipo de Kardex</label>
+                                    <select class="form-select" id="kardexType">
+                                        <option value="product">Por Producto</option>
+                                        <option value="lot">Por Lote</option>
+                                        <option value="serial">Por Número de Serie</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="kardexFilter" class="form-label">Filtrar por</label>
+                                    <select class="form-select" id="kardexFilter">
+                                        <!-- Options will be loaded dynamically -->
+                                    </select>
+                                </div>
+                                <button class="btn btn-primary w-100" id="generateKardex">
+                                    <i class="fas fa-chart-line"></i> Generar Kardex
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-9">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5><i class="fas fa-chart-line"></i> Kardex de Inventario</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-striped kardex-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Fecha</th>
+                                                <th>Referencia</th>
+                                                <th>Concepto</th>
+                                                <th colspan="3" class="text-center bg-success text-white">ENTRADAS</th>
+                                                <th colspan="3" class="text-center bg-danger text-white">SALIDAS</th>
+                                                <th colspan="3" class="text-center bg-info text-white">SALDOS</th>
+                                            </tr>
+                                            <tr>
+                                                <th></th>
+                                                <th></th>
+                                                <th></th>
+                                                <th>Cant.</th>
+                                                <th>Precio</th>
+                                                <th>Total</th>
+                                                <th>Cant.</th>
+                                                <th>Precio</th>
+                                                <th>Total</th>
+                                                <th>Cant.</th>
+                                                <th>Precio</th>
+                                                <th>Total</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="kardexTable">
+                                            <!-- Kardex will be loaded here -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sales Tab -->
+            <div class="tab-pane fade" id="sales" role="tabpanel">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-shopping-cart"></i> Historial de Ventas</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Documento</th>
+                                        <th>Número de Serie</th>
+                                        <th>Producto</th>
+                                        <th>Lote</th>
+                                        <th>Precio</th>
+                                        <th>Ubicación</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="salesTable">
+                                    <!-- Sales will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Modal -->
+    <div class="modal fade" id="productModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Nuevo Producto</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="productForm">
+                        <div class="mb-3">
+                            <label for="productCode" class="form-label">Código del Producto</label>
+                            <input type="text" class="form-control" id="productCode" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="productName" class="form-label">Nombre del Producto</label>
+                            <input type="text" class="form-control" id="productName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="productSize" class="form-label">Talla</label>
+                            <select class="form-select" id="productSize" required>
+                                <option value="">Seleccione talla</option>
+                                <option value="35">35</option>
+                                <option value="36">36</option>
+                                <option value="37">37</option>
+                                <option value="38">38</option>
+                                <option value="39">39</option>
+                                <option value="40">40</option>
+                                <option value="41">41</option>
+                                <option value="42">42</option>
+                                <option value="43">43</option>
+                                <option value="44">44</option>
+                                <option value="45">45</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="productPrice" class="form-label">Precio</label>
+                            <input type="number" class="form-control" id="productPrice" step="0.01" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="productCost" class="form-label">Costo</label>
+                            <input type="number" class="form-control" id="productCost" step="0.01" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="saveProduct">Guardar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lot Modal -->
+    <div class="modal fade" id="lotModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Crear Nuevo Lote</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="lotForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label for="lotProduct" class="form-label">Producto</label>
+                                <select class="form-select" id="lotProduct" required>
+                                    <option value="">Seleccione producto</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="lotQuantity" class="form-label">Cantidad de Pares</label>
+                                <input type="number" class="form-control" id="lotQuantity" value="12" min="1" max="50"
+                                    required>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <label for="lotSupplier" class="form-label">Proveedor</label>
+                                <input type="text" class="form-control" id="lotSupplier"
+                                    placeholder="Nombre del proveedor">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="lotManufactureDate" class="form-label">Fecha de Fabricación</label>
+                                <input type="date" class="form-control" id="lotManufactureDate">
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <label for="lotNotes" class="form-label">Notas</label>
+                            <textarea class="form-control" id="lotNotes" rows="3"
+                                placeholder="Notas adicionales sobre el lote"></textarea>
+                        </div>
+                        <div class="mt-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="autoGenerateSerials" checked>
+                                <label class="form-check-label" for="autoGenerateSerials">
+                                    Generar automáticamente números de serie
+                                </label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="createLot">Crear Lote</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transfer Document Modal -->
+    <div class="modal fade" id="transferDocModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Documento de Transferencia</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="transferDocContent">
+                    <!-- Document content will be loaded here -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-primary" onclick="window.print()">
+                        <i class="fas fa-print"></i> Imprimir
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // ==================== ENHANCED MODELS ====================
+        class Product {
+            constructor(code, name, size, price, cost, barcode = null) {
+                this.id = Date.now() + Math.random();
+                this.code = code;
+                this.name = name;
+                this.size = size;
+                this.fullCode = `${code}-${size}`;
+                this.fullName = `${name} Talla ${size}`;
+                this.price = parseFloat(price);
+                this.cost = parseFloat(cost);
+                this.barcode = barcode || this.fullCode;
+                this.createdAt = new Date();
+            }
+        }
+
+        class Lot {
+            constructor(lotNumber, productId, quantity = 12, supplier = null, manufactureDate = null, notes = null) {
+                this.id = Date.now() + Math.random();
+                this.lotNumber = lotNumber;
+                this.productId = productId;
+                this.quantity = parseInt(quantity);
+                this.supplier = supplier;
+                this.manufactureDate = manufactureDate;
+                this.notes = notes;
+                this.status = 'active'; // active, completed, closed
+                this.createdAt = new Date();
+                this.serialsGenerated = 0;
+            }
+        }
+
+        class SerialNumber {
+            constructor(serialNumber, productId, lotId, position = null) {
+                this.id = Date.now() + Math.random();
+                this.serialNumber = serialNumber;
+                this.productId = productId;
+                this.lotId = lotId;
+                this.position = position; // Position in lot (1-12)
+                this.barcode = serialNumber;
+                this.status = 'available'; // available, sold, defective, transit
+                this.currentLocation = 'warehouse';
+                this.createdAt = new Date();
+            }
+        }
+
+        class StockMove {
+            constructor(serialNumberId, fromLocation, toLocation, moveType, reference = null, documentId = null) {
+                this.id = Date.now() + Math.random();
+                this.serialNumberId = serialNumberId;
+                this.fromLocation = fromLocation;
+                this.toLocation = toLocation;
+                this.moveType = moveType; // 'in', 'transfer_out', 'transfer_in', 'sale'
+                this.status = 'pending'; // pending, confirmed, cancelled
+                this.moveDate = new Date();
+                this.reference = reference;
+                this.documentId = documentId;
+                this.userId = 'current_user';
+                this.cost = 0;
+                this.price = 0;
+            }
+        }
+
+        class TransferDocument {
+            constructor(fromLocation, toLocation, items = []) {
+                this.id = Date.now() + Math.random();
+                this.documentNumber = this.generateDocumentNumber();
+                this.fromLocation = fromLocation;
+                this.toLocation = toLocation;
+                this.items = items; // Array of serial numbers
+                this.status = 'pending'; // pending, in_transit, received, cancelled
+                this.createdAt = new Date();
+                this.sentDate = null;
+                this.receivedDate = null;
+                this.createdBy = 'current_user';
+                this.receivedBy = null;
+            }
+
+            generateDocumentNumber() {
+                const date = new Date();
+                const year = date.getFullYear().toString().slice(-2);
+                const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                const day = date.getDate().toString().padStart(2, '0');
+                const time = Date.now().toString().slice(-6);
+                return `TRF-${year}${month}${day}-${time}`;
+            }
+        }
+
+        class Sale {
+            constructor(serialNumberId, amount, cost, customerInfo = null, documentId = null) {
+                this.id = Date.now() + Math.random();
+                this.documentNumber = this.generateSaleNumber();
+                this.serialNumberId = serialNumberId;
+                this.saleDate = new Date();
+                this.amount = parseFloat(amount);
+                this.cost = parseFloat(cost);
+                this.customerInfo = customerInfo;
+                this.documentId = documentId;
+            }
+
+            generateSaleNumber() {
+                const date = new Date();
+                const year = date.getFullYear().toString().slice(-2);
+                const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                const day = date.getDate().toString().padStart(2, '0');
+                const time = Date.now().toString().slice(-6);
+                return `VTA-${year}${month}${day}-${time}`;
+            }
+        }
+
+        class KardexEntry {
+            constructor(productId, lotId, serialNumberId, moveType, quantity, unitCost, totalCost, balance, avgCost, reference, date) {
+                this.id = Date.now() + Math.random();
+                this.productId = productId;
+                this.lotId = lotId;
+                this.serialNumberId = serialNumberId;
+                this.moveType = moveType; // 'in', 'out', 'transfer_out', 'transfer_in', 'sale'
+                this.quantity = parseInt(quantity);
+                this.unitCost = parseFloat(unitCost);
+                this.totalCost = parseFloat(totalCost);
+                this.balance = parseInt(balance);
+                this.avgCost = parseFloat(avgCost);
+                this.reference = reference;
+                this.date = date || new Date();
+            }
+        }
+
+        // ==================== ENHANCED DATA MANAGER ====================
+        class DataManager {
+            constructor() {
+                this.initializeData();
+            }
+
+            initializeData() {
+                if (!localStorage.getItem('products')) {
+                    const sampleProducts = [
+                        new Product('CAL001', 'Zapato Formal Negro', '38', 150.00, 80.00),
+                        new Product('CAL001', 'Zapato Formal Negro', '39', 150.00, 80.00),
+                        new Product('CAL001', 'Zapato Formal Negro', '40', 150.00, 80.00),
+                        new Product('CAL002', 'Zapato Deportivo Blanco', '38', 120.00, 65.00),
+                        new Product('CAL002', 'Zapato Deportivo Blanco', '39', 120.00, 65.00),
+                        new Product('CAL003', 'Sandalia de Cuero', '38', 80.00, 45.00),
+                        new Product('CAL004', 'Bota de Seguridad', '40', 200.00, 110.00)
+                    ];
+                    localStorage.setItem('products', JSON.stringify(sampleProducts));
+                }
+
+                // Initialize empty collections
+                ['lots', 'serialNumbers', 'stockMoves', 'transferDocuments', 'sales', 'kardexEntries'].forEach(key => {
+                    if (!localStorage.getItem(key)) {
+                        localStorage.setItem(key, JSON.stringify([]));
+                    }
+                });
+            }
+
+            // Generic CRUD operations
+            get(collection) {
+                return JSON.parse(localStorage.getItem(collection) || '[]');
+            }
+
+            save(collection, item) {
+                const items = this.get(collection);
+                items.push(item);
+                localStorage.setItem(collection, JSON.stringify(items));
+                return item;
+            }
+
+            update(collection, id, updates) {
+                const items = this.get(collection);
+                const index = items.findIndex(item => item.id === id);
+                if (index !== -1) {
+                    Object.assign(items[index], updates);
+                    localStorage.setItem(collection, JSON.stringify(items));
+                    return items[index];
+                }
+                return null;
+            }
+
+            findById(collection, id) {
+                const items = this.get(collection);
+                return items.find(item => item.id === id);
+            }
+
+            findBy(collection, field, value) {
+                const items = this.get(collection);
+                return items.find(item => item[field] === value);
+            }
+
+            findAllBy(collection, field, value) {
+                const items = this.get(collection);
+                return items.filter(item => item[field] === value);
+            }
+
+            // Specific finders
+            findSerialByBarcode(barcode) {
+                return this.findBy('serialNumbers', 'barcode', barcode) ||
+                    this.findBy('serialNumbers', 'serialNumber', barcode);
+            }
+
+            findProductByBarcode(barcode) {
+                return this.findBy('products', 'barcode', barcode) ||
+                    this.findBy('products', 'fullCode', barcode) ||
+                    this.findBy('products', 'code', barcode);
+            }
+
+            // Kardex operations
+            addKardexEntry(entry) {
+                return this.save('kardexEntries', entry);
+            }
+
+            getKardexByProduct(productId) {
+                return this.findAllBy('kardexEntries', 'productId', productId)
+                    .sort((a, b) => new Date(a.date) - new Date(b.date));
+            }
+
+            getKardexByLot(lotId) {
+                return this.findAllBy('kardexEntries', 'lotId', lotId)
+                    .sort((a, b) => new Date(a.date) - new Date(b.date));
+            }
+
+            getKardexBySerial(serialNumberId) {
+                return this.findAllBy('kardexEntries', 'serialNumberId', serialNumberId)
+                    .sort((a, b) => new Date(a.date) - new Date(b.date));
+            }
+
+            // Inventory calculations
+            getProductBalance(productId, location = null) {
+                const serials = this.findAllBy('serialNumbers', 'productId', productId);
+                if (location) {
+                    return serials.filter(s => s.currentLocation === location && s.status === 'available').length;
+                }
+                return serials.filter(s => s.status === 'available').length;
+            }
+
+            getLotBalance(lotId) {
+                const serials = this.findAllBy('serialNumbers', 'lotId', lotId);
+                return {
+                    total: serials.length,
+                    available: serials.filter(s => s.status === 'available').length,
+                    sold: serials.filter(s => s.status === 'sold').length,
+                    transit: serials.filter(s => s.status === 'transit').length
+                };
+            }
+        }
+
+        // ==================== LOT MANAGER ====================
+        class LotManager {
+            static generateLotNumber(productCode) {
+                const date = new Date();
+                const year = date.getFullYear().toString().slice(-2);
+                const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                const timestamp = Date.now().toString().slice(-6);
+                return `${productCode}-L${year}${month}-${timestamp}`;
+            }
+
+            static generateSerialInLot(lotNumber, position, productCode) {
+                return `${productCode}-${lotNumber.split('-').pop()}-${position.toString().padStart(3, '0')}`;
+            }
+
+            static createLotWithSerials(dataManager, productId, quantity = 12, supplier = null, manufactureDate = null, notes = null) {
+                const product = dataManager.findById('products', productId);
+                if (!product) throw new Error('Producto no encontrado');
+
+                const lotNumber = this.generateLotNumber(product.code);
+
+                // Create lot
+                const lot = new Lot(lotNumber, productId, quantity, supplier, manufactureDate, notes);
+                dataManager.save('lots', lot);
+
+                // Create serial numbers for the lot
+                const serials = [];
+                for (let i = 1; i <= quantity; i++) {
+                    const serialNumber = this.generateSerialInLot(lotNumber, i, product.code);
+                    const serial = new SerialNumber(serialNumber, productId, lot.id, i);
+                    serials.push(serial);
+                    dataManager.save('serialNumbers', serial);
+
+                    // Create kardex entry for each unit received
+                    const kardexEntry = new KardexEntry(
+                        productId, lot.id, serial.id, 'in', 1, product.cost, product.cost,
+                        dataManager.getProductBalance(productId), product.cost,
+                        `Recepción lote ${lotNumber}`, new Date()
+                    );
+                    dataManager.addKardexEntry(kardexEntry);
+                }
+
+                return { lot, serials };
+            }
+        }
+
+        // ==================== ENHANCED CONTROLLER ====================
+        class InventoryController {
+            constructor() {
+                this.dataManager = new DataManager();
+                this.currentLocation = 'warehouse';
+                this.view = new InventoryView(this);
+                this.initializeApp();
+            }
+
+            initializeApp() {
+                this.view.initialize();
+                this.setupEventListeners();
+                this.loadInitialData();
+            }
+
+            setupEventListeners() {
+                // Scanner events
+                document.getElementById('barcodeInput').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.processScan();
+                });
+
+                document.getElementById('processBtn').addEventListener('click', () => this.processScan());
+
+                // Location change
+                document.querySelectorAll('.location-item').forEach(item => {
+                    item.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        this.changeLocation(e.target.dataset.location);
+                    });
+                });
+
+                // Product and lot forms
+                document.getElementById('saveProduct').addEventListener('click', () => this.saveProduct());
+                document.getElementById('createLot').addEventListener('click', () => this.createLot());
+
+                // Kardex
+                document.getElementById('generateKardex').addEventListener('click', () => this.generateKardex());
+                document.getElementById('kardexType').addEventListener('change', () => this.updateKardexFilters());
+
+                // Tab changes
+                document.querySelectorAll('[data-bs-toggle="tab"]').forEach(tab => {
+                    tab.addEventListener('shown.bs.tab', (e) => this.onTabChange(e.target.id));
+                });
+            }
+
+            loadInitialData() {
+                this.view.loadProducts();
+                this.view.loadLots();
+                this.view.loadInventory();
+                this.view.loadTransfers();
+                this.view.loadSales();
+                this.updateKardexFilters();
+            }
+
+            changeLocation(location) {
+                this.currentLocation = location;
+                this.view.updateCurrentLocation(location);
+                this.view.loadInventory();
+            }
+
+            processScan() {
+                const barcode = document.getElementById('barcodeInput').value.trim();
+                const operationType = document.getElementById('operationType').value;
+                const quantity = parseInt(document.getElementById('quantity').value) || 1;
+
+                if (!barcode) {
+                    this.view.showAlert('Por favor ingrese un código de barras', 'warning');
+                    return;
+                }
+
+                let result;
+                switch (operationType) {
+                    case 'receive_lot':
+                        result = this.processReceiveLot(barcode, quantity);
+                        break;
+                    case 'transfer_out':
+                        result = this.processTransferOut(barcode);
+                        break;
+                    case 'confirm_receipt':
+                        result = this.processConfirmReceipt(barcode);
+                        break;
+                    case 'sale':
+                        result = this.processSale(barcode);
+                        break;
+                    default:
+                        result = { success: false, error: 'Tipo de operación no válido' };
+                }
+
+                this.view.displayScanResult(result);
+
+                if (result.success) {
+                    document.getElementById('barcodeInput').value = '';
+                    this.view.loadInventory();
+                    this.view.loadTransfers();
+                    this.view.loadSales();
+                    this.view.loadLots();
+                }
+            }
+
+            processReceiveLot(barcode, quantity) {
+                // Try to find product by barcode
+                const product = this.dataManager.findProductByBarcode(barcode);
+                if (!product) {
+                    return { success: false, error: 'Producto no encontrado' };
+                }
+
+                try {
+                    const result = LotManager.createLotWithSerials(
+                        this.dataManager, product.id, quantity
+                    );
+
+                    return {
+                        success: true,
+                        operation: 'receive_lot',
+                        product: product,
+                        lot: result.lot,
+                        serials: result.serials,
+                        message: `Lote ${result.lot.lotNumber} recibido con ${quantity} pares`
+                    };
+                } catch (error) {
+                    return { success: false, error: error.message };
+                }
+            }
+
+            processTransferOut(barcode) {
+                const serial = this.dataManager.findSerialByBarcode(barcode);
+                if (!serial) {
+                    return { success: false, error: 'Número de serie no encontrado' };
+                }
+
+                if (serial.currentLocation !== this.currentLocation) {
+                    return {
+                        success: false,
+                        error: `El producto no está en ${this.getLocationName(this.currentLocation)}`
+                    };
+                }
+
+                if (serial.status !== 'available') {
+                    return { success: false, error: 'Producto no disponible para transferencia' };
+                }
+
+                const transferTo = document.getElementById('transferTo').value;
+                if (transferTo === this.currentLocation) {
+                    return { success: false, error: 'No se puede transferir a la misma ubicación' };
+                }
+
+                // Create or find existing transfer document
+                let transferDoc = this.findOrCreateTransferDocument(this.currentLocation, transferTo);
+
+                // Add item to transfer document
+                transferDoc.items.push(serial.serialNumber);
+
+                // Update serial status and location to transit
+                this.dataManager.update('serialNumbers', serial.id, {
+                    status: 'transit',
+                    currentLocation: 'transit'
+                });
+
+                // Create stock move (double entry)
+                const moveOut = new StockMove(
+                    serial.id, this.currentLocation, 'transit', 'transfer_out',
+                    transferDoc.documentNumber, transferDoc.id
+                );
+                moveOut.status = 'confirmed';
+                this.dataManager.save('stockMoves', moveOut);
+
+                const product = this.dataManager.findById('products', serial.productId);
+
+                // Create kardex entry for outbound
+                const kardexOut = new KardexEntry(
+                    serial.productId, serial.lotId, serial.id, 'transfer_out', 1,
+                    product.cost, product.cost, this.dataManager.getProductBalance(serial.productId),
+                    product.cost, transferDoc.documentNumber, new Date()
+                );
+                this.dataManager.addKardexEntry(kardexOut);
+
+                return {
+                    success: true,
+                    operation: 'transfer_out',
+                    product: product,
+                    serial: serial,
+                    document: transferDoc,
+                    transferTo: transferTo,
+                    message: `Producto enviado. Documento: ${transferDoc.documentNumber}`
+                };
+            }
+
+            processConfirmReceipt(barcode) {
+                const serial = this.dataManager.findSerialByBarcode(barcode);
+                if (!serial) {
+                    return { success: false, error: 'Número de serie no encontrado' };
+                }
+
+                if (serial.status !== 'transit') {
+                    return { success: false, error: 'Este producto no está en tránsito' };
+                }
+
+                // Find pending transfer document
+                const moves = this.dataManager.findAllBy('stockMoves', 'serialNumberId', serial.id);
+                const pendingMove = moves.find(m => m.moveType === 'transfer_out' && m.status === 'confirmed');
+
+                if (!pendingMove) {
+                    return { success: false, error: 'No se encontró el documento de transferencia' };
+                }
+
+                // Update serial to current location
+                this.dataManager.update('serialNumbers', serial.id, {
+                    status: 'available',
+                    currentLocation: this.currentLocation
+                });
+
+                // Create confirming move (double entry completion)
+                const moveIn = new StockMove(
+                    serial.id, 'transit', this.currentLocation, 'transfer_in',
+                    pendingMove.reference, pendingMove.documentId
+                );
+                moveIn.status = 'confirmed';
+                this.dataManager.save('stockMoves', moveIn);
+
+                const product = this.dataManager.findById('products', serial.productId);
+
+                // Create kardex entry for inbound
+                const kardexIn = new KardexEntry(
+                    serial.productId, serial.lotId, serial.id, 'transfer_in', 1,
+                    product.cost, product.cost, this.dataManager.getProductBalance(serial.productId),
+                    product.cost, pendingMove.reference, new Date()
+                );
+                this.dataManager.addKardexEntry(kardexIn);
+
+                return {
+                    success: true,
+                    operation: 'confirm_receipt',
+                    product: product,
+                    serial: serial,
+                    message: `Recepción confirmada en ${this.getLocationName(this.currentLocation)}`
+                };
+            }
+
+            processSale(barcode) {
+                const serial = this.dataManager.findSerialByBarcode(barcode);
+                if (!serial) {
+                    return { success: false, error: 'Número de serie no encontrado' };
+                }
+
+                if (serial.currentLocation !== this.currentLocation) {
+                    return {
+                        success: false,
+                        error: `El producto no está en ${this.getLocationName(this.currentLocation)}`
+                    };
+                }
+
+                if (serial.status !== 'available') {
+                    return { success: false, error: 'Este producto no está disponible para venta' };
+                }
+
+                // Only allow sales from stores
+                if (this.currentLocation === 'warehouse' || this.currentLocation === 'transit') {
+                    return { success: false, error: 'Las ventas solo se pueden realizar desde las tiendas' };
+                }
+
+                const product = this.dataManager.findById('products', serial.productId);
+
+                // Create sale
+                const sale = new Sale(serial.id, product.price, product.cost);
+                this.dataManager.save('sales', sale);
+
+                // Update serial status and move to customers
+                this.dataManager.update('serialNumbers', serial.id, {
+                    status: 'sold',
+                    currentLocation: 'customers'
+                });
+
+                // Create stock move
+                const saleMove = new StockMove(
+                    serial.id, this.currentLocation, 'customers', 'sale',
+                    sale.documentNumber, sale.id
+                );
+                saleMove.status = 'confirmed';
+                saleMove.price = product.price;
+                saleMove.cost = product.cost;
+                this.dataManager.save('stockMoves', saleMove);
+
+                // Create kardex entry for sale
+                const kardexSale = new KardexEntry(
+                    serial.productId, serial.lotId, serial.id, 'sale', 1,
+                    product.cost, product.cost, this.dataManager.getProductBalance(serial.productId),
+                    product.cost, sale.documentNumber, new Date()
+                );
+                this.dataManager.addKardexEntry(kardexSale);
+
+                return {
+                    success: true,
+                    operation: 'sale',
+                    product: product,
+                    serial: serial,
+                    sale: sale,
+                    amount: product.price,
+                    message: `Venta realizada por ${product.price.toFixed(2)} - ${sale.documentNumber}`
+                };
+            }
+
+            findOrCreateTransferDocument(fromLocation, toLocation) {
+                // Look for pending transfer document for same route
+                const documents = this.dataManager.get('transferDocuments');
+                let existingDoc = documents.find(doc =>
+                    doc.fromLocation === fromLocation &&
+                    doc.toLocation === toLocation &&
+                    doc.status === 'pending'
+                );
+
+                if (!existingDoc) {
+                    existingDoc = new TransferDocument(fromLocation, toLocation);
+                    this.dataManager.save('transferDocuments', existingDoc);
+                } else {
+                    // Update the existing document
+                    this.dataManager.update('transferDocuments', existingDoc.id, existingDoc);
+                }
+
+                return existingDoc;
+            }
+
+            saveProduct() {
+                const code = document.getElementById('productCode').value.trim();
+                const name = document.getElementById('productName').value.trim();
+                const size = document.getElementById('productSize').value;
+                const price = document.getElementById('productPrice').value.trim();
+                const cost = document.getElementById('productCost').value.trim();
+
+                if (!code || !name || !size || !price || !cost) {
+                    this.view.showAlert('Por favor complete todos los campos requeridos', 'warning');
+                    return;
+                }
+
+                // Check if product already exists
+                const existingProduct = this.dataManager.findBy('products', 'fullCode', `${code}-${size}`);
+                if (existingProduct) {
+                    this.view.showAlert('Ya existe un producto con este código y talla', 'warning');
+                    return;
+                }
+
+                const product = new Product(code, name, size, price, cost);
+                this.dataManager.save('products', product);
+
+                this.view.showAlert('Producto guardado exitosamente', 'success');
+                this.view.loadProducts();
+                this.updateKardexFilters();
+
+                document.getElementById('productForm').reset();
+                bootstrap.Modal.getInstance(document.getElementById('productModal')).hide();
+            }
+
+            createLot() {
+                const productId = document.getElementById('lotProduct').value;
+                const quantity = parseInt(document.getElementById('lotQuantity').value);
+                const supplier = document.getElementById('lotSupplier').value.trim();
+                const manufactureDate = document.getElementById('lotManufactureDate').value;
+                const notes = document.getElementById('lotNotes').value.trim();
+
+                if (!productId || !quantity) {
+                    this.view.showAlert('Por favor complete los campos requeridos', 'warning');
+                    return;
+                }
+
+                try {
+                    const result = LotManager.createLotWithSerials(
+                        this.dataManager, productId, quantity, supplier,
+                        manufactureDate || null, notes || null
+                    );
+
+                    this.view.showAlert(`Lote ${result.lot.lotNumber} creado con ${quantity} números de serie`, 'success');
+                    this.view.loadLots();
+                    this.view.loadInventory();
+                    this.updateKardexFilters();
+
+                    document.getElementById('lotForm').reset();
+                    bootstrap.Modal.getInstance(document.getElementById('lotModal')).hide();
+
+                } catch (error) {
+                    this.view.showAlert('Error al crear el lote: ' + error.message, 'danger');
+                }
+            }
+
+            generateKardex() {
+                const kardexType = document.getElementById('kardexType').value;
+                const filterId = document.getElementById('kardexFilter').value;
+
+                if (!filterId) {
+                    this.view.showAlert('Por favor seleccione un filtro', 'warning');
+                    return;
+                }
+
+                let entries = [];
+                let title = '';
+
+                switch (kardexType) {
+                    case 'product':
+                        entries = this.dataManager.getKardexByProduct(filterId);
+                        const product = this.dataManager.findById('products', filterId);
+                        title = `Kardex - ${product ? product.fullName : 'Producto'}`;
+                        break;
+                    case 'lot':
+                        entries = this.dataManager.getKardexByLot(filterId);
+                        const lot = this.dataManager.findById('lots', filterId);
+                        title = `Kardex - Lote ${lot ? lot.lotNumber : 'Lote'}`;
+                        break;
+                    case 'serial':
+                        entries = this.dataManager.getKardexBySerial(filterId);
+                        const serial = this.dataManager.findById('serialNumbers', filterId);
+                        title = `Kardex - Serie ${serial ? serial.serialNumber : 'Serie'}`;
+                        break;
+                }
+
+                this.view.displayKardex(entries, title);
+            }
+
+            updateKardexFilters() {
+                const kardexType = document.getElementById('kardexType').value;
+                const filterSelect = document.getElementById('kardexFilter');
+
+                filterSelect.innerHTML = '<option value="">Seleccione...</option>';
+
+                switch (kardexType) {
+                    case 'product':
+                        const products = this.dataManager.get('products');
+                        products.forEach(product => {
+                            filterSelect.innerHTML += `<option value="${product.id}">${product.fullName}</option>`;
+                        });
+                        break;
+                    case 'lot':
+                        const lots = this.dataManager.get('lots');
+                        lots.forEach(lot => {
+                            const product = this.dataManager.findById('products', lot.productId);
+                            filterSelect.innerHTML += `<option value="${lot.id}">${lot.lotNumber} - ${product ? product.fullName : 'N/A'}</option>`;
+                        });
+                        break;
+                    case 'serial':
+                        const serials = this.dataManager.get('serialNumbers');
+                        serials.slice(0, 50).forEach(serial => { // Limit to 50 for performance
+                            const product = this.dataManager.findById('products', serial.productId);
+                            filterSelect.innerHTML += `<option value="${serial.id}">${serial.serialNumber} - ${product ? product.fullName : 'N/A'}</option>`;
+                        });
+                        break;
+                }
+            }
+
+            getLocationName(location) {
+                const locations = {
+                    'warehouse': 'Almacén Principal',
+                    'store_001': 'Tienda Centro',
+                    'store_002': 'Tienda Norte',
+                    'store_003': 'Tienda Sur',
+                    'transit': 'En Tránsito',
+                    'customers': 'Almacén Clientes'
+                };
+                return locations[location] || location;
+            }
+
+            onTabChange(tabId) {
+                switch (tabId) {
+                    case 'lots-tab':
+                        this.view.loadLots();
+                        break;
+                    case 'products-tab':
+                        this.view.loadProducts();
+                        break;
+                    case 'transfers-tab':
+                        this.view.loadTransfers();
+                        break;
+                    case 'inventory-tab':
+                        this.view.loadInventory();
+                        break;
+                    case 'sales-tab':
+                        this.view.loadSales();
+                        break;
+                    case 'kardex-tab':
+                        this.updateKardexFilters();
+                        break;
+                }
+            }
+
+            showTransferDocument(documentId) {
+                const document = this.dataManager.findById('transferDocuments', documentId);
+                if (document) {
+                    this.view.showTransferDocument(document);
+                }
+            }
+
+            showSerialHistory(serialNumber) {
+                const serial = this.dataManager.findBy('serialNumbers', 'serialNumber', serialNumber);
+                if (serial) {
+                    const moves = this.dataManager.findAllBy('stockMoves', 'serialNumberId', serial.id)
+                        .sort((a, b) => new Date(b.moveDate) - new Date(a.moveDate));
+                    this.view.showHistoryModal(serialNumber, moves);
+                }
+            }
+        }
+        // ==================== ENHANCED VIEW ====================
+        class InventoryView {
+            constructor(controller) {
+                this.controller = controller;
+            }
+
+            initialize() {
+                this.setupScanArea();
+                this.loadProductOptions();
+            }
+
+            setupScanArea() {
+                const scanArea = document.getElementById('scanArea');
+                const barcodeInput = document.getElementById('barcodeInput');
+
+                scanArea.addEventListener('click', () => {
+                    barcodeInput.focus();
+                    scanArea.classList.add('active');
+                });
+
+                barcodeInput.addEventListener('focus', () => scanArea.classList.add('active'));
+                barcodeInput.addEventListener('blur', () => scanArea.classList.remove('active'));
+            }
+
+            loadProductOptions() {
+                const products = this.controller.dataManager.get('products');
+                const lotProductSelect = document.getElementById('lotProduct');
+
+                lotProductSelect.innerHTML = '<option value="">Seleccione producto</option>';
+                products.forEach(product => {
+                    lotProductSelect.innerHTML += `<option value="${product.id}">${product.fullName} - ${product.price}</option>`;
+                });
+            }
+
+            updateCurrentLocation(location) {
+                const locationNames = {
+                    'warehouse': 'Almacén Principal',
+                    'store_001': 'Tienda Centro',
+                    'store_002': 'Tienda Norte',
+                    'store_003': 'Tienda Sur',
+                    'transit': 'En Tránsito',
+                    'customers': 'Almacén Clientes'
+                };
+                document.getElementById('currentLocation').textContent =
+                    `Ubicación: ${locationNames[location]}`;
+            }
+
+            displayScanResult(result) {
+                const productInfo = document.getElementById('productInfo');
+
+                if (result.success) {
+                    let content = `
+                        <div class="alert alert-success">
+                            <strong><i class="fas fa-check-circle"></i> ${result.message}</strong>
+                        </div>
+                        <div class="product-details">
+                            <h6><strong>${result.product.fullName}</strong></h6>
+                            <p class="mb-1"><strong>Código:</strong> ${result.product.fullCode}</p>
+                            <p class="mb-1"><strong>Precio:</strong> ${result.product.price.toFixed(2)}</p>
+                    `;
+
+                    if (result.serial) {
+                        content += `<p class="mb-1"><strong>N° Serie:</strong> <span class="barcode-display">${result.serial.serialNumber}</span></p>`;
+                    }
+
+                    if (result.lot) {
+                        content += `<p class="mb-1"><strong>Lote:</strong> ${result.lot.lotNumber}</p>`;
+                    }
+
+                    if (result.document) {
+                        content += `<p class="mb-1"><strong>Documento:</strong> ${result.document.documentNumber}</p>`;
+                    }
+
+                    if (result.operation === 'sale') {
+                        content += `<p class="mb-1"><strong>Total Venta:</strong> ${result.amount.toFixed(2)}</p>`;
+                    }
+
+                    content += '</div>';
+                    productInfo.innerHTML = content;
+
+                    this.addToRecentHistory(result);
+                } else {
+                    productInfo.innerHTML = `
+                        <div class="alert alert-danger">
+                            <strong><i class="fas fa-exclamation-triangle"></i> Error</strong><br>
+                            ${result.error}
+                        </div>
+                    `;
+                }
+
+                this.showAlert(result.success ? result.message : result.error, result.success ? 'success' : 'danger');
+            }
+
+            addToRecentHistory(result) {
+                const recentHistory = document.getElementById('recentHistory');
+                const timestamp = new Date().toLocaleString();
+                const operationIcons = {
+                    'receive_lot': 'fas fa-arrow-down text-success',
+                    'transfer_out': 'fas fa-arrow-right text-info',
+                    'confirm_receipt': 'fas fa-arrow-left text-primary',
+                    'sale': 'fas fa-shopping-cart text-warning'
+                };
+
+                const historyItem = document.createElement('div');
+                historyItem.className = 'border-start border-3 border-primary ps-3 mb-2';
+                historyItem.innerHTML = `
+                    <div class="d-flex align-items-center mb-1">
+                        <i class="${operationIcons[result.operation]} me-2"></i>
+                        <small><strong>${result.product.fullName}</strong></small>
+                    </div>
+                    <small class="text-muted">${result.serial ? result.serial.serialNumber : result.lot ? result.lot.lotNumber : ''} - ${timestamp}</small>
+                `;
+
+                if (recentHistory.children.length === 0 || recentHistory.firstChild.textContent.includes('No hay movimientos')) {
+                    recentHistory.innerHTML = '';
+                }
+
+                recentHistory.insertBefore(historyItem, recentHistory.firstChild);
+
+                // Keep only last 5 items
+                while (recentHistory.children.length > 5) {
+                    recentHistory.removeChild(recentHistory.lastChild);
+                }
+            }
+
+            loadProducts() {
+                const products = this.controller.dataManager.get('products');
+                const productsList = document.getElementById('productsList');
+
+                if (products.length === 0) {
+                    productsList.innerHTML = '<div class="col-12"><p class="text-center text-muted">No hay productos registrados</p></div>';
+                    return;
+                }
+
+                productsList.innerHTML = products.map(product => `
+                    <div class="col-md-6 col-lg-4 mb-3">
+                        <div class="card product-card h-100">
+                            <div class="card-body">
+                                <h6 class="card-title">${product.fullName}</h6>
+                                <p class="card-text">
+                                    <strong>Código:</strong> ${product.fullCode}<br>
+                                    <strong>Precio:</strong> ${product.price.toFixed(2)}<br>
+                                    <strong>Costo:</strong> ${product.cost.toFixed(2)}<br>
+                                    <strong>Stock:</strong> ${this.controller.dataManager.getProductBalance(product.id)} unidades
+                                </p>
+                                <small class="text-muted">Creado: ${new Date(product.createdAt).toLocaleDateString()}</small>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+
+                // Update product options in lot modal
+                this.loadProductOptions();
+            }
+
+            loadLots() {
+                const lots = this.controller.dataManager.get('lots');
+                const products = this.controller.dataManager.get('products');
+                const lotsList = document.getElementById('lotsList');
+                const lotStats = document.getElementById('lotStats');
+
+                if (lots.length === 0) {
+                    lotsList.innerHTML = '<p class="text-center text-muted">No hay lotes registrados</p>';
+                    lotStats.innerHTML = '<p class="text-muted">Sin estadísticas</p>';
+                    return;
+                }
+
+                // Display lots
+                lotsList.innerHTML = lots.map(lot => {
+                    const product = products.find(p => p.id === lot.productId);
+                    const balance = this.controller.dataManager.getLotBalance(lot.id);
+
+                    return `
+                        <div class="card lot-card mb-3">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <h6 class="card-title">${lot.lotNumber}</h6>
+                                        <p class="mb-1"><strong>Producto:</strong> ${product ? product.fullName : 'N/A'}</p>
+                                        <p class="mb-1"><strong>Cantidad:</strong> ${lot.quantity} pares</p>
+                                        ${lot.supplier ? `<p class="mb-1"><strong>Proveedor:</strong> ${lot.supplier}</p>` : ''}
+                                        ${lot.manufactureDate ? `<p class="mb-1"><strong>Fabricación:</strong> ${new Date(lot.manufactureDate).toLocaleDateString()}</p>` : ''}
+                                        ${lot.notes ? `<p class="mb-1"><strong>Notas:</strong> ${lot.notes}</p>` : ''}
+                                        <small class="text-muted">Creado: ${new Date(lot.createdAt).toLocaleDateString()}</small>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="text-center">
+                                            <div class="row text-center">
+                                                <div class="col-4">
+                                                    <div class="badge bg-success fs-6">${balance.available}</div>
+                                                    <small class="d-block">Disponible</small>
+                                                </div>
+                                                <div class="col-4">
+                                                    <div class="badge bg-warning fs-6">${balance.transit}</div>
+                                                    <small class="d-block">Tránsito</small>
+                                                </div>
+                                                <div class="col-4">
+                                                    <div class="badge bg-danger fs-6">${balance.sold}</div>
+                                                    <small class="d-block">Vendido</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                // Calculate and display stats
+                const totalLots = lots.length;
+                const activeLots = lots.filter(l => l.status === 'active').length;
+                const totalUnits = lots.reduce((sum, lot) => sum + lot.quantity, 0);
+
+                lotStats.innerHTML = `
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <h4 class="text-primary">${totalLots}</h4>
+                            <small>Total Lotes</small>
+                        </div>
+                        <div class="col-4">
+                            <h4 class="text-success">${activeLots}</h4>
+                            <small>Activos</small>
+                        </div>
+                        <div class="col-4">
+                            <h4 class="text-info">${totalUnits}</h4>
+                            <small>Total Pares</small>
+                        </div>
+                    </div>
+                `;
+            }
+
+            loadInventory() {
+                const serials = this.controller.dataManager.get('serialNumbers');
+                const products = this.controller.dataManager.get('products');
+                const lots = this.controller.dataManager.get('lots');
+                const inventoryTable = document.getElementById('inventoryTable');
+
+                // Filter by current location
+                const filteredSerials = serials.filter(serial => {
+                    if (this.controller.currentLocation === 'all') return true;
+                    return serial.currentLocation === this.controller.currentLocation;
+                });
+
+                if (filteredSerials.length === 0) {
+                    inventoryTable.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No hay productos en esta ubicación</td></tr>';
+                    return;
+                }
+
+                const statusColors = {
+                    'available': 'success',
+                    'sold': 'danger',
+                    'transit': 'warning',
+                    'defective': 'dark'
+                };
+
+                inventoryTable.innerHTML = filteredSerials.map(serial => {
+                    const product = products.find(p => p.id === serial.productId);
+                    const lot = lots.find(l => l.id === serial.lotId);
+
+                    return `
+                        <tr class="${serial.status === 'transit' ? 'movement-transit' : ''}">
+                            <td><code class="barcode-display">${serial.serialNumber}</code></td>
+                            <td>${product ? product.fullName : 'Producto no encontrado'}</td>
+                            <td>${lot ? lot.lotNumber : 'N/A'}</td>
+                            <td>${this.controller.getLocationName(serial.currentLocation)}</td>
+                            <td>
+                                <span class="badge bg-${statusColors[serial.status]} status-badge">
+                                    ${serial.status.toUpperCase()}
+                                </span>
+                            </td>
+                            <td>${new Date(serial.createdAt).toLocaleDateString()}</td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-info" onclick="app.showSerialHistory('${serial.serialNumber}')">
+                                    <i class="fas fa-history"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            loadTransfers() {
+                const transfers = this.controller.dataManager.get('transferDocuments');
+                const transfersTable = document.getElementById('transfersTable');
+
+                if (transfers.length === 0) {
+                    transfersTable.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No hay transferencias registradas</td></tr>';
+                    return;
+                }
+
+                const statusColors = {
+                    'pending': 'warning',
+                    'in_transit': 'info',
+                    'received': 'success',
+                    'cancelled': 'danger'
+                };
+
+                transfersTable.innerHTML = transfers
+                    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+                    .map(transfer => `
+                        <tr class="movement-${transfer.status}">
+                            <td><code>${transfer.documentNumber}</code></td>
+                            <td>${new Date(transfer.createdAt).toLocaleDateString()}</td>
+                            <td>${this.controller.getLocationName(transfer.fromLocation)}</td>
+                            <td>${this.controller.getLocationName(transfer.toLocation)}</td>
+                            <td>
+                                <span class="badge bg-${statusColors[transfer.status]}">
+                                    ${transfer.status.toUpperCase()}
+                                </span>
+                            </td>
+                            <td>${transfer.items.length} productos</td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary" onclick="app.showTransferDocument('${transfer.id}')">
+                                    <i class="fas fa-eye"></i> Ver
+                                </button>
+                            </td>
+                        </tr>
+                    `).join('');
+            }
+
+            loadSales() {
+                const sales = this.controller.dataManager.get('sales');
+                const serials = this.controller.dataManager.get('serialNumbers');
+                const products = this.controller.dataManager.get('products');
+                const lots = this.controller.dataManager.get('lots');
+                const salesTable = document.getElementById('salesTable');
+
+                if (sales.length === 0) {
+                    salesTable.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No hay ventas registradas</td></tr>';
+                    return;
+                }
+
+                salesTable.innerHTML = sales
+                    .sort((a, b) => new Date(b.saleDate) - new Date(a.saleDate))
+                    .map(sale => {
+                        const serial = serials.find(s => s.id === sale.serialNumberId);
+                        const product = serial ? products.find(p => p.id === serial.productId) : null;
+                        const lot = serial ? lots.find(l => l.id === serial.lotId) : null;
+
+                        return `
+                            <tr>
+                                <td>${new Date(sale.saleDate).toLocaleDateString()}</td>
+                                <td><code>${sale.documentNumber}</code></td>
+                                <td><code class="barcode-display">${serial ? serial.serialNumber : 'N/A'}</code></td>
+                                <td>${product ? product.fullName : 'Producto no encontrado'}</td>
+                                <td>${lot ? lot.lotNumber : 'N/A'}</td>
+                                <td><strong>${sale.amount.toFixed(2)}</strong></td>
+                                <td>Tienda</td>
+                            </tr>
+                        `;
+                    }).join('');
+            }
+
+            displayKardex(entries, title) {
+                const kardexTable = document.getElementById('kardexTable');
+
+                if (entries.length === 0) {
+                    kardexTable.innerHTML = '<tr><td colspan="12" class="text-center text-muted">No hay movimientos registrados</td></tr>';
+                    return;
+                }
+
+                let runningBalance = 0;
+                let runningValue = 0;
+
+                kardexTable.innerHTML = entries.map(entry => {
+                    const isInbound = ['in', 'transfer_in'].includes(entry.moveType);
+                    const isOutbound = ['out', 'transfer_out', 'sale'].includes(entry.moveType);
+
+                    if (isInbound) {
+                        runningBalance += entry.quantity;
+                        runningValue += entry.totalCost;
+                    } else if (isOutbound) {
+                        runningBalance -= entry.quantity;
+                        runningValue -= entry.totalCost;
+                    }
+
+                    const avgCost = runningBalance > 0 ? runningValue / runningBalance : 0;
+
+                    return `
+                        <tr>
+                            <td>${new Date(entry.date).toLocaleDateString()}</td>
+                            <td>${entry.reference}</td>
+                            <td>${this.getMoveTypeDescription(entry.moveType)}</td>
+                            ${isInbound ? `
+                                <td class="text-center">${entry.quantity}</td>
+                                <td class="text-end">${entry.unitCost.toFixed(2)}</td>
+                                <td class="text-end">${entry.totalCost.toFixed(2)}</td>
+                                <td class="text-center">-</td>
+                                <td class="text-end">-</td>
+                                <td class="text-end">-</td>
+                            ` : `
+                                <td class="text-center">-</td>
+                                <td class="text-end">-</td>
+                                <td class="text-end">-</td>
+                                <td class="text-center">${entry.quantity}</td>
+                                <td class="text-end">${entry.unitCost.toFixed(2)}</td>
+                                <td class="text-end">${entry.totalCost.toFixed(2)}</td>
+                            `}
+                            <td class="text-center"><strong>${runningBalance}</strong></td>
+                            <td class="text-end"><strong>${avgCost.toFixed(2)}</strong></td>
+                            <td class="text-end"><strong>${runningValue.toFixed(2)}</strong></td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            getMoveTypeDescription(moveType) {
+                const descriptions = {
+                    'in': 'Entrada de Inventario',
+                    'transfer_out': 'Salida por Transferencia',
+                    'transfer_in': 'Entrada por Transferencia',
+                    'sale': 'Venta',
+                    'out': 'Salida'
+                };
+                return descriptions[moveType] || moveType;
+            }
+
+            showTransferDocument(document) {
+                const serials = this.controller.dataManager.get('serialNumbers');
+                const products = this.controller.dataManager.get('products');
+                const lots = this.controller.dataManager.get('lots');
+
+                const documentItems = document.items.map(serialNumber => {
+                    const serial = serials.find(s => s.serialNumber === serialNumber);
+                    const product = serial ? products.find(p => p.id === serial.productId) : null;
+                    const lot = serial ? lots.find(l => l.id === serial.lotId) : null;
+
+                    return {
+                        serialNumber,
+                        product: product ? product.fullName : 'N/A',
+                        lot: lot ? lot.lotNumber : 'N/A',
+                        cost: product ? product.cost : 0
+                    };
+                });
+
+                const totalCost = documentItems.reduce((sum, item) => sum + item.cost, 0);
+
+                const content = `
+                    <div class="document-header">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h4>DOCUMENTO DE TRANSFERENCIA</h4>
+                                <p><strong>N° Documento:</strong> ${document.documentNumber}</p>
+                                <p><strong>Fecha:</strong> ${new Date(document.createdAt).toLocaleDateString()}</p>
+                            </div>
+                            <div class="col-md-6 text-end">
+                                <p><strong>Estado:</strong> <span class="badge bg-info">${document.status.toUpperCase()}</span></p>
+                                <p><strong>Total Items:</strong> ${document.items.length}</p>
+                                <p><strong>Valor Total:</strong> ${totalCost.toFixed(2)}</p>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <h6>ORIGEN</h6>
+                                <p>${this.controller.getLocationName(document.fromLocation)}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>DESTINO</h6>
+                                <p>${this.controller.getLocationName(document.toLocation)}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <h6>DETALLE DE PRODUCTOS</h6>
+                        <div class="table-responsive">
+                            <table class="table table-striped table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Número de Serie</th>
+                                        <th>Producto</th>
+                                        <th>Lote</th>
+                                        <th class="text-end">Costo Unit.</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${documentItems.map((item, index) => `
+                                        <tr>
+                                            <td>${index + 1}</td>
+                                            <td><code class="barcode-display">${item.serialNumber}</code></td>
+                                            <td>${item.product}</td>
+                                            <td>${item.lot}</td>
+                                            <td class="text-end">${item.cost.toFixed(2)}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <th colspan="4" class="text-end">TOTAL:</th>
+                                        <th class="text-end">${totalCost.toFixed(2)}</th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <div class="row">
+                            <div class="col-md-4 text-center">
+                                <div class="border-top pt-2">
+                                    <small>ELABORADO POR</small><br>
+                                    <small>${document.createdBy}</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4 text-center">
+                                <div class="border-top pt-2">
+                                    <small>AUTORIZADO POR</small><br>
+                                    <small>_________________</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4 text-center">
+                                <div class="border-top pt-2">
+                                    <small>RECIBIDO POR</small><br>
+                                    <small>_________________</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                document.getElementById('transferDocContent').innerHTML = content;
+                const modal = new bootstrap.Modal(document.getElementById('transferDocModal'));
+                modal.show();
+            }
+
+            showHistoryModal(serialNumber, moves) {
+                // Implementation similar to previous version but with enhanced move types
+                const historyModalBody = document.getElementById('historyModalBody');
+                const modal = new bootstrap.Modal(document.getElementById('historyModal'));
+
+                if (moves.length === 0) {
+                    historyModalBody.innerHTML = '<p class="text-muted text-center">No hay movimientos registrados para este número de serie</p>';
+                } else {
+                    const moveTypeNames = {
+                        'in': 'Entrada de Inventario',
+                        'transfer_out': 'Salida por Transferencia',
+                        'transfer_in': 'Entrada por Transferencia',
+                        'sale': 'Venta'
+                    };
+
+                    const moveTypeIcons = {
+                        'in': 'fas fa-arrow-down text-success',
+                        'transfer_out': 'fas fa-arrow-right text-info',
+                        'transfer_in': 'fas fa-arrow-left text-primary',
+                        'sale': 'fas fa-shopping-cart text-warning'
+                    };
+
+                    historyModalBody.innerHTML = `
+                        <h6>Historial de Movimientos - Número de Serie: <code class="barcode-display">${serialNumber}</code></h6>
+                        <div class="timeline mt-3">
+                            ${moves.map(move => `
+                                <div class="border-start border-3 border-primary ps-3 mb-3">
+                                    <div class="d-flex align-items-center">
+                                        <i class="${moveTypeIcons[move.moveType]} me-3"></i>
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-1">${moveTypeNames[move.moveType]}</h6>
+                                            <p class="mb-1">
+                                                <strong>Desde:</strong> ${this.controller.getLocationName(move.fromLocation)} 
+                                                <i class="fas fa-arrow-right mx-2"></i>
+                                                <strong>Hacia:</strong> ${this.controller.getLocationName(move.toLocation)}
+                                            </p>
+                                            <p class="mb-1"><strong>Estado:</strong> 
+                                                <span class="badge bg-${move.status === 'confirmed' ? 'success' : 'warning'}">${move.status.toUpperCase()}</span>
+                                            </p>
+                                            ${move.reference ? `<p class="mb-1"><strong>Referencia:</strong> ${move.reference}</p>` : ''}
+                                            <small class="text-muted">
+                                                <i class="fas fa-clock"></i> ${new Date(move.moveDate).toLocaleString()}
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                }
+
+                modal.show();
+            }
+
+            showAlert(message, type) {
+                // Remove existing alerts
+                const existingAlerts = document.querySelectorAll('.custom-alert');
+                existingAlerts.forEach(alert => alert.remove());
+
+                const alertDiv = document.createElement('div');
+                alertDiv.className = `alert alert-${type} alert-dismissible fade show custom-alert`;
+                alertDiv.style.position = 'fixed';
+                alertDiv.style.top = '20px';
+                alertDiv.style.right = '20px';
+                alertDiv.style.zIndex = '9999';
+                alertDiv.style.minWidth = '300px';
+                alertDiv.innerHTML = `
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+
+                document.body.appendChild(alertDiv);
+
+                // Auto remove after 5 seconds
+                setTimeout(() => {
+                    if (alertDiv.parentNode) {
+                        alertDiv.remove();
+                    }
+                }, 5000);
+            }
+        }
+
+        // ==================== APP INITIALIZATION ====================
+        let app;
+
+        document.addEventListener('DOMContentLoaded', function () {
+            app = new InventoryController();
+
+            // Global functions for onclick events
+            window.app = app;
+        });
+    </script>
+</body>
+
+</html>
